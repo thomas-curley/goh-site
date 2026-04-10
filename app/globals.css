@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+/* ===== Gnome Village Theme - Tailwind v4 CSS Config ===== */
+
+@theme inline {
+  /* Core palette */
+  --color-gnome-green: #2D5016;
+  --color-gnome-green-light: #4A7C23;
+  --color-bark-brown: #3E2B1C;
+  --color-bark-brown-light: #5C4033;
+  --color-parchment: #F5E6C8;
+  --color-parchment-dark: #E8D5A8;
+  --color-gold: #DAA520;
+  --color-gold-light: #FFD700;
+  --color-red-accent: #8B1A1A;
+  --color-iron-grey: #6B6B6B;
+  --color-text-primary: #1A1A1A;
+  --color-text-light: #F5F5F5;
+
+  /* Fonts */
+  --font-display: "MedievalSharp", serif;
+  --font-body: "Merriweather", "Lora", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ===== Base Styles ===== */
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-parchment);
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(232, 213, 168, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(232, 213, 168, 0.3) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4c4a0' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Display headings use MedievalSharp */
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* Stat numbers use monospace */
+.font-stats {
+  font-family: var(--font-mono);
+}
+
+/* ===== Dark Mode - "Nighttime" palette ===== */
+.dark body {
+  background-color: #1a2332;
+  color: #E8D5A8;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(26, 35, 50, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(26, 35, 50, 0.3) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23233044' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.dark .card-wood {
+  background-color: #1e2d40;
+  border-color: #2a3f5a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .card-wood:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dark .bg-parchment-dark {
+  background-color: #152030;
+}
+
+.dark .text-bark-brown {
+  color: #d4c4a0;
+}
+
+.dark .text-bark-brown-light {
+  color: #a89878;
+}
+
+.dark .text-text-primary {
+  color: #E8D5A8;
+}
+
+.dark .text-iron-grey {
+  color: #8899aa;
+}
+
+.dark .border-bark-brown-light {
+  border-color: #2a3f5a;
+}
+
+.dark .border-parchment-dark {
+  border-color: #233044;
+}
+
+.dark input,
+.dark select {
+  background-color: #1e2d40;
+  border-color: #2a3f5a;
+  color: #E8D5A8;
+}
+
+/* ===== Scrollbar Styling ===== */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-parchment-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bark-brown-light);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-bark-brown);
+}
+
+/* ===== Utility Classes ===== */
+.text-shadow {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.card-wood {
+  background-color: color-mix(in srgb, var(--color-parchment) 90%, var(--color-bark-brown-light) 10%);
+  border: 1px solid var(--color-bark-brown-light);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(62, 43, 28, 0.15);
+}
+
+.card-wood:hover {
+  box-shadow: 0 4px 16px rgba(62, 43, 28, 0.25);
+}
+
+/* ===== FullCalendar Theme Override ===== */
+.fc-gnome .fc {
+  --fc-border-color: var(--color-bark-brown-light);
+  --fc-button-bg-color: var(--color-gnome-green);
+  --fc-button-border-color: var(--color-gnome-green);
+  --fc-button-hover-bg-color: var(--color-gnome-green-light);
+  --fc-button-hover-border-color: var(--color-gnome-green-light);
+  --fc-button-active-bg-color: var(--color-bark-brown);
+  --fc-button-active-border-color: var(--color-bark-brown);
+  --fc-today-bg-color: rgba(218, 165, 32, 0.1);
+  --fc-neutral-bg-color: var(--color-parchment);
+  --fc-page-bg-color: var(--color-parchment);
+  --fc-event-border-color: transparent;
+  font-family: var(--font-body);
+}
+
+.fc-gnome .fc .fc-toolbar-title {
+  font-family: var(--font-display);
+  color: var(--color-gnome-green);
+}
+
+.fc-gnome .fc .fc-col-header-cell-cushion,
+.fc-gnome .fc .fc-daygrid-day-number {
+  color: var(--color-bark-brown);
+}
+
+.fc-gnome .fc .fc-button {
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+}
+
+.fc-gnome .fc .fc-event {
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  padding: 2px 4px;
+}
