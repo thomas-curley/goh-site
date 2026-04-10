@@ -1,20 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { createDiscordEvent, postToChannel } from "@/lib/discord";
+import { formatDiscordMessage, formatDiscordEventDescription } from "@/lib/discord-format";
 
-// Placeholder: events will be stored in Supabase once credentials are configured.
-// For now, return empty array / accept creation requests gracefully.
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 export async function GET(request: NextRequest) {
+  const supabase = getServiceClient();
+  if (!supabase) {
+    return NextResponse.json({ events: [], message: "Supabase not configured" });
+  }
+
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get("start");
   const endDate = searchParams.get("end");
 
-  // TODO: Fetch from Supabase with date range filter
-  // const supabase = getSupabaseClient();
-  // let query = supabase.from("events").select("*").order("start_time", { ascending: true });
-  // if (startDate) query = query.gte("start_time", startDate);
-  // if (endDate) query = query.lte("start_time", endDate);
+  let query = supabase.from("events").select("*").order("start_time", { ascending: true });
+  if (startDate) query = query.gte("start_time", startDate);
+  if (endDate) query = query.lte("start_time", endDate);
 
-  return NextResponse.json({ events: [], message: "Supabase not configured yet" });
+  const { data, error } = await query;
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ events: data });
 }
 
 export async function POST(request: NextRequest) {
@@ -29,15 +44,97 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Authenticate user (must be Council/Summoner Hat rank)
-    // TODO: Save to Supabase
-    // TODO: Create Discord Scheduled Event via Discord API
+    const supabase = getServiceClient();
 
-    return NextResponse.json(
-      { message: "Event creation will work once Supabase is configured", event: body },
-      { status: 201 }
-    );
-  } catch {
+    // Build event row
+    const eventRow = {
+      title: body.title,
+      description: body.description || null,
+      event_type: body.event_type || "other",
+      start_time: new Date(body.start_time).toISOString(),
+      end_time: body.end_time ? new Date(body.end_time).toISOString() : null,
+      host_rsn: body.host_rsn || null,
+      world: body.world || null,
+      location: body.location || null,
+      meet_location: body.meet_location || null,
+      spots: body.spots || "Open",
+      signup_type: body.signup_type || null,
+      voice_channel: body.voice_channel || null,
+      requirements: body.requirements || null,
+      requirements_list: body.requirements_list || null,
+      guide_text: body.guide_text || null,
+      video_url: body.video_url || null,
+      prize_pool: body.prize_pool || null,
+    };
+
+    // Post to Discord if requested
+    let discordEventId: string | null = null;
+    let discordMessageId: string | null = null;
+
+    if (body.post_to_discord) {
+      try {
+        // Create Discord Scheduled Event
+        const endTime = eventRow.end_time ?? new Date(new Date(eventRow.start_time).getTime() + 2 * 60 * 60 * 1000).toISOString();
+
+        const discordEvent = await createDiscordEvent({
+          name: eventRow.title,
+          description: formatDiscordEventDescription(eventRow),
+          scheduled_start_time: eventRow.start_time,
+          scheduled_end_time: endTime,
+          entity_type: 3,
+          entity_metadata: {
+            location: [eventRow.location, eventRow.meet_location].filter(Boolean).join(" — Meet: ") || "In-game",
+          },
+          privacy_level: 2,
+        });
+
+        discordEventId = discordEvent.id;
+
+        // Post formatted message to events channel
+        const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID;
+        if (channelId) {
+          const message = formatDiscordMessage(eventRow);
+          const discordMsg = await postToChannel(channelId, message);
+          discordMessageId = discordMsg.id;
+        }
+      } catch (discordError) {
+        console.error("Discord post failed:", discordError);
+        // Continue — still save to Supabase even if Discord fails
+      }
+    }
+
+    // Save to Supabase
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("events")
+        .insert({
+          ...eventRow,
+          discord_event_id: discordEventId,
+          discord_message_id: discordMessageId,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        event: data,
+        discord_posted: body.post_to_discord && (discordEventId || discordMessageId),
+      }, { status: 201 });
+    }
+
+    // No Supabase — return what we have
+    return NextResponse.json({
+      event: eventRow,
+      discord_event_id: discordEventId,
+      discord_message_id: discordMessageId,
+      discord_posted: body.post_to_discord && (discordEventId || discordMessageId),
+      message: "Supabase not configured — event not persisted",
+    }, { status: 201 });
+  } catch (err) {
+    console.error("Event creation error:", err);
     return NextResponse.json(
       { error: "Invalid request body" },
       { status: 400 }

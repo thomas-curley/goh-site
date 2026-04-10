@@ -75,6 +75,24 @@ export async function deleteDiscordEvent(eventId: string) {
   }
 }
 
+/**
+ * Post a message to a Discord channel.
+ */
+export async function postToChannel(channelId: string, content: string) {
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ content }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error: ${res.status} ${error}`);
+  }
+
+  return res.json();
+}
+
 export async function getDiscordEvents() {
   const guildId = process.env.DISCORD_GUILD_ID;
   if (!guildId) throw new Error("DISCORD_GUILD_ID not set");
