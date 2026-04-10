@@ -39,9 +39,15 @@ const GUIDE_CATEGORIES = [
     icon: "pickaxe",
   },
   {
+    title: "RuneLite Plugins",
+    href: "/guides/runelite",
+    description: "Recommended RuneLite plugins by category — essentials, PvM, skilling, QoL, and clan picks with descriptions.",
+    icon: "monitor",
+  },
+  {
     title: "Tools & Links",
     href: "/guides/tools",
-    description: "DPS calculators, RuneLite plugins, collection log trackers, and our own clan tools.",
+    description: "DPS calculators, collection log trackers, and our own clan tools.",
     icon: "wrench",
   },
 ];
@@ -53,6 +59,7 @@ const ICONS: Record<string, string> = {
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   pickaxe: "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z",
   wrench: "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z",
+  monitor: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
 };
 
 export default function GuidesPage() {

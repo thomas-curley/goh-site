@@ -36,15 +36,7 @@ const COMMUNITY_TOOLS = [
   },
 ];
 
-const RECOMMENDED_PLUGINS = [
-  "Quest Helper — step-by-step quest walkthroughs in-game",
-  "Inventory Setups — save and load gear presets",
-  "Bank Tags — organize your bank with custom tags",
-  "Loot Tracker — track drops and GP/hr",
-  "GPU Plugin — smooth rendering and extended draw distance",
-  "Menu Entry Swapper — quality of life menu reordering",
-  "Ground Items — highlight valuable drops",
-];
+// RuneLite plugins now have their own dedicated page at /guides/runelite
 
 export default function ToolsPage() {
   return (
@@ -94,21 +86,19 @@ export default function ToolsPage() {
         </div>
       </section>
 
-      {/* RuneLite Plugins */}
+      {/* RuneLite Plugins Link */}
       <section>
-        <h2 className="font-display text-2xl text-bark-brown mb-4">
-          Recommended RuneLite Plugins
-        </h2>
-        <Card hover={false}>
-          <ul className="space-y-2">
-            {RECOMMENDED_PLUGINS.map((plugin, i) => (
-              <li key={i} className="flex gap-2 text-sm text-bark-brown-light">
-                <span className="text-gnome-green shrink-0">•</span>
-                {plugin}
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <Link href="/guides/runelite">
+          <Card className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-xl text-bark-brown">RuneLite Plugins</h2>
+              <p className="text-sm text-bark-brown-light">
+                Full guide to recommended plugins — essentials, PvM, skilling, QoL, and clan picks.
+              </p>
+            </div>
+            <span className="text-sm text-gnome-green font-semibold shrink-0 ml-4">View Guide &rarr;</span>
+          </Card>
+        </Link>
       </section>
     </div>
   );
