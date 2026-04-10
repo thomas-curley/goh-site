@@ -58,14 +58,16 @@ export function StatsPanel({ skills }: StatsPanelProps) {
           <div
             key={skill}
             className={cn(
-              "card-wood px-3 py-2 flex items-center justify-between gap-2",
-              isTotal && "col-span-3 bg-bark-brown text-text-light"
+              "px-3 py-2 flex items-center justify-between gap-2 rounded-md",
+              isTotal
+                ? "col-span-3 bg-bark-brown border border-bark-brown-light text-text-light"
+                : "card-wood"
             )}
           >
             <span
               className={cn(
                 "text-xs font-body truncate",
-                isTotal ? "text-gold-light font-bold text-sm" : "text-bark-brown-light"
+                isTotal ? "text-parchment font-bold text-sm" : "text-bark-brown-light"
               )}
             >
               {name}
@@ -73,7 +75,7 @@ export function StatsPanel({ skills }: StatsPanelProps) {
             <span
               className={cn(
                 "font-stats font-bold text-sm",
-                isTotal ? "text-gold-light text-lg" : getLevelColor(level)
+                isTotal ? "text-gold text-lg" : getLevelColor(level)
               )}
             >
               {level.toLocaleString()}
