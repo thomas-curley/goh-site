@@ -25,7 +25,9 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const [loading, setLoading] = useState(true);
   const [rsn, setRsn] = useState("");
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [status, setStatus] = useState<{ type: "success" | "error" | "taken"; message: string; takenBy?: string } | null>(null);
+  const [resetReason, setResetReason] = useState("");
+  const [showResetForm, setShowResetForm] = useState(false);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -53,6 +55,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
 
     setSaving(true);
     setStatus(null);
+    setShowResetForm(false);
 
     try {
       // Verify RSN exists on WOM
@@ -70,6 +73,25 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
       }
 
       const womPlayer = await womRes.json();
+
+      // Check if RSN is already linked to someone else
+      const { data: existing } = await supabase
+        .from("user_profiles")
+        .select("id, discord_username")
+        .ilike("rsn", womPlayer.displayName)
+        .neq("id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        setStatus({
+          type: "taken",
+          message: `"${womPlayer.displayName}" is already linked to another Discord account. If this is your RSN, you can request an admin reset below.`,
+          takenBy: existing.discord_username,
+        });
+        setShowResetForm(true);
+        setSaving(false);
+        return;
+      }
 
       // Check if player is in our WOM group (optional — for clan_rank)
       let clanRank: string | null = null;
@@ -103,9 +125,19 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
         .eq("id", userId);
 
       if (error) {
-        setStatus({ type: "error", message: "Failed to save. Try again." });
+        // Catch unique constraint violation
+        if (error.code === "23505") {
+          setStatus({
+            type: "taken",
+            message: `"${womPlayer.displayName}" is already linked to another account. Request an admin reset below.`,
+          });
+          setShowResetForm(true);
+        } else {
+          setStatus({ type: "error", message: "Failed to save. Try again." });
+        }
       } else {
         setStatus({ type: "success", message: `RSN "${womPlayer.displayName}" linked successfully!` });
+        setShowResetForm(false);
         await loadProfile();
       }
     } catch {
@@ -113,6 +145,29 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetReason.trim() || !rsn.trim()) return;
+
+    setSaving(true);
+    const { error } = await supabase
+      .from("rsn_reset_requests")
+      .insert({
+        requester_id: userId,
+        requested_rsn: rsn.trim(),
+        reason: resetReason.trim(),
+      });
+
+    if (error) {
+      setStatus({ type: "error", message: "Failed to submit request. Try again." });
+    } else {
+      setStatus({ type: "success", message: "Reset request submitted! A Council Member will review it." });
+      setShowResetForm(false);
+      setResetReason("");
+    }
+    setSaving(false);
   };
 
   const handleUnlink = async () => {
@@ -130,6 +185,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
 
     setRsn("");
     setStatus({ type: "success", message: "RSN unlinked." });
+    setShowResetForm(false);
     await loadProfile();
     setSaving(false);
   };
@@ -212,7 +268,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
             <p className="text-sm text-bark-brown-light mb-4">
               Link your Old School RuneScape username so our Discord bot can look
               up your stats automatically. Your RSN will be verified against
-              Wise Old Man.
+              Wise Old Man. Each RSN can only be linked to one Discord account.
             </p>
             <form onSubmit={handleLinkRsn} className="flex gap-3">
               <input
@@ -230,10 +286,38 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
           </div>
         )}
 
+        {/* Status messages */}
         {status && (
-          <p className={`text-sm mt-4 ${status.type === "error" ? "text-red-accent" : "text-gnome-green"}`}>
+          <p className={`text-sm mt-4 ${
+            status.type === "error" || status.type === "taken" ? "text-red-accent" : "text-gnome-green"
+          }`}>
             {status.message}
           </p>
+        )}
+
+        {/* Reset request form (shown when RSN is taken) */}
+        {showResetForm && (
+          <div className="mt-4 p-4 border border-gold/30 bg-gold/5 rounded-md">
+            <h3 className="font-display text-base text-bark-brown mb-2">
+              Request RSN Reset
+            </h3>
+            <p className="text-xs text-bark-brown-light mb-3">
+              If this is your RSN, explain below and a Council Member will review your request.
+            </p>
+            <form onSubmit={handleResetRequest} className="space-y-3">
+              <textarea
+                value={resetReason}
+                onChange={(e) => setResetReason(e.target.value)}
+                placeholder="Explain why this RSN belongs to you..."
+                required
+                rows={2}
+                className="w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green resize-y"
+              />
+              <Button type="submit" disabled={saving} size="sm" variant="secondary">
+                {saving ? "Submitting..." : "Submit Reset Request"}
+              </Button>
+            </form>
+          </div>
         )}
       </Card>
 
@@ -247,12 +331,16 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
           </li>
           <li className="flex gap-2">
             <span className="text-gnome-green shrink-0">2.</span>
-            Your RSN is linked to your Discord account in our database.
+            Your RSN is linked to your Discord account. Each RSN can only be linked once.
           </li>
           <li className="flex gap-2">
             <span className="text-gnome-green shrink-0">3.</span>
             Use Discord bot commands like <code className="font-mono text-gnome-green">!stats</code> — the
             bot looks up your RSN automatically.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-gnome-green shrink-0">4.</span>
+            If someone links your RSN by mistake, request an admin reset and a Council Member will review it.
           </li>
         </ul>
       </Card>

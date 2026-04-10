@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 const ADMIN_NAV = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/events", label: "Events" },
+  { href: "/admin/rsn-links", label: "RSN Links" },
   { href: "/admin/guides", label: "Guides" },
 ];
 
