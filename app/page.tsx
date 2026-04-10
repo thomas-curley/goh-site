@@ -46,7 +46,7 @@ async function getAnnouncements() {
 export default async function HomePage() {
   const [groupDetails, achievements, upcomingEvents, announcements] = await Promise.all([
     getGroupDetails(),
-    getGroupAchievements(5),
+    getGroupAchievements(15),
     getUpcomingEvents(),
     getAnnouncements(),
   ]);
