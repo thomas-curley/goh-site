@@ -40,25 +40,25 @@ export function GainsChart({ username }: GainsChartProps) {
 
     try {
       const res = await fetch(
-        `https://api.wiseoldman.net/v2/players/${encodeURIComponent(username)}/snapshots?period=${selectedPeriod}`
+        `https://api.wiseoldman.net/v2/players/${encodeURIComponent(username)}/snapshots/timeline?metric=overall&period=${selectedPeriod}`
       );
 
       if (!res.ok) throw new Error("Failed to fetch gains data");
 
-      const snapshots = await res.json();
+      const timeline = await res.json();
 
-      if (!Array.isArray(snapshots) || snapshots.length === 0) {
+      if (!Array.isArray(timeline) || timeline.length === 0) {
         setData([]);
         return;
       }
 
-      const points: GainDataPoint[] = snapshots
-        .map((s: { createdAt: string; data: { skills: { overall: { experience: number } } } }) => ({
-          date: new Date(s.createdAt).toLocaleDateString("en-US", {
+      const points: GainDataPoint[] = timeline
+        .map((point: { value: number; date: string }) => ({
+          date: new Date(point.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
           }),
-          value: s.data?.skills?.overall?.experience ?? 0,
+          value: point.value,
         }))
         .reverse();
 
