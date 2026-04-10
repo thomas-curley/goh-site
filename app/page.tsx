@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE } from "@/lib/constants";
 import { getGroupDetails, getGroupAchievements } from "@/lib/wom";
+import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
 
 export const revalidate = 3600; // ISR: revalidate every hour
@@ -45,6 +46,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Achievements Ticker */}
+      <AchievementsTicker achievements={achievements as unknown as { playerId: number; name: string; metric: string; threshold: number; createdAt: Date; player?: { displayName: string } }[]} />
 
       {/* Quick Stats */}
       <section className="max-w-7xl mx-auto px-4 py-16">

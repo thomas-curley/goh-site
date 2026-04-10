@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getPlayerDetails } from "@/lib/wom";
 import { StatsPanel } from "@/components/members/StatsPanel";
 import { BossKillsGrid } from "@/components/members/BossKillsGrid";
-import { RankBadge } from "@/components/ui/RankBadge";
+import { GainsChart } from "@/components/members/GainsChart";
 import { Card } from "@/components/ui/Card";
 import { formatNumber, getAccountTypeLabel } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -98,6 +98,11 @@ export default async function MemberProfilePage({ params }: Props) {
           <p className="font-stats text-2xl font-bold text-gold">{formatNumber(Math.round(player.ttm))}</p>
         </Card>
       </div>
+
+      {/* Gains Chart */}
+      <section className="mb-10">
+        <GainsChart username={player.username} />
+      </section>
 
       {/* Skills Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
