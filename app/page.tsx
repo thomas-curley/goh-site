@@ -5,13 +5,32 @@ import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE } from "@/lib/constants";
 import { getGroupDetails, getGroupAchievements } from "@/lib/wom";
 import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
+import { createClient } from "@supabase/supabase-js";
+import { EVENT_TYPES } from "@/lib/constants";
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
+async function getUpcomingEvents() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return [];
+
+  const supabase = createClient(url, key);
+  const { data } = await supabase
+    .from("events")
+    .select("id, title, event_type, start_time, host_rsn, world, location, meet_location")
+    .gte("start_time", new Date().toISOString())
+    .order("start_time", { ascending: true })
+    .limit(3);
+
+  return data ?? [];
+}
+
 export default async function HomePage() {
-  const [groupDetails, achievements] = await Promise.all([
+  const [groupDetails, achievements, upcomingEvents] = await Promise.all([
     getGroupDetails(),
     getGroupAchievements(5),
+    getUpcomingEvents(),
   ]);
 
   const memberCount = groupDetails?.memberships?.length ?? 0;
@@ -83,24 +102,50 @@ export default async function HomePage() {
           <h2 className="font-display text-3xl text-gnome-green text-center mb-10">
             Upcoming Events
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gnome-green-light" />
-                <div className="pl-4">
-                  <p className="text-xs text-iron-grey uppercase tracking-wide mb-1">
-                    Coming Soon
-                  </p>
-                  <h3 className="font-display text-lg text-bark-brown mb-2">
-                    Event Placeholder
-                  </h3>
-                  <p className="text-sm text-iron-grey">
-                    Events will appear here once the calendar is set up.
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
+          {upcomingEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {upcomingEvents.map((event) => {
+                const eventType = EVENT_TYPES.find((t) => t.key === event.event_type);
+                const startDate = new Date(event.start_time);
+                return (
+                  <Card key={event.id} className="relative overflow-hidden">
+                    <div
+                      className="absolute left-0 top-0 bottom-0 w-1"
+                      style={{ backgroundColor: eventType?.color ?? "#6B6B6B" }}
+                    />
+                    <div className="pl-4">
+                      <p className="text-xs text-iron-grey uppercase tracking-wide mb-1">
+                        {startDate.toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {" · "}
+                        {startDate.toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      <h3 className="font-display text-lg text-bark-brown mb-1">
+                        {event.title}
+                      </h3>
+                      <div className="text-sm text-iron-grey space-y-0.5">
+                        {event.host_rsn && (
+                          <p>Host: <span className="font-mono">{event.host_rsn}</span></p>
+                        )}
+                        {event.world && <p>World {event.world}</p>}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center text-iron-grey py-8">
+              <p className="font-display text-xl mb-2">No upcoming events</p>
+              <p className="text-sm">Check our Discord for the latest event announcements.</p>
+            </div>
+          )}
           <div className="text-center mt-8">
             <Link href="/events">
               <Button variant="ghost">View All Events</Button>

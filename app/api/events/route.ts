@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createDiscordEvent, postToChannel } from "@/lib/discord";
+import { createDiscordEvent, postToChannel, createSignupThread } from "@/lib/discord";
 import { formatDiscordMessage, formatDiscordEventDescription } from "@/lib/discord-format";
 
 function getServiceClient() {
@@ -103,6 +103,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Create sign-up thread if requested
+    let signupThreadId: string | null = null;
+    if (body.create_signup_thread) {
+      try {
+        const signupsChannelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID;
+        if (signupsChannelId) {
+          const startDate = new Date(eventRow.start_time);
+          const dateStr = startDate.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          });
+          const threadMessage = [
+            `📋 **Sign-ups: ${eventRow.title}**`,
+            "",
+            `📅 ${dateStr}`,
+            eventRow.host_rsn ? `🤠 Host: ${eventRow.host_rsn}` : null,
+            eventRow.spots && eventRow.spots !== "Open" ? `👥 Spots: ${eventRow.spots}` : null,
+            "",
+            "React with ✅ to sign up, or reply with your RSN and role!",
+          ].filter((l) => l !== null).join("\n");
+
+          const { threadId } = await createSignupThread(
+            signupsChannelId,
+            eventRow.title,
+            threadMessage
+          );
+          signupThreadId = threadId;
+        }
+      } catch (threadError) {
+        console.error("Signup thread creation failed:", threadError);
+      }
+    }
+
     // Save to Supabase
     if (supabase) {
       const { data, error } = await supabase
@@ -122,6 +156,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         event: data,
         discord_posted: body.post_to_discord && (discordEventId || discordMessageId),
+        signup_thread_created: !!signupThreadId,
+        signup_thread_id: signupThreadId,
       }, { status: 201 });
     }
 
@@ -131,6 +167,8 @@ export async function POST(request: NextRequest) {
       discord_event_id: discordEventId,
       discord_message_id: discordMessageId,
       discord_posted: body.post_to_discord && (discordEventId || discordMessageId),
+      signup_thread_created: !!signupThreadId,
+      signup_thread_id: signupThreadId,
       message: "Supabase not configured — event not persisted",
     }, { status: 201 });
   } catch (err) {

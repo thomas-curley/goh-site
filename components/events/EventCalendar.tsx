@@ -17,6 +17,14 @@ interface CalendarEvent {
     hostRsn?: string;
     world?: number;
     description?: string;
+    location?: string;
+    meetLocation?: string;
+    spots?: string;
+    signupType?: string;
+    voiceChannel?: string;
+    prizePool?: string;
+    requirements?: string;
+    requirementsList?: string;
   };
 }
 
@@ -109,9 +117,51 @@ export function EventCalendar({ events }: EventCalendarProps) {
                   {selectedEvent.extendedProps.world}
                 </p>
               )}
+              {selectedEvent.extendedProps?.location && (
+                <p>
+                  <span className="text-iron-grey">Location: </span>
+                  {selectedEvent.extendedProps.location}
+                </p>
+              )}
+              {selectedEvent.extendedProps?.meetLocation && (
+                <p>
+                  <span className="text-iron-grey">Meet: </span>
+                  {selectedEvent.extendedProps.meetLocation}
+                </p>
+              )}
+              {selectedEvent.extendedProps?.spots && (
+                <p>
+                  <span className="text-iron-grey">Spots: </span>
+                  {selectedEvent.extendedProps.spots}
+                </p>
+              )}
+              {selectedEvent.extendedProps?.signupType && (
+                <p>
+                  <span className="text-iron-grey">Signup: </span>
+                  {selectedEvent.extendedProps.signupType}
+                </p>
+              )}
+              {selectedEvent.extendedProps?.voiceChannel && (
+                <p>
+                  <span className="text-iron-grey">Voice: </span>
+                  {selectedEvent.extendedProps.voiceChannel}
+                </p>
+              )}
+              {selectedEvent.extendedProps?.prizePool && (
+                <p>
+                  <span className="text-iron-grey">Prize Pool: </span>
+                  {selectedEvent.extendedProps.prizePool}
+                </p>
+              )}
               {selectedEvent.extendedProps?.description && (
                 <p className="text-bark-brown-light mt-3">
                   {selectedEvent.extendedProps.description}
+                </p>
+              )}
+              {selectedEvent.extendedProps?.requirements && (
+                <p className="text-bark-brown-light mt-2">
+                  <span className="text-iron-grey">Requirements: </span>
+                  {selectedEvent.extendedProps.requirements}
                 </p>
               )}
             </div>

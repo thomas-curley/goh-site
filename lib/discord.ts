@@ -93,6 +93,37 @@ export async function postToChannel(channelId: string, content: string) {
   return res.json();
 }
 
+/**
+ * Create a thread in a channel (for sign-ups).
+ * Posts an initial message then creates a public thread from it.
+ */
+export async function createSignupThread(
+  channelId: string,
+  eventTitle: string,
+  initialMessage: string
+): Promise<{ threadId: string; messageId: string }> {
+  // Post the initial message
+  const msg = await postToChannel(channelId, initialMessage);
+
+  // Create a public thread from that message
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages/${msg.id}/threads`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      name: `Sign-ups: ${eventTitle}`.slice(0, 100),
+      auto_archive_duration: 10080, // 7 days
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error creating thread: ${res.status} ${error}`);
+  }
+
+  const thread = await res.json();
+  return { threadId: thread.id, messageId: msg.id };
+}
+
 export async function getDiscordEvents() {
   const guildId = process.env.DISCORD_GUILD_ID;
   if (!guildId) throw new Error("DISCORD_GUILD_ID not set");

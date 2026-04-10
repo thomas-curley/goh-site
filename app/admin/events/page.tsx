@@ -24,6 +24,7 @@ interface EventForm {
   video_url: string;
   prize_pool: string;
   post_to_discord: boolean;
+  create_signup_thread: boolean;
 }
 
 const EMPTY_FORM: EventForm = {
@@ -45,6 +46,7 @@ const EMPTY_FORM: EventForm = {
   video_url: "",
   prize_pool: "",
   post_to_discord: true,
+  create_signup_thread: false,
 };
 
 const SIGNUP_TYPES = [
@@ -87,9 +89,12 @@ export default function AdminEventsPage() {
         const discordNote = form.post_to_discord
           ? " and posted to Discord"
           : "";
+        const threadNote = data.signup_thread_created
+          ? " + sign-up thread created"
+          : "";
         setStatus({
           type: "success",
-          message: `Event "${form.title}" created${discordNote}!`,
+          message: `Event "${form.title}" created${discordNote}${threadNote}!`,
         });
         setForm(EMPTY_FORM);
       } else {
@@ -250,6 +255,31 @@ export default function AdminEventsPage() {
                   Creates a Discord Scheduled Event and posts the formatted event
                   message to the events channel. Uncheck if the event already
                   exists in Discord.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 mb-6">
+              <button
+                type="button"
+                onClick={() => update("create_signup_thread", !form.create_signup_thread)}
+                className={`mt-0.5 w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
+                  form.create_signup_thread
+                    ? "bg-gnome-green border-gnome-green"
+                    : "border-bark-brown-light hover:border-gnome-green"
+                }`}
+              >
+                {form.create_signup_thread && (
+                  <svg className="w-4 h-4 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <div>
+                <p className="font-semibold text-bark-brown">Create Sign-up Thread</p>
+                <p className="text-xs text-bark-brown-light">
+                  Creates a thread in #event-signups where members can react or
+                  reply to sign up for this event.
                 </p>
               </div>
             </div>
