@@ -75,8 +75,7 @@ export default function AboutPage() {
                 <div>
                   <p className="font-bold text-bark-brown">{rank.name}</p>
                   <p className="text-sm text-bark-brown-light">
-                    {rank.key === "council" && "Clan leadership. Manages events, guides, and clan operations."}
-                    {rank.key === "summoner_hat" && "Senior leadership with full administrative access."}
+                    {rank.key === "council_member" && "Clan leadership — Owner and Summoner ranks in WOM. Manages events, guides, and clan operations with full admin access."}
                     {rank.key === "yew" && "Experienced and trusted members who contribute actively to the clan."}
                     {rank.key === "pine" && "Established members who participate regularly in events and activities."}
                     {rank.key === "oak" && "Members who have been around a while and proven themselves."}

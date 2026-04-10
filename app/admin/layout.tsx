@@ -15,7 +15,8 @@ const ADMIN_NAV = [
 ];
 
 // Ranks that can access the admin panel
-const ADMIN_RANKS = ["council", "summoner_hat", "summoner hat", "owner", "leader", "administrator"];
+// WOM roles that grant admin access — these all display as "Council Member"
+const ADMIN_RANKS = ["council_member", "council", "summoner", "summoner_hat", "owner", "leader", "administrator"];
 
 export default async function AdminLayout({
   children,

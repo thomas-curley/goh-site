@@ -10,15 +10,24 @@ export const RANKS = [
   { name: "Oak", order: 1, color: "bg-amber-700 text-amber-100", key: "oak" },
   { name: "Pine", order: 2, color: "bg-green-700 text-green-100", key: "pine" },
   { name: "Yew", order: 3, color: "bg-green-900 text-green-100", key: "yew" },
-  { name: "Summoner Hat", order: 4, color: "bg-yellow-500 text-yellow-900", key: "summoner_hat" },
-  { name: "Council", order: 5, color: "bg-yellow-500 text-yellow-900", key: "council" },
+  { name: "Council Member", order: 4, color: "bg-yellow-500 text-yellow-900", key: "council_member" },
 ] as const;
 
 export type RankName = (typeof RANKS)[number]["name"];
 
+// WOM roles that map to "Council Member" (highest rank)
+const COUNCIL_ALIASES = ["owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
+
 export function getRankByName(name: string) {
+  const normalized = name.toLowerCase().replace(/ /g, "_");
+
+  // Map WOM owner/summoner/council to Council Member
+  if (COUNCIL_ALIASES.includes(normalized)) {
+    return RANKS.find((r) => r.key === "council_member");
+  }
+
   return RANKS.find(
-    (r) => r.name.toLowerCase() === name.toLowerCase() || r.key === name.toLowerCase().replace(/ /g, "_")
+    (r) => r.name.toLowerCase() === name.toLowerCase() || r.key === normalized
   );
 }
 
