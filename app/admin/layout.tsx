@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkPermission } from "@/lib/check-permission";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,91 +9,104 @@ export const metadata: Metadata = {
 };
 
 const ADMIN_NAV = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/events", label: "Events" },
-  { href: "/admin/rsn-links", label: "RSN Links" },
-  { href: "/admin/guides", label: "Guides" },
+  { href: "/admin", label: "Dashboard", permission: "view_admin" as const },
+  { href: "/admin/events", label: "Events", permission: "manage_events" as const },
+  { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links" as const },
+  { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions" as const },
+  { href: "/admin/guides", label: "Guides", permission: "manage_guides" as const },
 ];
-
-// Ranks that can access the admin panel
-// WOM roles that grant admin access — these all display as "Council Member"
-const ADMIN_RANKS = ["council_member", "council", "summoner", "summoner_hat", "owner", "leader", "administrator"];
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let isAuthorized = false;
-  let userName = "";
-  let supabaseConfigured = true;
+  const { allowed, user } = await checkPermission("view_admin");
 
-  try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  if (!user && allowed) {
+    // Supabase not configured — dev mode
+    return (
+      <div className="min-h-[80vh]">
+        <div className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
+          Admin panel — Supabase not configured. Auth enforcement disabled for development.
+        </div>
+        <AdminShell navItems={ADMIN_NAV}>{children}</AdminShell>
+      </div>
+    );
+  }
 
-    if (!user) {
-      redirect("/login?redirect=/admin");
-    }
+  if (!user) {
+    redirect("/login?redirect=/admin");
+  }
 
-    // Check if user has admin rank
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("discord_username, clan_rank")
-      .eq("id", user.id)
-      .single();
+  if (!allowed) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">
+        <h1 className="font-display text-4xl text-gold mb-4">Access Denied</h1>
+        <p className="text-bark-brown-light mb-2">
+          You don&apos;t have permission to access the admin panel.
+        </p>
+        <p className="text-sm text-iron-grey">
+          {user.clan_rank
+            ? `Your rank (${user.clan_rank}) doesn't have "View Admin Panel" permission.`
+            : "Link your RSN on the Account page to get your clan rank detected."}
+        </p>
+        <Link href="/account" className="mt-6 text-gnome-green hover:text-gnome-green-light underline">
+          Go to Account Page
+        </Link>
+      </div>
+    );
+  }
 
-    userName = profile?.discord_username ?? "Unknown";
-
-    if (profile?.clan_rank && ADMIN_RANKS.includes(profile.clan_rank.toLowerCase())) {
-      isAuthorized = true;
-    } else {
-      // For development: allow access but show warning
-      // In production, you could redirect with: redirect("/account");
-      isAuthorized = true; // Remove this line to enforce rank check
-    }
-  } catch {
-    // Supabase not configured — allow access for development
-    supabaseConfigured = false;
-    isAuthorized = true;
+  // Filter nav to only show items the user has permission for
+  const visibleNav = [];
+  for (const item of ADMIN_NAV) {
+    const { allowed: itemAllowed } = await checkPermission(item.permission);
+    if (itemAllowed) visibleNav.push(item);
   }
 
   return (
     <div className="min-h-[80vh]">
-      {/* Status Banner */}
-      {!supabaseConfigured ? (
-        <div className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
-          Admin panel — Supabase not configured. Auth enforcement disabled for development.
-        </div>
-      ) : (
-        <div className="bg-gnome-green/10 border-b border-gnome-green/30 px-4 py-2 text-center text-sm text-gnome-green">
-          Logged in as <span className="font-semibold">{userName}</span>
-        </div>
-      )}
+      <div className="bg-gnome-green/10 border-b border-gnome-green/30 px-4 py-2 text-center text-sm text-gnome-green">
+        Logged in as <span className="font-semibold">{user.discord_username}</span>
+        {user.clan_rank && (
+          <span className="text-iron-grey ml-2">
+            ({user.clan_rank.replace(/_/g, " ")})
+          </span>
+        )}
+      </div>
+      <AdminShell navItems={visibleNav}>{children}</AdminShell>
+    </div>
+  );
+}
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar */}
-          <aside className="md:w-56 shrink-0">
-            <h2 className="font-display text-xl text-gnome-green mb-4">
-              Admin Panel
-            </h2>
-            <nav className="space-y-1">
-              {ADMIN_NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block px-3 py-2 rounded-md text-sm text-bark-brown hover:bg-parchment-dark hover:text-gnome-green transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
-
-          {/* Content */}
-          <main className="flex-1 min-w-0">{children}</main>
-        </div>
+function AdminShell({
+  children,
+  navItems,
+}: {
+  children: React.ReactNode;
+  navItems: { href: string; label: string }[];
+}) {
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="flex flex-col md:flex-row gap-8">
+        <aside className="md:w-56 shrink-0">
+          <h2 className="font-display text-xl text-gnome-green mb-4">
+            Admin Panel
+          </h2>
+          <nav className="space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block px-3 py-2 rounded-md text-sm text-bark-brown hover:bg-parchment-dark hover:text-gnome-green transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </aside>
+        <main className="flex-1 min-w-0">{children}</main>
       </div>
     </div>
   );
