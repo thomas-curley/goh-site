@@ -43,7 +43,7 @@ export default async function AdminLayout({
   if (!allowed) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">
-        <h1 className="font-display text-4xl text-gold mb-4">Access Denied</h1>
+        <h1 className="font-display text-4xl text-gold-display mb-4">Access Denied</h1>
         <p className="text-bark-brown-light mb-2">
           You don&apos;t have permission to access the admin panel.
         </p>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BannerGenerator } from "@/components/admin/BannerGenerator";
 
 interface Announcement {
   id: string;
@@ -12,6 +13,7 @@ interface Announcement {
   category: string;
   pinned: boolean;
   published: boolean;
+  banner_url: string | null;
   author_name: string | null;
   created_at: string;
 }
@@ -34,6 +36,7 @@ export default function AdminAnnouncementsPage() {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("announcement");
   const [pinned, setPinned] = useState(false);
+  const [bannerUrl, setBannerUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -64,7 +67,7 @@ export default function AdminAnnouncementsPage() {
     if (editingId) {
       await supabase
         .from("announcements")
-        .update({ title, content, category, pinned, updated_at: new Date().toISOString() })
+        .update({ title, content, category, pinned, banner_url: bannerUrl || null, updated_at: new Date().toISOString() })
         .eq("id", editingId);
       setStatus("Announcement updated!");
     } else {
@@ -72,6 +75,7 @@ export default function AdminAnnouncementsPage() {
         .from("announcements")
         .insert({
           title, content, category, pinned,
+          banner_url: bannerUrl || null,
           author_id: user?.id,
           author_name: user?.user_metadata?.full_name ?? "Admin",
         });
@@ -82,6 +86,7 @@ export default function AdminAnnouncementsPage() {
     setContent("");
     setCategory("announcement");
     setPinned(false);
+    setBannerUrl("");
     setEditingId(null);
     setSaving(false);
     await load();
@@ -93,6 +98,7 @@ export default function AdminAnnouncementsPage() {
     setContent(a.content);
     setCategory(a.category);
     setPinned(a.pinned);
+    setBannerUrl(a.banner_url ?? "");
     window.scrollTo(0, 0);
   };
 
@@ -163,6 +169,15 @@ export default function AdminAnnouncementsPage() {
               </button>
             </div>
           </div>
+          {/* Banner Generator */}
+          <BannerGenerator
+            title={title}
+            description={content}
+            type="announcement"
+            currentBanner={bannerUrl || null}
+            onBannerGenerated={(url) => setBannerUrl(url)}
+          />
+
           <div className="flex gap-3">
             <Button type="submit" disabled={saving}>
               {saving ? "Saving..." : editingId ? "Update" : "Publish"}
@@ -171,7 +186,7 @@ export default function AdminAnnouncementsPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => { setEditingId(null); setTitle(""); setContent(""); setCategory("announcement"); setPinned(false); }}
+                onClick={() => { setEditingId(null); setTitle(""); setContent(""); setCategory("announcement"); setPinned(false); setBannerUrl(""); }}
               >
                 Cancel
               </Button>

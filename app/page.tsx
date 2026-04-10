@@ -94,19 +94,19 @@ export default async function HomePage() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Card className="text-center">
-            <p className="font-stats text-4xl text-gold font-bold">
+            <p className="font-stats text-4xl text-gold-display font-bold">
               {memberCount > 0 ? memberCount : "--"}
             </p>
             <p className="text-bark-brown mt-1">Total Members</p>
           </Card>
           <Card className="text-center">
-            <p className="font-stats text-4xl text-gold font-bold">
+            <p className="font-stats text-4xl text-gold-display font-bold">
               {totalExp > 0 ? formatNumber(totalExp) : "--"}
             </p>
             <p className="text-bark-brown mt-1">Combined Total XP</p>
           </Card>
           <Card className="text-center">
-            <p className="font-stats text-4xl text-gold font-bold">
+            <p className="font-stats text-4xl text-gold-display font-bold">
               {recentAchievementCount > 0 ? `${recentAchievementCount}+` : "--"}
             </p>
             <p className="text-bark-brown mt-1">Recent Achievements</p>

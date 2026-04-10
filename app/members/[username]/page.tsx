@@ -83,19 +83,19 @@ export default async function MemberProfilePage({ params }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
         <Card className="text-center" hover={false}>
           <p className="text-xs text-iron-grey uppercase tracking-wide">Total XP</p>
-          <p className="font-stats text-2xl font-bold text-gold">{formatNumber(player.exp)}</p>
+          <p className="font-stats text-2xl font-bold text-gold-display">{formatNumber(player.exp)}</p>
         </Card>
         <Card className="text-center" hover={false}>
           <p className="text-xs text-iron-grey uppercase tracking-wide">EHP</p>
-          <p className="font-stats text-2xl font-bold text-gold">{formatNumber(Math.round(player.ehp))}</p>
+          <p className="font-stats text-2xl font-bold text-gold-display">{formatNumber(Math.round(player.ehp))}</p>
         </Card>
         <Card className="text-center" hover={false}>
           <p className="text-xs text-iron-grey uppercase tracking-wide">EHB</p>
-          <p className="font-stats text-2xl font-bold text-gold">{formatNumber(Math.round(player.ehb))}</p>
+          <p className="font-stats text-2xl font-bold text-gold-display">{formatNumber(Math.round(player.ehb))}</p>
         </Card>
         <Card className="text-center" hover={false}>
           <p className="text-xs text-iron-grey uppercase tracking-wide">TTM</p>
-          <p className="font-stats text-2xl font-bold text-gold">{formatNumber(Math.round(player.ttm))}</p>
+          <p className="font-stats text-2xl font-bold text-gold-display">{formatNumber(Math.round(player.ttm))}</p>
         </Card>
       </div>
 

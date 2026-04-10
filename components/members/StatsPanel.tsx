@@ -40,7 +40,7 @@ const SKILL_DISPLAY_NAMES: Record<string, string> = {
 };
 
 function getLevelColor(level: number): string {
-  if (level >= 99) return "text-gold";
+  if (level >= 99) return "text-gold-display";
   if (level >= 50) return "text-gnome-green";
   return "text-text-primary";
 }
@@ -75,7 +75,7 @@ export function StatsPanel({ skills }: StatsPanelProps) {
             <span
               className={cn(
                 "font-stats font-bold text-sm",
-                isTotal ? "text-gold text-lg" : getLevelColor(level)
+                isTotal ? "text-gold-display text-lg" : getLevelColor(level)
               )}
             >
               {level.toLocaleString()}

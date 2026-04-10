@@ -94,7 +94,7 @@ export default function AboutPage() {
         <Card hover={false}>
           <ol className="space-y-4 text-bark-brown-light">
             <li className="flex gap-3">
-              <span className="font-stats font-bold text-gold text-lg">1.</span>
+              <span className="font-stats font-bold text-gold-display text-lg">1.</span>
               <div>
                 <p className="font-bold text-bark-brown">Join the Clan Chat</p>
                 <p className="text-sm">
@@ -104,7 +104,7 @@ export default function AboutPage() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="font-stats font-bold text-gold text-lg">2.</span>
+              <span className="font-stats font-bold text-gold-display text-lg">2.</span>
               <div>
                 <p className="font-bold text-bark-brown">Join the Discord</p>
                 <p className="text-sm">
@@ -113,7 +113,7 @@ export default function AboutPage() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="font-stats font-bold text-gold text-lg">3.</span>
+              <span className="font-stats font-bold text-gold-display text-lg">3.</span>
               <div>
                 <p className="font-bold text-bark-brown">Say Hello!</p>
                 <p className="text-sm">

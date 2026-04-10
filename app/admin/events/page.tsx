@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EVENT_TYPES } from "@/lib/constants";
+import { BannerGenerator } from "@/components/admin/BannerGenerator";
 
 interface EventForm {
   title: string;
@@ -23,6 +24,7 @@ interface EventForm {
   guide_text: string;
   video_url: string;
   prize_pool: string;
+  banner_url: string;
   post_to_discord: boolean;
   create_signup_thread: boolean;
 }
@@ -45,6 +47,7 @@ const EMPTY_FORM: EventForm = {
   guide_text: "",
   video_url: "",
   prize_pool: "",
+  banner_url: "",
   post_to_discord: true,
   create_signup_thread: false,
 };
@@ -230,6 +233,16 @@ export default function AdminEventsPage() {
               </div>
             </div>
           </Card>
+
+          {/* Banner Generator */}
+          <BannerGenerator
+            title={form.title}
+            description={form.description}
+            eventType={form.event_type}
+            type="event"
+            currentBanner={form.banner_url || null}
+            onBannerGenerated={(url) => update("banner_url", url)}
+          />
 
           {/* Discord + Submit */}
           <Card hover={false}>

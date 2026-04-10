@@ -32,7 +32,7 @@ export function AchievementsTicker({ achievements }: AchievementsTickerProps) {
       <div className="flex animate-[scroll_30s_linear_infinite] gap-8 py-3 px-4 whitespace-nowrap">
         {[...achievements, ...achievements].map((a, i) => (
           <span key={`${a.playerId}-${a.name}-${i}`} className="text-sm text-bark-brown-light inline-flex items-center gap-2">
-            <span className="text-gold">★</span>
+            <span className="text-gold-display">★</span>
             <span className="font-mono font-bold text-gnome-green">
               {a.player?.displayName ?? "Unknown"}
             </span>
