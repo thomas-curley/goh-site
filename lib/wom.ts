@@ -71,6 +71,15 @@ export async function getGroupAchievements(limit: number = 20) {
   }
 }
 
+export async function getGroupHiscores(metric: string, limit: number = 10) {
+  try {
+    return await womClient.groups.getGroupHiscores(WOM_GROUP_ID, metric as never, { limit });
+  } catch (error) {
+    console.error(`Failed to fetch group hiscores for ${metric}:`, error);
+    return [];
+  }
+}
+
 export async function getGroupCompetitions() {
   try {
     return await womClient.groups.getGroupCompetitions(WOM_GROUP_ID);

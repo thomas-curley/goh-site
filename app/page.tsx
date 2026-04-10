@@ -26,11 +26,29 @@ async function getUpcomingEvents() {
   return data ?? [];
 }
 
+async function getAnnouncements() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return [];
+
+  const supabase = createClient(url, key);
+  const { data } = await supabase
+    .from("announcements")
+    .select("id, title, content, category, pinned, author_name, created_at")
+    .eq("published", true)
+    .order("pinned", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  return data ?? [];
+}
+
 export default async function HomePage() {
-  const [groupDetails, achievements, upcomingEvents] = await Promise.all([
+  const [groupDetails, achievements, upcomingEvents, announcements] = await Promise.all([
     getGroupDetails(),
     getGroupAchievements(5),
     getUpcomingEvents(),
+    getAnnouncements(),
   ]);
 
   const memberCount = groupDetails?.memberships?.length ?? 0;
@@ -182,23 +200,49 @@ export default async function HomePage() {
         </Card>
       </section>
 
-      {/* Recent News */}
+      {/* Latest News */}
       <section className="bg-parchment-dark py-16">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="font-display text-3xl text-gnome-green text-center mb-10">
             Latest News
           </h2>
           <div className="max-w-2xl mx-auto space-y-4">
-            <Card>
-              <p className="text-xs text-iron-grey mb-1">Announcement</p>
-              <h3 className="font-display text-lg text-bark-brown">
-                Welcome to the New Gn0me Home Website!
-              </h3>
-              <p className="text-sm text-bark-brown-light mt-2">
-                We&apos;re building a new home for our clan on the web. Stay
-                tuned for guides, event calendars, member profiles, and more.
-              </p>
-            </Card>
+            {announcements.length > 0 ? (
+              announcements.map((a) => (
+                <Card key={a.id}>
+                  <div className="flex items-center gap-2 mb-1">
+                    {a.pinned && <span className="text-xs">📌</span>}
+                    <p className="text-xs text-iron-grey uppercase tracking-wide">
+                      {a.category.replace(/_/g, " ")}
+                    </p>
+                    <span className="text-xs text-iron-grey">·</span>
+                    <p className="text-xs text-iron-grey">
+                      {new Date(a.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <h3 className="font-display text-lg text-bark-brown">
+                    {a.title}
+                  </h3>
+                  <p className="text-sm text-bark-brown-light mt-2 line-clamp-3">
+                    {a.content}
+                  </p>
+                  {a.author_name && (
+                    <p className="text-xs text-iron-grey mt-2">— {a.author_name}</p>
+                  )}
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <p className="text-xs text-iron-grey mb-1">Announcement</p>
+                <h3 className="font-display text-lg text-bark-brown">
+                  Welcome to the Gn0me Home Website!
+                </h3>
+                <p className="text-sm text-bark-brown-light mt-2">
+                  Your home for guides, event calendars, member profiles,
+                  and more. Check back for news and updates.
+                </p>
+              </Card>
+            )}
           </div>
         </div>
       </section>

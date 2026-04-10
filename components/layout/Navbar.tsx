@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: "/events", label: "Events" },
   { href: "/guides", label: "Guides" },
   { href: "/members", label: "Members" },
-  { href: "/competitions", label: "Competitions" },
+  { href: "/hiscores", label: "Hiscores" },
   { href: "/about", label: "About" },
 ];
 
