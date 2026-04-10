@@ -85,6 +85,14 @@ h1, h2, h3 {
   color: #8899aa;
 }
 
+.dark .text-gnome-green {
+  color: #6BBF3B;
+}
+
+.dark .text-gnome-green-light {
+  color: #8CD660;
+}
+
 .dark .border-bark-brown-light {
   border-color: #2a3f5a;
 }
