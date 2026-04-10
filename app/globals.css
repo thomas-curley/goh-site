@@ -87,6 +87,23 @@ h1, h2, h3 {
   color: #E8D5A8;
 }
 
+/* Tailwind v4 @theme inline bakes colors at compile time.
+   These overrides ensure dark mode text is readable. */
+.dark .text-bark-brown { color: #d4c4a0 !important; }
+.dark .text-bark-brown-light { color: #c4b48e !important; }
+.dark .text-iron-grey { color: #9fb0c2 !important; }
+.dark .text-gnome-green { color: #6BBF3B !important; }
+.dark .text-gnome-green-light { color: #8CD660 !important; }
+.dark .text-gold { color: #DAA520 !important; }
+.dark .text-gold-display { color: #DAA520 !important; }
+.dark .text-text-primary { color: #E8D5A8 !important; }
+.dark .text-parchment { color: #F5E6C8 !important; }
+.dark .text-parchment-dark { color: #a89878 !important; }
+.dark .text-red-accent { color: #E85555 !important; }
+.dark .bg-parchment-dark { background-color: #152030 !important; }
+.dark .border-bark-brown-light { border-color: #2a3f5a !important; }
+.dark .border-parchment-dark { border-color: #233044 !important; }
+
 /* ===== Ticker Animation ===== */
 @keyframes scroll {
   from { transform: translateX(0); }
