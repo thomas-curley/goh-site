@@ -76,6 +76,22 @@ export async function deleteDiscordEvent(eventId: string) {
 }
 
 /**
+ * Fetch recent messages from a Discord channel.
+ */
+export async function getChannelMessages(channelId: string, limit: number = 50) {
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages?limit=${limit}`, {
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error: ${res.status} ${error}`);
+  }
+
+  return res.json();
+}
+
+/**
  * Post a message to a Discord channel.
  */
 export async function postToChannel(channelId: string, content: string) {

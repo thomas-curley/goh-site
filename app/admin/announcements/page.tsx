@@ -128,6 +128,38 @@ export default function AdminAnnouncementsPage() {
     <div>
       <h1 className="font-display text-3xl text-gnome-green mb-6">Announcements</h1>
 
+      {/* Import from Discord */}
+      <Card hover={false} className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="font-display text-base text-bark-brown">Import from Discord</h3>
+          <p className="text-xs text-bark-brown-light">
+            Pull recent announcements from the #announcements channel that aren&apos;t already on the site.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={saving}
+          onClick={async () => {
+            setSaving(true);
+            setStatus(null);
+            try {
+              const res = await fetch("/api/announcements/import-discord", { method: "POST" });
+              const data = await res.json();
+              setStatus(data.message ?? data.error ?? "Done");
+              await load();
+            } catch {
+              setStatus("Failed to import from Discord.");
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          {saving ? "Importing..." : "Import from Discord"}
+        </Button>
+      </Card>
+
       {status && (
         <div className="mb-4 p-3 rounded-md bg-gnome-green/10 border border-gnome-green/30 text-sm text-gnome-green">
           {status}
