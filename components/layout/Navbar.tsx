@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CLAN_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -41,6 +42,7 @@ export function Navbar() {
               </Link>
             ))}
             <ThemeToggle />
+            <UserMenu />
           </div>
 
           {/* Mobile hamburger */}

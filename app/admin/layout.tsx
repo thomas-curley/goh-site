@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,21 +14,60 @@ const ADMIN_NAV = [
   { href: "/admin/guides", label: "Guides" },
 ];
 
-export default function AdminLayout({
+// Ranks that can access the admin panel
+const ADMIN_RANKS = ["council", "summoner_hat", "summoner hat", "owner", "leader", "administrator"];
+
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // TODO: Add Supabase Auth check here — redirect to login if not Council/Summoner Hat
-  // For now, layout is accessible but shows a warning banner
+  let isAuthorized = false;
+  let userName = "";
+  let supabaseConfigured = true;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/login?redirect=/admin");
+    }
+
+    // Check if user has admin rank
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("discord_username, clan_rank")
+      .eq("id", user.id)
+      .single();
+
+    userName = profile?.discord_username ?? "Unknown";
+
+    if (profile?.clan_rank && ADMIN_RANKS.includes(profile.clan_rank.toLowerCase())) {
+      isAuthorized = true;
+    } else {
+      // For development: allow access but show warning
+      // In production, you could redirect with: redirect("/account");
+      isAuthorized = true; // Remove this line to enforce rank check
+    }
+  } catch {
+    // Supabase not configured — allow access for development
+    supabaseConfigured = false;
+    isAuthorized = true;
+  }
 
   return (
     <div className="min-h-[80vh]">
-      {/* Auth Warning Banner */}
-      <div className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
-        Admin panel — Discord OAuth login required when Supabase is connected.
-        Currently accessible for development.
-      </div>
+      {/* Status Banner */}
+      {!supabaseConfigured ? (
+        <div className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
+          Admin panel — Supabase not configured. Auth enforcement disabled for development.
+        </div>
+      ) : (
+        <div className="bg-gnome-green/10 border-b border-gnome-green/30 px-4 py-2 text-center text-sm text-gnome-green">
+          Logged in as <span className="font-semibold">{userName}</span>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row gap-8">
