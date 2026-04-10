@@ -46,6 +46,16 @@ h1, h2, h3 {
 }
 
 /* ===== Dark Mode - "Nighttime" palette ===== */
+.dark {
+  --color-gnome-green: #6BBF3B;
+  --color-gnome-green-light: #8CD660;
+  --color-bark-brown: #d4c4a0;
+  --color-bark-brown-light: #a89878;
+  --color-parchment-dark: #152030;
+  --color-iron-grey: #8899aa;
+  --color-text-primary: #E8D5A8;
+}
+
 .dark body {
   background-color: #1a2332;
   color: #E8D5A8;
@@ -63,42 +73,6 @@ h1, h2, h3 {
 
 .dark .card-wood:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.dark .bg-parchment-dark {
-  background-color: #152030;
-}
-
-.dark .text-bark-brown {
-  color: #d4c4a0;
-}
-
-.dark .text-bark-brown-light {
-  color: #a89878;
-}
-
-.dark .text-text-primary {
-  color: #E8D5A8;
-}
-
-.dark .text-iron-grey {
-  color: #8899aa;
-}
-
-.dark .text-gnome-green {
-  color: #6BBF3B;
-}
-
-.dark .text-gnome-green-light {
-  color: #8CD660;
-}
-
-.dark .border-bark-brown-light {
-  border-color: #2a3f5a;
-}
-
-.dark .border-parchment-dark {
-  border-color: #233044;
 }
 
 .dark input,
