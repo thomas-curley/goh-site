@@ -82,6 +82,35 @@ export default function AdminEventListPage() {
         </Link>
       </div>
 
+      {/* Import from Discord */}
+      <Card hover={false} className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="font-display text-base text-bark-brown">Import from Discord</h3>
+          <p className="text-xs text-bark-brown-light">
+            Pull scheduled events from Discord that aren&apos;t already on the site.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={loading}
+          onClick={async () => {
+            setStatus("Importing...");
+            try {
+              const res = await fetch("/api/events/import-discord", { method: "POST" });
+              const data = await res.json();
+              setStatus(data.message ?? data.error ?? "Done");
+              await load();
+            } catch {
+              setStatus("Failed to import from Discord.");
+            }
+          }}
+        >
+          Import from Discord
+        </Button>
+      </Card>
+
       {status && (
         <div className="mb-4 p-3 rounded-md bg-gnome-green/10 border border-gnome-green/30 text-sm text-gnome-green">
           {status}
