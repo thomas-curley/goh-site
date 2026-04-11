@@ -313,11 +313,11 @@ export default function AdminEventsPage() {
         {/* Live Preview */}
         <div className="xl:sticky xl:top-20 xl:self-start">
           <h2 className="font-display text-lg text-bark-brown mb-4">Discord Preview</h2>
-          <Card hover={false} className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[80vh]">
+          <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[80vh] rounded-lg border border-[#1e1f22] p-4 shadow-lg">
             <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
-              {preview || "Fill in the form to see a preview..."}
+              {preview || <span className="text-[#72767d]">Fill in the form to see a preview...</span>}
             </pre>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
