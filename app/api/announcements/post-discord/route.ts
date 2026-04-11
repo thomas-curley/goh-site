@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { title, content, category, author } = await request.json();
+    const { title, content, category, author, bannerUrl } = await request.json();
 
     if (!title || !content) {
       return NextResponse.json({ error: "title and content required" }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       author ? `— ${author}` : null,
     ].filter((l) => l !== null).join("\n");
 
-    const result = await postToChannel(channelId, message);
+    const result = await postToChannel(channelId, message, bannerUrl || undefined);
 
     return NextResponse.json({ posted: true, message_id: result.id });
   } catch (err) {

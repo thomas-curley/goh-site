@@ -92,13 +92,19 @@ export async function getChannelMessages(channelId: string, limit: number = 50) 
 }
 
 /**
- * Post a message to a Discord channel.
+ * Post a message to a Discord channel, optionally with an image embed.
  */
-export async function postToChannel(channelId: string, content: string) {
+export async function postToChannel(channelId: string, content: string, imageUrl?: string) {
+  const body: Record<string, unknown> = { content };
+
+  if (imageUrl) {
+    body.embeds = [{ image: { url: imageUrl } }];
+  }
+
   const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {

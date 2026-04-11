@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID;
         if (channelId) {
           const message = formatDiscordMessage(eventRow);
-          const discordMsg = await postToChannel(channelId, message);
+          const discordMsg = await postToChannel(channelId, message, body.banner_url || undefined);
           discordMessageId = discordMsg.id;
         }
       } catch (discordError) {

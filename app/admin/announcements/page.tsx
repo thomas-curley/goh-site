@@ -65,10 +65,25 @@ export default function AdminAnnouncementsPage() {
 
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Get linked RSN for author name (fall back to Discord name)
+    let authorName = user?.user_metadata?.full_name ?? "Admin";
+    if (user) {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("rsn, discord_username")
+        .eq("id", user.id)
+        .single();
+      if (profile?.rsn) {
+        authorName = profile.rsn;
+      } else if (profile?.discord_username) {
+        authorName = profile.discord_username;
+      }
+    }
+
     if (editingId) {
       const { error } = await supabase
         .from("announcements")
-        .update({ title, content, category, pinned, banner_url: bannerUrl || null, updated_at: new Date().toISOString() })
+        .update({ title, content, category, pinned, banner_url: bannerUrl || null, author_name: authorName, updated_at: new Date().toISOString() })
         .eq("id", editingId);
       if (error) { setStatus(`Error: ${error.message}`); setSaving(false); return; }
       setStatus("Announcement updated!");
@@ -79,7 +94,7 @@ export default function AdminAnnouncementsPage() {
           title, content, category, pinned,
           banner_url: bannerUrl || null,
           author_id: user?.id,
-          author_name: user?.user_metadata?.full_name ?? "Admin",
+          author_name: authorName,
         });
       if (error) { setStatus(`Error: ${error.message}`); setSaving(false); return; }
 
@@ -89,7 +104,7 @@ export default function AdminAnnouncementsPage() {
           await fetch("/api/announcements/post-discord", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content, category, author: user?.user_metadata?.full_name ?? "Admin" }),
+            body: JSON.stringify({ title, content, category, author: authorName, bannerUrl }),
           });
           setStatus("Announcement published and posted to Discord!");
         } catch {
