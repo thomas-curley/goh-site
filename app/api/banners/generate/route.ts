@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { buildBannerPrompt } from "@/lib/banner-prompt";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 banner generations per minute per IP
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const { allowed } = rateLimit(ip, { limit: 5, windowMs: 60_000 });
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
+  }
+
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
     return NextResponse.json({ error: "OpenAI API key not configured" }, { status: 503 });

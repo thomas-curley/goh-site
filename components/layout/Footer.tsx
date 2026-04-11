@@ -35,6 +35,16 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/hiscores" className="text-parchment hover:text-gold-light transition-colors">
+                  Clan Hiscores
+                </Link>
+              </li>
+              <li>
+                <Link href="/competitions" className="text-parchment hover:text-gold-light transition-colors">
+                  Competitions
+                </Link>
+              </li>
+              <li>
                 <a
                   href={WOM_GROUP_URL}
                   target="_blank"

@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 
 const ADMIN_NAV = [
   { href: "/admin", label: "Dashboard", permission: "view_admin" as const },
-  { href: "/admin/events", label: "Events", permission: "manage_events" as const },
+  { href: "/admin/events", label: "Create Event", permission: "manage_events" as const },
+  { href: "/admin/events/list", label: "Event List", permission: "manage_events" as const },
   { href: "/admin/announcements", label: "Announcements", permission: "manage_events" as const },
   { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links" as const },
   { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions" as const },

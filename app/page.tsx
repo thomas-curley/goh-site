@@ -8,14 +8,16 @@ import { formatNumber } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
 import { EVENT_TYPES } from "@/lib/constants";
 
-export const revalidate = 3600; // ISR: revalidate every hour
+export const revalidate = 300; // ISR: revalidate every 5 minutes
 
 async function getUpcomingEvents() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return [];
 
-  const supabase = createClient(url, key);
+  const supabase = createClient(url, key, {
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
+  });
   const { data } = await supabase
     .from("events")
     .select("id, title, event_type, start_time, host_rsn, world, location, meet_location")
@@ -31,14 +33,21 @@ async function getAnnouncements() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return [];
 
-  const supabase = createClient(url, key);
-  const { data } = await supabase
+  const supabase = createClient(url, key, {
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
+  });
+  const { data, error } = await supabase
     .from("announcements")
     .select("id, title, content, category, pinned, author_name, created_at")
     .eq("published", true)
     .order("pinned", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(5);
+
+  if (error) {
+    console.error("Failed to fetch announcements:", error);
+    return [];
+  }
 
   return data ?? [];
 }

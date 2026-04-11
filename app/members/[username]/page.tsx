@@ -6,6 +6,7 @@ import { BossKillsGrid } from "@/components/members/BossKillsGrid";
 import { GainsChart } from "@/components/members/GainsChart";
 import { Card } from "@/components/ui/Card";
 import { formatNumber, getAccountTypeLabel } from "@/lib/utils";
+import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 
 interface Props {
@@ -35,6 +36,26 @@ export default async function MemberProfilePage({ params }: Props) {
   const snapshot = player.latestSnapshot;
   const skills = snapshot?.data?.skills;
   const bosses = snapshot?.data?.bosses;
+
+  // Check if this player has linked their RSN on the site
+  let linkedDiscord: { discord_username: string; discord_avatar: string | null } | null = null;
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && key) {
+      const supabase = createClient(url, key, {
+        global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
+      });
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("discord_username, discord_avatar")
+        .ilike("rsn", player.displayName)
+        .single();
+      if (data) linkedDiscord = data;
+    }
+  } catch {
+    // Not linked or Supabase not configured
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -67,6 +88,14 @@ export default async function MemberProfilePage({ params }: Props) {
                 {player.combatLevel}
               </span>
             </span>
+            {linkedDiscord && (
+              <span className="inline-flex items-center gap-1.5 text-xs bg-gnome-green/10 text-gnome-green px-2 py-0.5 rounded-full">
+                {linkedDiscord.discord_avatar && (
+                  <img src={linkedDiscord.discord_avatar} alt="" className="w-4 h-4 rounded-full" />
+                )}
+                {linkedDiscord.discord_username}
+              </span>
+            )}
           </div>
         </div>
         <a
