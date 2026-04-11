@@ -55,7 +55,7 @@ async function getAnnouncements() {
 export default async function HomePage() {
   const [groupDetails, achievements, upcomingEvents, announcements] = await Promise.all([
     getGroupDetails(),
-    getGroupAchievements(15),
+    getGroupAchievements(50),
     getUpcomingEvents(),
     getAnnouncements(),
   ]);
@@ -65,7 +65,17 @@ export default async function HomePage() {
     (sum, m) => sum + (m.player.exp ?? 0),
     0
   ) ?? 0;
-  const recentAchievementCount = achievements?.length ?? 0;
+
+  // Deduplicate achievements: max 2 per player for variety
+  const playerCounts = new Map<number, number>();
+  const diverseAchievements = (achievements ?? []).filter((a: { playerId: number }) => {
+    const count = playerCounts.get(a.playerId) ?? 0;
+    if (count >= 2) return false;
+    playerCounts.set(a.playerId, count + 1);
+    return true;
+  }).slice(0, 15);
+
+  const recentAchievementCount = diverseAchievements.length;
 
   return (
     <div>
@@ -94,7 +104,7 @@ export default async function HomePage() {
       </section>
 
       {/* Achievements Ticker */}
-      <AchievementsTicker achievements={achievements as unknown as { playerId: number; name: string; metric: string; threshold: number; createdAt: Date; player?: { displayName: string } }[]} />
+      <AchievementsTicker achievements={diverseAchievements as unknown as { playerId: number; name: string; metric: string; threshold: number; createdAt: Date; player?: { displayName: string } }[]} />
 
       {/* Quick Stats */}
       <section className="max-w-7xl mx-auto px-4 py-16">
