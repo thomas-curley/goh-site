@@ -28,8 +28,6 @@ export function buildBannerPrompt(context: BannerContext): string {
     ? EVENT_TYPE_SCENES[context.eventType] ?? EVENT_TYPE_SCENES.other
     : EVENT_TYPE_SCENES.other;
 
-  const titleText = context.title.length <= 30 ? context.title : "";
-
   const basePrompt = [
     // Resolution and composition guidance
     `Create a wide panoramic landscape banner illustration at exactly 1792x1024 pixels.`,
@@ -46,10 +44,8 @@ export function buildBannerPrompt(context: BannerContext): string {
     `Art style: Old School RuneScape pixel-inspired fantasy game art with warm lighting, rich saturated colors, and a slightly stylized painterly feel. No modern elements, no photographs, no 3D renders.`,
     `Color palette: earthy forest greens, dark wood browns, parchment golds, and warm amber tones — the "Gnome Village" woodland aesthetic.`,
 
-    // Title text
-    titleText
-      ? `The text "${titleText}" is displayed prominently in a large ornate medieval fantasy font, centered horizontally in the upper third of the image, with a golden glow effect and a subtle dark shadow for legibility. Leave breathing room around the text.`
-      : "",
+    // No text in image — will be overlaid via CSS
+    `CRITICAL: Do NOT include any text, words, letters, numbers, signs, banners with writing, or typography anywhere in the image. The image must be purely visual art with zero text of any kind. Leave the upper portion of the image slightly darker or with negative space so text can be overlaid on top later.`,
 
     // Composition reminders
     `Important: the image is wide landscape format (1.75:1 ratio). Compose the scene to span the full width. Place visual interest across the entire horizontal span, not just the center.`,
