@@ -5,6 +5,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
+import { ReformatButton } from "@/components/admin/ReformatButton";
 
 interface Announcement {
   id: string;
@@ -213,6 +214,14 @@ export default function AdminAnnouncementsPage() {
           <div>
             <label className="block text-sm font-semibold text-bark-brown mb-1">Content</label>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} required rows={4} className={`${inputClass} resize-y`} placeholder="Write your announcement here..." />
+            <div className="mt-2">
+              <ReformatButton
+                content={content}
+                title={title}
+                type="announcement"
+                onAccept={(reformatted) => setContent(reformatted)}
+              />
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EVENT_TYPES } from "@/lib/constants";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
+import { ReformatButton } from "@/components/admin/ReformatButton";
 
 interface EventForm {
   title: string;
@@ -132,6 +133,14 @@ export default function AdminEventsPage() {
               <div>
                 <label className={labelClass}>Description / Flavor Text</label>
                 <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="Deep in the jungle ruins, an ancient serpent-spirit awaits..." />
+                <div className="mt-2">
+                  <ReformatButton
+                    content={form.description}
+                    title={form.title}
+                    type="event"
+                    onAccept={(reformatted) => update("description", reformatted)}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
