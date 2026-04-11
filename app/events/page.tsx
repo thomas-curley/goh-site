@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "View upcoming and past Gn0me Home clan events.",
 };
 
-export const revalidate = 300; // Revalidate every 5 minutes
+export const dynamic = "force-dynamic";
 
 async function getEvents() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

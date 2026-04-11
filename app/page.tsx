@@ -8,7 +8,7 @@ import { formatNumber } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
 import { EVENT_TYPES } from "@/lib/constants";
 
-export const revalidate = 300; // ISR: revalidate every 5 minutes
+export const dynamic = "force-dynamic";
 
 async function getUpcomingEvents() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

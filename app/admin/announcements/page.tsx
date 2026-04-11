@@ -37,6 +37,7 @@ export default function AdminAnnouncementsPage() {
   const [category, setCategory] = useState("announcement");
   const [pinned, setPinned] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
+  const [postToDiscord, setPostToDiscord] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -65,13 +66,14 @@ export default function AdminAnnouncementsPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (editingId) {
-      await supabase
+      const { error } = await supabase
         .from("announcements")
         .update({ title, content, category, pinned, banner_url: bannerUrl || null, updated_at: new Date().toISOString() })
         .eq("id", editingId);
+      if (error) { setStatus(`Error: ${error.message}`); setSaving(false); return; }
       setStatus("Announcement updated!");
     } else {
-      await supabase
+      const { error } = await supabase
         .from("announcements")
         .insert({
           title, content, category, pinned,
@@ -79,7 +81,23 @@ export default function AdminAnnouncementsPage() {
           author_id: user?.id,
           author_name: user?.user_metadata?.full_name ?? "Admin",
         });
-      setStatus("Announcement published!");
+      if (error) { setStatus(`Error: ${error.message}`); setSaving(false); return; }
+
+      // Post to Discord if checked
+      if (postToDiscord) {
+        try {
+          await fetch("/api/announcements/post-discord", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, content, category, author: user?.user_metadata?.full_name ?? "Admin" }),
+          });
+          setStatus("Announcement published and posted to Discord!");
+        } catch {
+          setStatus("Announcement published! (Discord post failed)");
+        }
+      } else {
+        setStatus("Announcement published!");
+      }
     }
 
     setTitle("");
@@ -87,6 +105,7 @@ export default function AdminAnnouncementsPage() {
     setCategory("announcement");
     setPinned(false);
     setBannerUrl("");
+    setPostToDiscord(true);
     setEditingId(null);
     setSaving(false);
     await load();
@@ -209,6 +228,33 @@ export default function AdminAnnouncementsPage() {
             currentBanner={bannerUrl || null}
             onBannerGenerated={(url) => setBannerUrl(url)}
           />
+
+          {/* Post to Discord checkbox (only for new announcements) */}
+          {!editingId && (
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                onClick={() => setPostToDiscord(!postToDiscord)}
+                className={`mt-0.5 w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
+                  postToDiscord
+                    ? "bg-gnome-green border-gnome-green"
+                    : "border-bark-brown-light hover:border-gnome-green"
+                }`}
+              >
+                {postToDiscord && (
+                  <svg className="w-4 h-4 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <div>
+                <p className="font-semibold text-bark-brown">Post to Discord</p>
+                <p className="text-xs text-bark-brown-light">
+                  Also post this announcement to the #announcements channel in Discord.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <Button type="submit" disabled={saving}>
