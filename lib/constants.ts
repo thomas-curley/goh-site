@@ -3,7 +3,7 @@ export const WOM_BASE_URL = "https://api.wiseoldman.net/v2";
 export const WOM_GROUP_URL = `https://wiseoldman.net/groups/${WOM_GROUP_ID}`;
 export const CLAN_NAME = "Gn0me Home";
 export const CLAN_CHAT = "Gn0me Home";
-export const DISCORD_INVITE = "https://discord.gg/gnomehome"; // Update with actual invite link
+export const DISCORD_INVITE = "https://discord.gg/F392pAMCvA";
 
 export const RANKS = [
   { name: "Gnome Child", order: 0, color: "bg-green-300 text-green-900", key: "gnome_child" },
