@@ -5,6 +5,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+// Link is already imported
 
 interface Event {
   id: string;
@@ -196,6 +197,12 @@ function EventRow({
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
+          <Link
+            href={`/admin/events/${event.id}/attendance`}
+            className="text-xs text-gnome-green hover:underline"
+          >
+            Attendance
+          </Link>
           <button
             onClick={() => onDelete(event)}
             className="text-xs text-red-accent hover:underline cursor-pointer"
