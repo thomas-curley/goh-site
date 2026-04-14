@@ -93,7 +93,16 @@ export async function POST(request: NextRequest) {
         // Post formatted message to events channel
         const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID;
         if (channelId) {
-          const message = formatDiscordMessage(eventRow);
+          // Prepend role pings if any
+          let pingPrefix = "";
+          if (Array.isArray(body.ping_roles) && body.ping_roles.length > 0) {
+            pingPrefix = body.ping_roles.map((id: string) => {
+              if (id === "@everyone") return "@everyone";
+              if (id === "@here") return "@here";
+              return `<@&${id}>`;
+            }).join(" ") + "\n\n";
+          }
+          const message = pingPrefix + formatDiscordMessage(eventRow);
           const discordMsg = await postToChannel(channelId, message, body.banner_url || undefined);
           discordMessageId = discordMsg.id;
         }

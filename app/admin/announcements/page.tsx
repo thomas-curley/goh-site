@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
+import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
 
 interface Announcement {
   id: string;
@@ -39,6 +40,7 @@ export default function AdminAnnouncementsPage() {
   const [pinned, setPinned] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
   const [postToDiscord, setPostToDiscord] = useState(true);
+  const [pingRoles, setPingRoles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -105,7 +107,7 @@ export default function AdminAnnouncementsPage() {
           await fetch("/api/announcements/post-discord", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content, category, author: authorName, bannerUrl }),
+            body: JSON.stringify({ title, content, category, author: authorName, bannerUrl, pingRoles }),
           });
           setStatus("Announcement published and posted to Discord!");
         } catch {
@@ -122,6 +124,7 @@ export default function AdminAnnouncementsPage() {
     setPinned(false);
     setBannerUrl("");
     setPostToDiscord(true);
+    setPingRoles([]);
     setEditingId(null);
     setSaving(false);
     await load();
@@ -252,6 +255,11 @@ export default function AdminAnnouncementsPage() {
             currentBanner={bannerUrl || null}
             onBannerGenerated={(url) => setBannerUrl(url)}
           />
+
+          {/* Role Pings */}
+          {!editingId && (
+            <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
+          )}
 
           {/* Post to Discord checkbox (only for new announcements) */}
           {!editingId && (

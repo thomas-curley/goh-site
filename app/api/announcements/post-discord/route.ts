@@ -16,14 +16,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { title, content, category, author, bannerUrl } = await request.json();
+    const { title, content, category, author, bannerUrl, pingRoles } = await request.json();
 
     if (!title || !content) {
       return NextResponse.json({ error: "title and content required" }, { status: 400 });
     }
 
+    // Build role pings prefix
+    let pingPrefix = "";
+    if (Array.isArray(pingRoles) && pingRoles.length > 0) {
+      pingPrefix = pingRoles.map((id: string) => {
+        if (id === "@everyone") return "@everyone";
+        if (id === "@here") return "@here";
+        return `<@&${id}>`;
+      }).join(" ") + "\n\n";
+    }
+
     const emoji = CATEGORY_EMOJIS[category] ?? "📢";
     const message = [
+      pingPrefix ? pingPrefix.trim() : null,
       `${emoji} **${title}**`,
       "",
       content,

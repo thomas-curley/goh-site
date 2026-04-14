@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { EVENT_TYPES } from "@/lib/constants";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
+import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
 
 interface EventForm {
   title: string;
@@ -26,6 +27,7 @@ interface EventForm {
   video_url: string;
   prize_pool: string;
   banner_url: string;
+  ping_roles: string[];
   post_to_discord: boolean;
   create_signup_thread: boolean;
 }
@@ -49,6 +51,7 @@ const EMPTY_FORM: EventForm = {
   video_url: "",
   prize_pool: "",
   banner_url: "",
+  ping_roles: [],
   post_to_discord: true,
   create_signup_thread: false,
 };
@@ -253,6 +256,14 @@ export default function AdminEventsPage() {
             onBannerGenerated={(url) => update("banner_url", url)}
           />
 
+          {/* Role Pings */}
+          <Card hover={false}>
+            <RolePingSelector
+              selectedRoles={form.ping_roles}
+              onChange={(roles) => setForm((prev) => ({ ...prev, ping_roles: roles }))}
+            />
+          </Card>
+
           {/* Discord + Submit */}
           <Card hover={false}>
             <div className="flex items-start gap-3 mb-6">
@@ -337,7 +348,8 @@ function buildPreview(form: EventForm): string {
   if (!form.title) return "";
 
   const lines: string[] = [];
-  lines.push(`📢 @Event Pings ${form.title} 📢`);
+  const pings = form.ping_roles.length > 0 ? formatRolePings(form.ping_roles) + " " : "";
+  lines.push(`📢 ${pings}${form.title} 📢`);
   lines.push("");
 
   if (form.description) {

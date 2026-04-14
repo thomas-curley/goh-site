@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { title, description, highlights, winners, imageUrl, author } = await request.json();
+    const { title, description, highlights, winners, imageUrl, author, pingRoles } = await request.json();
 
     if (!title) {
       return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -16,6 +16,17 @@ export async function POST(request: NextRequest) {
 
     // Build the gnome-themed recap message
     const lines: string[] = [];
+
+    // Role pings at the top
+    if (Array.isArray(pingRoles) && pingRoles.length > 0) {
+      const pings = pingRoles.map((id: string) => {
+        if (id === "@everyone") return "@everyone";
+        if (id === "@here") return "@here";
+        return `<@&${id}>`;
+      }).join(" ");
+      lines.push(pings);
+      lines.push("");
+    }
 
     lines.push(`🏰 **Event Recap: ${title}** 🏰`);
     lines.push("");

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
 
 interface PastEvent {
   id: string;
@@ -20,6 +21,7 @@ export default function EventRecapPage() {
   const [highlights, setHighlights] = useState<string[]>([""]);
   const [winners, setWinners] = useState<{ rsn: string; prize: string }[]>([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [pingRoles, setPingRoles] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -115,6 +117,7 @@ export default function EventRecapPage() {
           winners: winners.filter((w) => w.rsn.trim()),
           imageUrl,
           author,
+          pingRoles,
           eventId: selectedEvent || undefined,
         }),
       });
@@ -127,6 +130,7 @@ export default function EventRecapPage() {
         setHighlights([""]);
         setWinners([]);
         setImageUrl("");
+        setPingRoles([]);
         setSelectedEvent("");
       } else {
         setStatus(`Error: ${data.error}`);
@@ -150,7 +154,8 @@ export default function EventRecapPage() {
   }
 
   // Build preview
-  const previewLines = buildPreview({ title, description, highlights, winners, author: "You", imageUrl });
+  const pingPrefix = formatRolePings(pingRoles);
+  const previewLines = buildPreview({ title, description, highlights, winners, author: "You", imageUrl, pingPrefix });
 
   return (
     <div>
@@ -275,6 +280,11 @@ export default function EventRecapPage() {
             )}
           </Card>
 
+          {/* Role Pings */}
+          <Card hover={false}>
+            <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
+          </Card>
+
           {/* Submit */}
           <div className="flex items-center gap-4">
             <Button type="submit" disabled={submitting} size="lg">
@@ -311,6 +321,7 @@ function buildPreview({
   highlights,
   winners,
   author,
+  pingPrefix,
 }: {
   title: string;
   description: string;
@@ -318,10 +329,16 @@ function buildPreview({
   winners: { rsn: string; prize: string }[];
   author: string;
   imageUrl: string;
+  pingPrefix?: string;
 }): string {
   if (!title.trim()) return "";
 
   const lines: string[] = [];
+
+  if (pingPrefix) {
+    lines.push(pingPrefix);
+    lines.push("");
+  }
 
   lines.push(`🏰 **Event Recap: ${title}** 🏰`);
   lines.push("");
