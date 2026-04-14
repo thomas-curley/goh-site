@@ -92,9 +92,9 @@ function AdminShell({
   navItems: { href: string; label: string }[];
 }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="mx-auto px-4 lg:px-8 py-6">
       <div className="flex flex-col md:flex-row gap-8">
-        <aside className="md:w-56 shrink-0">
+        <aside className="md:w-48 shrink-0">
           <h2 className="font-display text-xl text-gnome-green mb-4">
             Admin Panel
           </h2>

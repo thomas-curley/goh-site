@@ -13,7 +13,7 @@ export default async function AccountPage() {
   // If Supabase not configured, show setup message
   if (!user) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
         <h1 className="font-display text-4xl text-gnome-green mb-4">My Account</h1>
         <p className="text-bark-brown-light">
           Account management requires Supabase to be configured. Add your

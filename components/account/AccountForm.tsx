@@ -202,7 +202,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const displayName = profile?.discord_username ?? userMeta?.full_name ?? "User";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="font-display text-4xl text-gnome-green mb-8">My Account</h1>
 
       {/* Discord Profile */}
