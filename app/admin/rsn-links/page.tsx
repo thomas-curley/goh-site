@@ -4,6 +4,21 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { normalizeRole } from "@/lib/permissions";
+
+// Rank hierarchy — higher index = higher rank
+const RANK_ORDER: Record<string, number> = {
+  gnome_child: 0,
+  oak: 1,
+  pine: 2,
+  yew: 3,
+  council_member: 4,
+};
+
+function getRankLevel(rank: string | null): number {
+  if (!rank) return -1;
+  return RANK_ORDER[normalizeRole(rank)] ?? -1;
+}
 
 interface ResetRequest {
   id: string;
@@ -28,18 +43,31 @@ interface LinkedProfile {
   discord_username: string;
   rsn: string | null;
   rsn_verified: boolean;
+  clan_rank: string | null;
   linked_at: string | null;
 }
 
 export default function AdminRsnLinksPage() {
   const [requests, setRequests] = useState<ResetRequest[]>([]);
   const [profiles, setProfiles] = useState<LinkedProfile[]>([]);
+  const [myRank, setMyRank] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
 
   const supabase = createSupabaseBrowserClient();
 
   const loadData = useCallback(async () => {
+    // Get current user's rank
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: myProfile } = await supabase
+        .from("user_profiles")
+        .select("clan_rank")
+        .eq("id", user.id)
+        .single();
+      if (myProfile) setMyRank(myProfile.clan_rank);
+    }
+
     // Load pending reset requests
     const { data: reqData } = await supabase
       .from("rsn_reset_requests")
@@ -53,11 +81,10 @@ export default function AdminRsnLinksPage() {
 
     if (reqData) setRequests(reqData as unknown as ResetRequest[]);
 
-    // Load all linked profiles
+    // Load ALL linked profiles (RLS now allows authenticated read of all)
     const { data: profData } = await supabase
       .from("user_profiles")
-      .select("id, discord_id, discord_username, rsn, rsn_verified, linked_at")
-      .not("rsn", "is", null)
+      .select("id, discord_id, discord_username, rsn, rsn_verified, clan_rank, linked_at")
       .order("linked_at", { ascending: false });
 
     if (profData) setProfiles(profData);
@@ -71,7 +98,6 @@ export default function AdminRsnLinksPage() {
   const handleApproveReset = async (request: ResetRequest) => {
     setActionStatus("Processing...");
 
-    // Find and unlink the current holder's RSN
     const { data: holder } = await supabase
       .from("user_profiles")
       .select("id")
@@ -85,7 +111,6 @@ export default function AdminRsnLinksPage() {
         .eq("id", holder.id);
     }
 
-    // Mark request as approved
     const { data: { user } } = await supabase.auth.getUser();
     await supabase
       .from("rsn_reset_requests")
@@ -96,7 +121,7 @@ export default function AdminRsnLinksPage() {
       })
       .eq("id", request.id);
 
-    setActionStatus(`Approved — "${request.requested_rsn}" has been unlinked. The requester can now link it.`);
+    setActionStatus(`Approved — "${request.requested_rsn}" has been unlinked.`);
     await loadData();
   };
 
@@ -123,6 +148,18 @@ export default function AdminRsnLinksPage() {
 
     setActionStatus(`Force-unlinked "${profile.rsn}" from ${profile.discord_username}.`);
     await loadData();
+  };
+
+  const myRankLevel = getRankLevel(myRank);
+
+  // Split profiles: linked RSNs and all users
+  const linkedProfiles = profiles.filter((p) => p.rsn);
+  const allUsers = profiles;
+
+  // Filter to profiles at or below my rank (owners/council can see everyone)
+  const canManage = (profile: LinkedProfile) => {
+    const theirLevel = getRankLevel(profile.clan_rank);
+    return theirLevel < myRankLevel || myRankLevel >= 4; // council_member sees all
   };
 
   if (loading) {
@@ -180,17 +217,10 @@ export default function AdminRsnLinksPage() {
                     </p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <Button
-                      size="sm"
-                      onClick={() => handleApproveReset(req)}
-                    >
+                    <Button size="sm" onClick={() => handleApproveReset(req)}>
                       Approve
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleDenyReset(req)}
-                    >
+                    <Button size="sm" variant="secondary" onClick={() => handleDenyReset(req)}>
                       Deny
                     </Button>
                   </div>
@@ -202,40 +232,82 @@ export default function AdminRsnLinksPage() {
       </section>
 
       {/* All Linked RSNs */}
-      <section>
+      <section className="mb-10">
         <h2 className="font-display text-xl text-bark-brown mb-4">
-          All Linked RSNs ({profiles.length})
+          Linked RSNs ({linkedProfiles.length})
         </h2>
 
-        {profiles.length === 0 ? (
+        {linkedProfiles.length === 0 ? (
           <Card hover={false}>
             <p className="text-sm text-iron-grey">No RSNs linked yet.</p>
           </Card>
         ) : (
           <div className="space-y-2">
-            {profiles.map((p) => (
-              <Card key={p.id} hover={false} className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="font-mono font-bold text-gnome-green text-sm">{p.rsn}</p>
-                    <p className="text-xs text-iron-grey">{p.discord_username} ({p.discord_id})</p>
+            {linkedProfiles.map((p) => {
+              const manageable = canManage(p);
+              return (
+                <Card key={p.id} hover={false} className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="min-w-0">
+                      <p className="font-mono font-bold text-gnome-green text-sm truncate">{p.rsn}</p>
+                      <p className="text-xs text-iron-grey truncate">
+                        {p.discord_username}
+                        {p.clan_rank && (
+                          <span className="ml-2 capitalize">
+                            ({normalizeRole(p.clan_rank).replace(/_/g, " ")})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {p.rsn_verified && (
+                      <span className="text-xs text-gnome-green-light bg-gnome-green/10 px-2 py-0.5 rounded-full shrink-0">
+                        Verified
+                      </span>
+                    )}
                   </div>
-                  {p.rsn_verified && (
-                    <span className="text-xs text-gnome-green-light bg-gnome-green/10 px-2 py-0.5 rounded-full">
-                      Verified
-                    </span>
+                  {manageable && (
+                    <button
+                      onClick={() => handleForceUnlink(p)}
+                      className="text-xs text-red-accent hover:underline cursor-pointer shrink-0 ml-2"
+                    >
+                      Force Unlink
+                    </button>
                   )}
-                </div>
-                <button
-                  onClick={() => handleForceUnlink(p)}
-                  className="text-xs text-red-accent hover:underline cursor-pointer shrink-0"
-                >
-                  Force Unlink
-                </button>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
+      </section>
+
+      {/* All Users (including those without RSN linked) */}
+      <section>
+        <h2 className="font-display text-xl text-bark-brown mb-4">
+          All Users ({allUsers.length})
+        </h2>
+        <div className="space-y-2">
+          {allUsers.map((p) => (
+            <Card key={p.id} hover={false} className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm text-bark-brown font-semibold truncate">
+                  {p.discord_username}
+                </p>
+                <p className="text-xs text-iron-grey">
+                  {p.rsn ? (
+                    <span>RSN: <span className="font-mono text-gnome-green">{p.rsn}</span></span>
+                  ) : (
+                    <span>No RSN linked</span>
+                  )}
+                  {p.clan_rank && (
+                    <span className="ml-2 capitalize">
+                      · {normalizeRole(p.clan_rank).replace(/_/g, " ")}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </Card>
+          ))}
+        </div>
       </section>
     </div>
   );
