@@ -81,10 +81,16 @@ h1, h2, h3 {
 }
 
 .dark input,
-.dark select {
-  background-color: #1e2d40;
-  border-color: #2a3f5a;
-  color: #E8D5A8;
+.dark select,
+.dark textarea {
+  background-color: #1e2d40 !important;
+  border-color: #2a3f5a !important;
+  color: #E8D5A8 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7f96 !important;
 }
 
 /* Tailwind v4 @theme inline bakes colors at compile time.
