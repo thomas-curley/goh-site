@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 interface CommandSpec {
-  type: "text" | "embed" | "random" | "wom";
+  type: "text" | "embed" | "random" | "wom" | "activity";
   ephemeral: boolean;
   allowed_channels: string[];
   allowed_roles: string[];
@@ -15,6 +15,8 @@ interface CommandSpec {
     title: string;
     color: string;
     footer: string;
+    activity_period: string; // "week" | "month" | "all"
+    activity_limit: number;
     responses: string[];
     wom_type: string;
     wom_period: string;
@@ -44,6 +46,8 @@ const EMPTY_SPEC: CommandSpec = {
     responses: [""],
     wom_type: "stats",
     wom_period: "week",
+    activity_period: "all",
+    activity_limit: 20,
   },
 };
 
@@ -246,6 +250,7 @@ export default function AdminCommandsPage() {
                   { type: "embed", label: "Embed", desc: "Rich embed with title, color, footer" },
                   { type: "random", label: "Random", desc: "Random pick from a list" },
                   { type: "wom", label: "WOM Data", desc: "Fetch player stats from Wise Old Man" },
+                  { type: "activity", label: "Activity Leaderboard", desc: "Show clan event attendance rankings" },
                 ].map((opt) => (
                   <button
                     key={opt.type}
@@ -348,6 +353,28 @@ export default function AdminCommandsPage() {
                   </div>
                 )}
 
+                {spec.type === "activity" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className={labelClass}>Leaderboard Title</label>
+                      <input type="text" value={spec.response.title} onChange={(e) => setSpec((s) => ({ ...s, response: { ...s.response, title: e.target.value } }))} className={inputClass} placeholder="Event Activity Leaderboard" />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Time Period</label>
+                      <select value={spec.response.activity_period} onChange={(e) => setSpec((s) => ({ ...s, response: { ...s.response, activity_period: e.target.value } }))} className={`${inputClass} cursor-pointer`}>
+                        <option value="all">All Time</option>
+                        <option value="month">Last 30 Days</option>
+                        <option value="week">Last 7 Days</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Max Players Shown</label>
+                      <input type="number" value={spec.response.activity_limit} onChange={(e) => setSpec((s) => ({ ...s, response: { ...s.response, activity_limit: parseInt(e.target.value) || 20 } }))} className={inputClass} min={5} max={50} />
+                    </div>
+                    <p className="text-xs text-iron-grey">Shows a ranked table of clan members by number of events attended. Data comes from the attendance tracking system.</p>
+                  </div>
+                )}
+
                 <div className="flex gap-3">
                   <Button variant="ghost" onClick={() => setStep(2)}>Back</Button>
                   <Button onClick={() => setStep(4)}>Next</Button>
@@ -443,6 +470,21 @@ function buildPreview(name: string, spec: CommandSpec): string {
       return `[Fetches ${spec.response.wom_type} from WOM for the user's linked RSN]${
         spec.response.wom_type === "gains" ? `\nPeriod: ${spec.response.wom_period}` : ""
       }`;
+    case "activity": {
+      const periodLabel = spec.response.activity_period === "month" ? "Last 30 Days" : spec.response.activity_period === "week" ? "Last 7 Days" : "All Time";
+      return [
+        `**${spec.response.title || "Event Activity Leaderboard"}**`,
+        `Period: ${periodLabel}`,
+        "",
+        "```",
+        " #  RSN               Events",
+        " 1  Tiffy X                12",
+        " 2  Gn0me Vlad              9",
+        " 3  Pizza Queen              7",
+        `... (top ${spec.response.activity_limit})`,
+        "```",
+      ].join("\n");
+    }
     default:
       return "";
   }

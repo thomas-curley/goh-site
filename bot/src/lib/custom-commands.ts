@@ -8,7 +8,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const SECRET = process.env.DISCORD_WEBHOOK_SECRET ?? "";
 
 interface CommandSpec {
-  type: "text" | "embed" | "random" | "wom";
+  type: "text" | "embed" | "random" | "wom" | "activity";
   ephemeral: boolean;
   allowed_channels: string[];
   allowed_roles: string[];
@@ -20,6 +20,8 @@ interface CommandSpec {
     responses: string[];
     wom_type: string;
     wom_period: string;
+    activity_period: string;
+    activity_limit: number;
   };
 }
 
@@ -147,6 +149,54 @@ export function buildCustomCommand(record: CustomCommandRecord): BotCommand {
           } else {
             await interaction.editReply({ embeds: [errorEmbed("Could not fetch gains.")] });
           }
+        }
+        break;
+      }
+
+      case "activity": {
+        // Fetch activity leaderboard from website API
+        const period = spec.response.activity_period || "all";
+        const limit = spec.response.activity_limit || 20;
+
+        try {
+          const res = await fetch(
+            `${SITE_URL}/api/attendance/leaderboard?period=${period}&limit=${limit}`,
+            { headers: { Authorization: `Bearer ${SECRET}` } }
+          );
+
+          if (!res.ok) {
+            await interaction.editReply({ embeds: [errorEmbed("Could not fetch activity data.")] });
+            break;
+          }
+
+          const data = await res.json();
+          const lb = data.leaderboard ?? [];
+
+          if (lb.length === 0) {
+            await interaction.editReply({
+              embeds: [clanEmbed()
+                .setTitle(spec.response.title || "Event Activity Leaderboard")
+                .setDescription("No attendance data recorded yet.")],
+            });
+            break;
+          }
+
+          const periodLabel = period === "month" ? "Last 30 Days" : period === "week" ? "Last 7 Days" : "All Time";
+
+          const lines = lb.map((entry: { rsn: string | null; name: string; count: number }, i: number) => {
+            const rank = String(i + 1).padStart(2);
+            const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  ";
+            const display = (entry.rsn ?? entry.name).padEnd(20);
+            return `${medal} ${rank}. ${display} ${String(entry.count).padStart(3)} events`;
+          });
+
+          const embed = clanEmbed()
+            .setTitle(spec.response.title || "🏆 Event Activity Leaderboard")
+            .setDescription(`**${periodLabel}**\n\`\`\`\n${lines.join("\n")}\n\`\`\``);
+
+          await interaction.editReply({ embeds: [embed] });
+        } catch {
+          await interaction.editReply({ embeds: [errorEmbed("Failed to load activity data.")] });
         }
         break;
       }
