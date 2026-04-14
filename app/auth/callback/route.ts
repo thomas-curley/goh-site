@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -35,29 +36,49 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.user) {
+    console.error("Auth exchange failed:", error);
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
 
   // Upsert user profile with Discord info from the OAuth provider
   const user = data.user;
-  const discordMeta = user.user_metadata;
+  const meta = user.user_metadata ?? {};
 
-  const profile = {
-    id: user.id,
-    discord_id: discordMeta?.provider_id ?? discordMeta?.sub ?? "",
-    discord_username: discordMeta?.full_name ?? discordMeta?.name ?? discordMeta?.preferred_username ?? "Unknown",
-    discord_avatar: discordMeta?.avatar_url ?? null,
-    updated_at: new Date().toISOString(),
-  };
+  // Discord provider_id can be in different fields depending on Supabase version
+  const discordId = meta.provider_id ?? meta.sub ?? meta.custom_claims?.global_name ?? "";
+  const discordUsername = meta.full_name ?? meta.name ?? meta.preferred_username ?? meta.custom_claims?.global_name ?? "Unknown";
+  const discordAvatar = meta.avatar_url ?? meta.picture ?? null;
 
   // Use service role to bypass RLS for the upsert
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (serviceKey) {
-    const { createClient } = await import("@supabase/supabase-js");
-    const serviceClient = createClient(supabaseUrl, serviceKey);
+  if (serviceKey && discordId) {
+    try {
+      const serviceClient = createClient(supabaseUrl, serviceKey);
 
-    await serviceClient.from("user_profiles").upsert(profile, {
-      onConflict: "id",
+      const { error: upsertError } = await serviceClient
+        .from("user_profiles")
+        .upsert(
+          {
+            id: user.id,
+            discord_id: discordId,
+            discord_username: discordUsername,
+            discord_avatar: discordAvatar,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+
+      if (upsertError) {
+        console.error("Profile upsert failed:", upsertError);
+      }
+    } catch (err) {
+      console.error("Profile creation error:", err);
+    }
+  } else {
+    console.error("Cannot create profile — missing service key or discord_id", {
+      hasServiceKey: !!serviceKey,
+      discordId,
+      metaKeys: Object.keys(meta),
     });
   }
 
