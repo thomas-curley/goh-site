@@ -38,12 +38,22 @@ async function loadCommands() {
     await import("./commands/signup.js"),
     await import("./commands/banner.js"),
     await import("./commands/attendance.js"),
+    await import("./commands/command.js"),
   ];
 
   for (const file of commandFiles) {
     const cmd = file.default as BotCommand;
     commands.set(cmd.data.name, cmd);
     console.log(`  Loaded /${cmd.data.name}`);
+  }
+
+  // Load custom commands from website API
+  const { fetchCustomCommands, buildCustomCommand } = await import("./lib/custom-commands.js");
+  const customCmds = await fetchCustomCommands();
+  for (const record of customCmds) {
+    const cmd = buildCustomCommand(record);
+    commands.set(record.name, cmd);
+    console.log(`  Loaded custom /${record.name}`);
   }
 }
 

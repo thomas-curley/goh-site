@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { href: "/admin/event-recap", label: "Event Recap", permission: "manage_events" as const },
   { href: "/admin/announcements", label: "Announcements", permission: "manage_events" as const },
   { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links" as const },
+  { href: "/admin/commands", label: "Bot Commands", permission: "manage_commands" as const },
   { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions" as const },
   { href: "/admin/guides", label: "Guides", permission: "manage_guides" as const },
 ];

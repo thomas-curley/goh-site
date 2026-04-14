@@ -22,6 +22,11 @@ export const PERMISSIONS = {
     label: "Manage Permissions",
     description: "Change role-based permission settings",
   },
+  manage_commands: {
+    key: "manage_commands",
+    label: "Manage Commands",
+    description: "Create, edit, and delete custom bot commands",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
