@@ -41,6 +41,10 @@ export default function EventAttendancePage() {
   const [status, setStatus] = useState<string | null>(null);
   const [addRsn, setAddRsn] = useState("");
   const [myRsn, setMyRsn] = useState<string>("Admin");
+  const [scanning, setScanning] = useState(false);
+  const [scannedNames, setScannedNames] = useState<{ rsn: string; discord_id: string | null; matched: boolean }[] | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState("");
 
   const supabase = createSupabaseBrowserClient();
 
@@ -184,6 +188,131 @@ export default function EventAttendancePage() {
           />
           <Button type="submit" size="sm">Add</Button>
         </form>
+      </Card>
+
+      {/* Screenshot Scanner */}
+      <Card hover={false} className="mb-6">
+        <h3 className="font-display text-base text-bark-brown mb-3">Scan Screenshot for Attendees</h3>
+        <p className="text-xs text-bark-brown-light mb-3">
+          Upload an OSRS screenshot and AI will detect player names and add them to the attendance list.
+        </p>
+
+        {/* Upload */}
+        {!screenshotUrl && (
+          <label className="block">
+            <input
+              type="file"
+              accept="image/*"
+              disabled={uploading}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                const fileName = `scan_${Date.now()}_${file.name}`;
+                const { error } = await supabase.storage
+                  .from("banners")
+                  .upload(fileName, file, { contentType: file.type });
+                if (error) {
+                  setStatus("Upload failed: " + error.message);
+                  setUploading(false);
+                  return;
+                }
+                const { data: pub } = supabase.storage.from("banners").getPublicUrl(fileName);
+                setScreenshotUrl(pub.publicUrl);
+                setUploading(false);
+              }}
+              className="block w-full text-sm text-bark-brown-light file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gnome-green file:text-text-light hover:file:bg-gnome-green-light file:cursor-pointer cursor-pointer"
+            />
+            {uploading && <p className="text-xs text-iron-grey mt-2">Uploading...</p>}
+          </label>
+        )}
+
+        {/* Preview + Scan */}
+        {screenshotUrl && !scannedNames && (
+          <div>
+            <img src={screenshotUrl} alt="Screenshot" className="w-full rounded-md border border-bark-brown-light max-h-64 object-contain mb-3" />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={scanning}
+                onClick={async () => {
+                  setScanning(true);
+                  setStatus(null);
+                  try {
+                    const res = await fetch(`/api/events/${eventId}/attendance/scan-screenshot`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ imageUrl: screenshotUrl }),
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.names) {
+                      setScannedNames(data.names);
+                      setStatus(data.message);
+                    } else {
+                      setStatus(data.error ?? "Scan failed");
+                    }
+                  } catch {
+                    setStatus("Screenshot scan failed.");
+                  } finally {
+                    setScanning(false);
+                  }
+                }}
+              >
+                {scanning ? "Scanning..." : "Scan for Player Names"}
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setScreenshotUrl(""); setScannedNames(null); }}>
+                Remove
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Scan results */}
+        {scannedNames && (
+          <div>
+            <img src={screenshotUrl} alt="Screenshot" className="w-full rounded-md border border-bark-brown-light max-h-48 object-contain mb-3" />
+            <h4 className="text-sm font-semibold text-bark-brown mb-2">
+              Detected {scannedNames.length} player name(s)
+            </h4>
+            <div className="space-y-1 mb-4">
+              {scannedNames.map((name, i) => (
+                <div key={i} className="flex items-center justify-between py-1 px-2 rounded border border-parchment-dark">
+                  <span className="font-mono text-sm text-gnome-green">{name.rsn}</span>
+                  <span className="text-xs text-iron-grey">
+                    {name.matched ? "✓ Linked profile found" : "No profile match"}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={async () => {
+                  setStatus("Adding scanned names...");
+                  for (const name of scannedNames) {
+                    await handleAction("add_manual", {
+                      rsn: name.rsn,
+                      discord_id: name.discord_id ?? `scan_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                      discord_username: name.rsn,
+                      attended: true,
+                    });
+                  }
+                  setStatus(`Added ${scannedNames.length} attendee(s) from screenshot.`);
+                  setScannedNames(null);
+                  setScreenshotUrl("");
+                  await loadData();
+                }}
+              >
+                Add All to Attendance
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setScannedNames(null); setScreenshotUrl(""); }}>
+                Discard
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Attendance list */}
