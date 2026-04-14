@@ -41,6 +41,7 @@ interface LinkedProfile {
   id: string;
   discord_id: string;
   discord_username: string;
+  discord_nickname: string | null;
   rsn: string | null;
   rsn_verified: boolean;
   clan_rank: string | null;
@@ -84,7 +85,7 @@ export default function AdminRsnLinksPage() {
     // Load ALL linked profiles (RLS now allows authenticated read of all)
     const { data: profData } = await supabase
       .from("user_profiles")
-      .select("id, discord_id, discord_username, rsn, rsn_verified, clan_rank, linked_at")
+      .select("id, discord_id, discord_username, discord_nickname, rsn, rsn_verified, clan_rank, linked_at")
       .order("linked_at", { ascending: false });
 
     if (profData) setProfiles(profData);
@@ -251,10 +252,14 @@ export default function AdminRsnLinksPage() {
                     <div className="min-w-0">
                       <p className="font-mono font-bold text-gnome-green text-sm truncate">{p.rsn}</p>
                       <p className="text-xs text-iron-grey truncate">
-                        {p.discord_username}
+                        {p.discord_nickname ? (
+                          <><span className="text-bark-brown-light">{p.discord_nickname}</span> ({p.discord_username})</>
+                        ) : (
+                          p.discord_username
+                        )}
                         {p.clan_rank && (
                           <span className="ml-2 capitalize">
-                            ({normalizeRole(p.clan_rank).replace(/_/g, " ")})
+                            · {normalizeRole(p.clan_rank).replace(/_/g, " ")}
                           </span>
                         )}
                       </p>
@@ -290,7 +295,10 @@ export default function AdminRsnLinksPage() {
             <Card key={p.id} hover={false} className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-sm text-bark-brown font-semibold truncate">
-                  {p.discord_username}
+                  {p.discord_nickname ?? p.discord_username}
+                  {p.discord_nickname && (
+                    <span className="text-xs text-iron-grey font-normal ml-2">({p.discord_username})</span>
+                  )}
                 </p>
                 <p className="text-xs text-iron-grey">
                   {p.rsn ? (

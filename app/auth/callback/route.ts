@@ -40,16 +40,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
 
-  // Upsert user profile with Discord info from the OAuth provider
   const user = data.user;
   const meta = user.user_metadata ?? {};
 
-  // Discord provider_id can be in different fields depending on Supabase version
-  const discordId = meta.provider_id ?? meta.sub ?? meta.custom_claims?.global_name ?? "";
-  const discordUsername = meta.full_name ?? meta.name ?? meta.preferred_username ?? meta.custom_claims?.global_name ?? "Unknown";
+  const discordId = meta.provider_id ?? meta.sub ?? "";
+  const discordUsername = meta.full_name ?? meta.name ?? meta.preferred_username ?? "Unknown";
   const discordAvatar = meta.avatar_url ?? meta.picture ?? null;
 
-  // Use service role to bypass RLS for the upsert
+  // Fetch guild nickname from Discord API
+  let discordNickname: string | null = null;
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  const guildId = process.env.DISCORD_GUILD_ID;
+  if (botToken && guildId && discordId) {
+    try {
+      const memberRes = await fetch(
+        `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}`,
+        { headers: { Authorization: `Bot ${botToken}` } }
+      );
+      if (memberRes.ok) {
+        const member = await memberRes.json();
+        discordNickname = member.nick ?? null;
+      }
+    } catch (err) {
+      console.error("Failed to fetch Discord nickname:", err);
+    }
+  }
+
+  // Upsert user profile
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (serviceKey && discordId) {
     try {
@@ -63,6 +80,7 @@ export async function GET(request: NextRequest) {
             discord_id: discordId,
             discord_username: discordUsername,
             discord_avatar: discordAvatar,
+            discord_nickname: discordNickname,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "id" }
@@ -74,12 +92,6 @@ export async function GET(request: NextRequest) {
     } catch (err) {
       console.error("Profile creation error:", err);
     }
-  } else {
-    console.error("Cannot create profile — missing service key or discord_id", {
-      hasServiceKey: !!serviceKey,
-      discordId,
-      metaKeys: Object.keys(meta),
-    });
   }
 
   return response;
