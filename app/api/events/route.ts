@@ -103,7 +103,11 @@ export async function POST(request: NextRequest) {
             }).join(" ") + "\n\n";
           }
           const message = pingPrefix + formatDiscordMessage(eventRow);
-          const discordMsg = await postToChannel(channelId, message, body.banner_url || undefined);
+          // Combine banner + extra images
+          const allImages: string[] = [];
+          if (body.banner_url) allImages.push(body.banner_url);
+          if (Array.isArray(body.extra_images)) allImages.push(...body.extra_images.filter(Boolean));
+          const discordMsg = await postToChannel(channelId, message, allImages.length > 0 ? allImages : undefined);
           discordMessageId = discordMsg.id;
         }
       } catch (discordError) {

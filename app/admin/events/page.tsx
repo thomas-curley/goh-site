@@ -7,6 +7,8 @@ import { EVENT_TYPES } from "@/lib/constants";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
+import { ImageUploader } from "@/components/admin/ImageUploader";
+import { EmojiConfig } from "@/components/admin/EmojiConfig";
 
 interface EventForm {
   title: string;
@@ -27,6 +29,8 @@ interface EventForm {
   video_url: string;
   prize_pool: string;
   banner_url: string;
+  extra_images: string[];
+  emojis: Record<string, string>;
   ping_roles: string[];
   post_to_discord: boolean;
   create_signup_thread: boolean;
@@ -51,6 +55,8 @@ const EMPTY_FORM: EventForm = {
   video_url: "",
   prize_pool: "",
   banner_url: "",
+  extra_images: [],
+  emojis: {},
   ping_roles: [],
   post_to_discord: true,
   create_signup_thread: false,
@@ -255,6 +261,34 @@ export default function AdminEventsPage() {
             currentBanner={form.banner_url || null}
             onBannerGenerated={(url) => update("banner_url", url)}
           />
+
+          {/* Extra Images */}
+          <Card hover={false}>
+            <ImageUploader
+              images={form.extra_images}
+              onChange={(imgs) => setForm((prev) => ({ ...prev, extra_images: imgs }))}
+              maxImages={4}
+              label="Additional Event Images"
+            />
+          </Card>
+
+          {/* Emoji Customization */}
+          <Card hover={false}>
+            <EmojiConfig
+              emojis={form.emojis}
+              onChange={(e) => setForm((prev) => ({ ...prev, emojis: e }))}
+              fields={[
+                { key: "header", label: "Header", default: "📢" },
+                { key: "event", label: "Event", default: "⚔️" },
+                { key: "host", label: "Host", default: "🤠" },
+                { key: "date", label: "Date", default: "📅" },
+                { key: "time", label: "Time", default: "⏰" },
+                { key: "world", label: "World", default: "🌍" },
+                { key: "meet", label: "Meet", default: "📍" },
+                { key: "requirements", label: "Requirements", default: "🎆" },
+              ]}
+            />
+          </Card>
 
           {/* Role Pings */}
           <Card hover={false}>

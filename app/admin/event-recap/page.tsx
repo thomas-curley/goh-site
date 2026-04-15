@@ -5,6 +5,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
+import { ImageUploader } from "@/components/admin/ImageUploader";
+import { EmojiConfig, getEmoji } from "@/components/admin/EmojiConfig";
 
 interface PastEvent {
   id: string;
@@ -20,9 +22,9 @@ export default function EventRecapPage() {
   const [description, setDescription] = useState("");
   const [highlights, setHighlights] = useState<string[]>([""]);
   const [winners, setWinners] = useState<{ rsn: string; prize: string }[]>([]);
-  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [pingRoles, setPingRoles] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [emojis, setEmojis] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,27 +68,6 @@ export default function EventRecapPage() {
     setWinners(next);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    const fileName = `recap_${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage
-      .from("banners")
-      .upload(fileName, file, { contentType: file.type, cacheControl: "31536000" });
-
-    if (error) {
-      setStatus("Image upload failed: " + error.message);
-      setUploading(false);
-      return;
-    }
-
-    const { data: publicUrl } = supabase.storage.from("banners").getPublicUrl(fileName);
-    setImageUrl(publicUrl.publicUrl);
-    setUploading(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -115,7 +96,8 @@ export default function EventRecapPage() {
           description,
           highlights: highlights.filter((h) => h.trim()),
           winners: winners.filter((w) => w.rsn.trim()),
-          imageUrl,
+          images,
+          emojis,
           author,
           pingRoles,
           eventId: selectedEvent || undefined,
@@ -129,7 +111,8 @@ export default function EventRecapPage() {
         setDescription("");
         setHighlights([""]);
         setWinners([]);
-        setImageUrl("");
+        setImages([]);
+        setEmojis({});
         setPingRoles([]);
         setSelectedEvent("");
       } else {
@@ -155,7 +138,7 @@ export default function EventRecapPage() {
 
   // Build preview
   const pingPrefix = formatRolePings(pingRoles);
-  const previewLines = buildPreview({ title, description, highlights, winners, author: "You", imageUrl, pingPrefix });
+  const previewLines = buildPreview({ title, description, highlights, winners, author: "You", imageUrl: images[0] ?? "", pingPrefix, emojis });
 
   return (
     <div>
@@ -255,29 +238,23 @@ export default function EventRecapPage() {
             )}
           </Card>
 
-          {/* Screenshot Upload */}
+          {/* Screenshots */}
           <Card hover={false}>
-            <h2 className="font-display text-lg text-bark-brown mb-4">Event Screenshot</h2>
-            {imageUrl ? (
-              <div className="mb-3">
-                <img src={imageUrl} alt="Event screenshot" className="w-full rounded-md border border-bark-brown-light object-cover max-h-48" />
-                <button type="button" onClick={() => setImageUrl("")} className="text-xs text-red-accent hover:underline mt-2 cursor-pointer">Remove</button>
-              </div>
-            ) : (
-              <div>
-                <label className="block">
-                  <span className={labelClass}>Upload Screenshot</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    className="block w-full text-sm text-bark-brown-light file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gnome-green file:text-text-light hover:file:bg-gnome-green-light file:cursor-pointer cursor-pointer"
-                  />
-                </label>
-                {uploading && <p className="text-xs text-iron-grey mt-2">Uploading...</p>}
-              </div>
-            )}
+            <ImageUploader images={images} onChange={setImages} maxImages={5} label="Event Screenshots" />
+          </Card>
+
+          {/* Emoji Customization */}
+          <Card hover={false}>
+            <EmojiConfig
+              emojis={emojis}
+              onChange={setEmojis}
+              fields={[
+                { key: "header", label: "Header", default: "🏰" },
+                { key: "highlights", label: "Highlights", default: "⭐" },
+                { key: "winners", label: "Winners", default: "🏆" },
+                { key: "signoff", label: "Sign-off", default: "🌳" },
+              ]}
+            />
           </Card>
 
           {/* Role Pings */}
@@ -305,8 +282,12 @@ export default function EventRecapPage() {
             <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
               {previewLines || <span className="text-[#72767d]">Fill in the form to see a preview...</span>}
             </pre>
-            {imageUrl && (
-              <img src={imageUrl} alt="Preview" className="mt-3 rounded max-h-40 w-auto" />
+            {images.length > 0 && (
+              <div className="flex gap-2 mt-3 overflow-x-auto">
+                {images.map((url, i) => (
+                  <img key={i} src={url} alt={`Preview ${i + 1}`} className="rounded max-h-32 w-auto shrink-0" />
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -322,6 +303,7 @@ function buildPreview({
   winners,
   author,
   pingPrefix,
+  emojis = {},
 }: {
   title: string;
   description: string;
@@ -330,9 +312,11 @@ function buildPreview({
   author: string;
   imageUrl: string;
   pingPrefix?: string;
+  emojis?: Record<string, string>;
 }): string {
   if (!title.trim()) return "";
 
+  const e = (key: string, def: string) => emojis[key] ?? def;
   const lines: string[] = [];
 
   if (pingPrefix) {
@@ -340,7 +324,7 @@ function buildPreview({
     lines.push("");
   }
 
-  lines.push(`🏰 **Event Recap: ${title}** 🏰`);
+  lines.push(`${e("header", "🏰")} **Event Recap: ${title}** ${e("header", "🏰")}`);
   lines.push("");
 
   if (description.trim()) {
@@ -350,7 +334,7 @@ function buildPreview({
 
   const validHighlights = highlights.filter((h) => h.trim());
   if (validHighlights.length > 0) {
-    lines.push("⭐ **Highlights**");
+    lines.push(`${e("highlights", "⭐")} **Highlights**`);
     for (const h of validHighlights) {
       lines.push(`• ${h}`);
     }
@@ -359,7 +343,7 @@ function buildPreview({
 
   const validWinners = winners.filter((w) => w.rsn.trim());
   if (validWinners.length > 0) {
-    lines.push("🏆 **Winners**");
+    lines.push(`${e("winners", "🏆")} **Winners**`);
     validWinners.forEach((w, i) => {
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🎖️";
       const prize = w.prize.trim() ? ` — ${w.prize}` : "";
@@ -368,7 +352,7 @@ function buildPreview({
     lines.push("");
   }
 
-  lines.push(`Thanks for coming! See you at the next one 🌳`);
+  lines.push(`Thanks for coming! See you at the next one ${e("signoff", "🌳")}`);
   lines.push(`— ${author}`);
 
   return lines.join("\n");

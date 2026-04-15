@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
+import { ImageUploader } from "@/components/admin/ImageUploader";
+import { EmojiConfig } from "@/components/admin/EmojiConfig";
 
 interface Announcement {
   id: string;
@@ -39,6 +41,8 @@ export default function AdminAnnouncementsPage() {
   const [category, setCategory] = useState("announcement");
   const [pinned, setPinned] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
+  const [extraImages, setExtraImages] = useState<string[]>([]);
+  const [customEmoji, setCustomEmoji] = useState<Record<string, string>>({});
   const [postToDiscord, setPostToDiscord] = useState(true);
   const [pingRoles, setPingRoles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -107,7 +111,7 @@ export default function AdminAnnouncementsPage() {
           await fetch("/api/announcements/post-discord", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content, category, author: authorName, bannerUrl, pingRoles }),
+            body: JSON.stringify({ title, content, category, author: authorName, bannerUrl, images: extraImages, customEmoji: customEmoji.header, pingRoles }),
           });
           setStatus("Announcement published and posted to Discord!");
         } catch {
@@ -125,6 +129,8 @@ export default function AdminAnnouncementsPage() {
     setBannerUrl("");
     setPostToDiscord(true);
     setPingRoles([]);
+    setExtraImages([]);
+    setCustomEmoji({});
     setEditingId(null);
     setSaving(false);
     await load();
@@ -255,6 +261,22 @@ export default function AdminAnnouncementsPage() {
             currentBanner={bannerUrl || null}
             onBannerGenerated={(url) => setBannerUrl(url)}
           />
+
+          {/* Extra Images */}
+          {!editingId && (
+            <ImageUploader images={extraImages} onChange={setExtraImages} maxImages={4} label="Additional Images (posted to Discord)" />
+          )}
+
+          {/* Emoji Customization */}
+          {!editingId && (
+            <EmojiConfig
+              emojis={customEmoji}
+              onChange={setCustomEmoji}
+              fields={[
+                { key: "header", label: "Header emoji", default: "📢" },
+              ]}
+            />
+          )}
 
           {/* Role Pings */}
           {!editingId && (

@@ -92,13 +92,17 @@ export async function getChannelMessages(channelId: string, limit: number = 50) 
 }
 
 /**
- * Post a message to a Discord channel, optionally with an image embed.
+ * Post a message to a Discord channel, optionally with image embed(s).
+ * Supports single image URL string or array of URLs (up to 10 embeds).
  */
-export async function postToChannel(channelId: string, content: string, imageUrl?: string) {
+export async function postToChannel(channelId: string, content: string, imageUrl?: string | string[]) {
   const body: Record<string, unknown> = { content };
 
   if (imageUrl) {
-    body.embeds = [{ image: { url: imageUrl } }];
+    const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
+    if (urls.length > 0) {
+      body.embeds = urls.slice(0, 10).map((url) => ({ image: { url } }));
+    }
   }
 
   const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
