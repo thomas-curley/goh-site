@@ -74,18 +74,26 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
 
       const womPlayer = await womRes.json();
 
+      // WOM's displayName only has capitalization if the player was first
+      // tracked with it — many group members are stored all-lowercase. The
+      // hiscores don't expose in-game capitalization, so when WOM has none,
+      // keep the capitalization the user typed (e.g. "Gn0me Vlad").
+      const typed = rsn.trim().replace(/[-_]/g, " ").replace(/\s+/g, " ");
+      const womName: string = womPlayer.displayName ?? typed;
+      const displayRsn = womName === womName.toLowerCase() ? typed : womName;
+
       // Check if RSN is already linked to someone else
       const { data: existing } = await supabase
         .from("user_profiles")
         .select("id, discord_username")
-        .ilike("rsn", womPlayer.displayName)
+        .ilike("rsn", displayRsn)
         .neq("id", userId)
         .maybeSingle();
 
       if (existing) {
         setStatus({
           type: "taken",
-          message: `"${womPlayer.displayName}" is already linked to another Discord account. If this is your RSN, you can request an admin reset below.`,
+          message: `"${displayRsn}" is already linked to another Discord account. If this is your RSN, you can request an admin reset below.`,
           takenBy: existing.discord_username,
         });
         setShowResetForm(true);
@@ -116,7 +124,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
       const { error } = await supabase
         .from("user_profiles")
         .update({
-          rsn: womPlayer.displayName,
+          rsn: displayRsn,
           rsn_verified: true,
           clan_rank: clanRank,
           linked_at: new Date().toISOString(),
@@ -129,14 +137,14 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
         if (error.code === "23505") {
           setStatus({
             type: "taken",
-            message: `"${womPlayer.displayName}" is already linked to another account. Request an admin reset below.`,
+            message: `"${displayRsn}" is already linked to another account. Request an admin reset below.`,
           });
           setShowResetForm(true);
         } else {
           setStatus({ type: "error", message: "Failed to save. Try again." });
         }
       } else {
-        setStatus({ type: "success", message: `RSN "${womPlayer.displayName}" linked successfully!` });
+        setStatus({ type: "success", message: `RSN "${displayRsn}" linked successfully!` });
         setShowResetForm(false);
         await loadProfile();
       }
