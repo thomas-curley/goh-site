@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
+import { Button } from "@/components/ui/Button";
 
 interface CalendarEvent {
   id: string;
@@ -165,6 +166,9 @@ export function EventCalendar({ events }: EventCalendarProps) {
                 </p>
               )}
             </div>
+            <a href={`/events/${selectedEvent.id}/signup`} className="block mt-4">
+              <Button className="w-full">Check In</Button>
+            </a>
           </div>
         </div>
       )}
