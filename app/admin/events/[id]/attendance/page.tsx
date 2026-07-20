@@ -29,6 +29,8 @@ const SOURCE_LABELS: Record<string, string> = {
   signup_reaction: "Discord Signup",
   voice_channel: "Voice Channel",
   manual: "Manual",
+  self_checkin: "Self Check-In",
+  self_checkin_unverified: "Self Check-In (unverified name)",
 };
 
 export default function EventAttendancePage() {
@@ -172,6 +174,16 @@ export default function EventAttendancePage() {
         </Button>
         <Button size="sm" variant="ghost" onClick={markAllAttended} disabled={signedUpCount === attendedCount}>
           Mark All Signed Up as Attended
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            navigator.clipboard.writeText(`${window.location.origin}/events/${eventId}/signup`);
+            setStatus("Signup link copied to clipboard.");
+          }}
+        >
+          Copy Self Check-In Link
         </Button>
       </div>
 
