@@ -50,6 +50,9 @@ export default function EventAttendancePage() {
   const [screenshotUrl, setScreenshotUrl] = useState("");
   const [reportChannelId, setReportChannelId] = useState("");
   const [postingReport, setPostingReport] = useState(false);
+  const [signupMessageRef, setSignupMessageRef] = useState("");
+  const [signupEmoji, setSignupEmoji] = useState("✅");
+  const [importing, setImporting] = useState(false);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -116,6 +119,12 @@ export default function EventAttendancePage() {
     const signedUp = attendance.filter((a) => a.signed_up && !a.attended);
     if (signedUp.length === 0) return;
     handleAction("mark_attended", { discord_ids: signedUp.map((a) => a.discord_id) });
+  };
+
+  const handleImportSignups = async () => {
+    setImporting(true);
+    await handleAction("import_signups", { messageRef: signupMessageRef.trim(), emoji: signupEmoji.trim() });
+    setImporting(false);
   };
 
   const handlePostReport = async () => {
@@ -191,9 +200,6 @@ export default function EventAttendancePage() {
 
       {/* Import buttons */}
       <div className="flex flex-wrap gap-3 mb-6">
-        <Button size="sm" variant="secondary" onClick={() => handleAction("import_signups")}>
-          Import Signups from Discord
-        </Button>
         <Button size="sm" variant="ghost" onClick={markAllAttended} disabled={signedUpCount === attendedCount}>
           Mark All Signed Up as Attended
         </Button>
@@ -208,6 +214,40 @@ export default function EventAttendancePage() {
           Copy Self Check-In Link
         </Button>
       </div>
+
+      {/* Import signups from a Discord reaction */}
+      <Card hover={false} className="mb-6">
+        <h3 className="font-display text-base text-bark-brown mb-3">Import Signups from Discord Reactions</h3>
+        <p className="text-xs text-bark-brown-light mb-3">
+          Paste a link to the signup message (right-click it in Discord → Copy Message Link) and everyone
+          who reacted with the chosen emoji will be pulled in as signed up. Leave the link blank to use
+          this event&apos;s signup thread, if it has one.
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[240px]">
+            <label className="block text-xs text-iron-grey mb-1">Message Link or ID</label>
+            <input
+              type="text"
+              value={signupMessageRef}
+              onChange={(e) => setSignupMessageRef(e.target.value)}
+              className={`${inputClass} w-full font-mono text-sm`}
+              placeholder="https://discord.com/channels/.../.../..."
+            />
+          </div>
+          <div className="w-24">
+            <label className="block text-xs text-iron-grey mb-1">Emoji</label>
+            <input
+              type="text"
+              value={signupEmoji}
+              onChange={(e) => setSignupEmoji(e.target.value)}
+              className={`${inputClass} w-full text-center`}
+            />
+          </div>
+          <Button size="sm" variant="secondary" disabled={importing} onClick={handleImportSignups}>
+            {importing ? "Importing..." : "Import Signups"}
+          </Button>
+        </div>
+      </Card>
 
       {/* Post report to Discord */}
       <Card hover={false} className="mb-6">

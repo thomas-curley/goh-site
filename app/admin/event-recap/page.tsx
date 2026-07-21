@@ -18,6 +18,7 @@ interface PastEvent {
 export default function EventRecapPage() {
   const [events, setEvents] = useState<PastEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>("");
+  const [destination, setDestination] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [highlights, setHighlights] = useState<string[]>([""]);
@@ -70,7 +71,7 @@ export default function EventRecapPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !destination.trim()) return;
 
     setSubmitting(true);
     setStatus(null);
@@ -101,6 +102,7 @@ export default function EventRecapPage() {
           author,
           pingRoles,
           eventId: selectedEvent || undefined,
+          destination,
         }),
       });
 
@@ -115,6 +117,7 @@ export default function EventRecapPage() {
         setEmojis({});
         setPingRoles([]);
         setSelectedEvent("");
+        setDestination("");
       } else {
         setStatus(`Error: ${data.error}`);
       }
@@ -149,20 +152,37 @@ export default function EventRecapPage() {
           {/* Link to event */}
           <Card hover={false}>
             <h2 className="font-display text-lg text-bark-brown mb-4">Event</h2>
-            <div>
-              <label className={labelClass}>Link to Past Event (optional)</label>
-              <select
-                value={selectedEvent}
-                onChange={(e) => setSelectedEvent(e.target.value)}
-                className={`${inputClass} cursor-pointer`}
-              >
-                <option value="">— None (custom recap) —</option>
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.title} — {new Date(ev.start_time).toLocaleDateString()}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>Link to Past Event (optional)</label>
+                <select
+                  value={selectedEvent}
+                  onChange={(e) => setSelectedEvent(e.target.value)}
+                  className={`${inputClass} cursor-pointer`}
+                >
+                  <option value="">— None (custom recap) —</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title} — {new Date(ev.start_time).toLocaleDateString()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Post To (forum post link or ID) *</label>
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  required
+                  className={`${inputClass} font-mono text-sm`}
+                  placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+                />
+                <p className="text-xs text-iron-grey mt-1">
+                  Open the event&apos;s forum post in Discord, right-click any message in it (or the post
+                  itself) → <span className="font-semibold">Copy Message Link</span>, and paste it here.
+                </p>
+              </div>
             </div>
           </Card>
 
@@ -264,7 +284,7 @@ export default function EventRecapPage() {
 
           {/* Submit */}
           <div className="flex items-center gap-4">
-            <Button type="submit" disabled={submitting} size="lg">
+            <Button type="submit" disabled={submitting || !destination.trim()} size="lg">
               {submitting ? "Posting..." : "Post Recap to Discord"}
             </Button>
             {status && (
