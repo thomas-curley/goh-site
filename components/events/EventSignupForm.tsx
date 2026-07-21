@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -65,6 +66,9 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn }
         <p className="text-sm text-bark-brown-light mb-4">
           Checked in as <span className="font-mono text-gnome-green">{checkedIn.rsn ?? checkedIn.discord_username}</span>.
           You&apos;re eligible for this week&apos;s raffle.
+        </p>
+        <p className="text-xs text-iron-grey mb-3">
+          <Link href="/leaderboard" className="text-gnome-green hover:underline">See the attendance leaderboard</Link>
         </p>
         <button
           onClick={() => { setEditingName(true); setManualName(checkedIn.rsn ?? ""); }}
