@@ -45,13 +45,17 @@ export interface StaticTextConfig {
 
 export type SectionConfig = RolePingPrefixConfig | LineConfig | ParagraphConfig | ListConfig | StaticTextConfig;
 
+// Config is stored/edited as a loose bag of properties (the admin UI builds
+// it generically per block_type, and callers narrow to the specific
+// SectionConfig shape — see LineConfig/ParagraphConfig/etc. above — only
+// where they actually interpret it, i.e. inside renderInstance below).
 export interface SectionInstance {
   instance_id: string;
   source_section_id: string | null;
   block_type: BlockType;
   label: string;
   blankLineBefore: boolean;
-  config: SectionConfig;
+  config: Record<string, unknown>;
 }
 
 export interface PostSection {
@@ -59,7 +63,7 @@ export interface PostSection {
   name: string;
   description: string;
   block_type: BlockType;
-  config: SectionConfig;
+  config: Record<string, unknown>;
   is_active: boolean;
 }
 
