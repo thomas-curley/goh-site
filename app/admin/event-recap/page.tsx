@@ -56,6 +56,11 @@ export default function EventRecapPage() {
     }
   }, [selectedEvent, events]);
 
+  const selectedEventData = events.find((e) => e.id === selectedEvent);
+  const dateStr = selectedEventData
+    ? new Date(selectedEventData.start_time).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    : "";
+
   useEffect(() => {
     if (!templateId) {
       setTemplateSections([]);
@@ -122,6 +127,7 @@ export default function EventRecapPage() {
           eventId: selectedEvent || undefined,
           destination,
           templateId,
+          dateStr,
         }),
       });
 
@@ -164,6 +170,7 @@ export default function EventRecapPage() {
     winners: winners.filter((w) => w.rsn.trim()),
     author: "You",
     pingRoles,
+    dateStr,
   });
 
   return (

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
   try {
-    const { title, description, highlights, winners, images, author, pingRoles, destination, templateId } = await request.json();
+    const { title, description, highlights, winners, images, author, pingRoles, destination, templateId, dateStr } = await request.json();
 
     if (!title) {
       return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No event recap template configured" }, { status: 500 });
     }
 
-    const message = renderTemplate(template.sections, { title, description, highlights, winners, author, pingRoles });
+    const message = renderTemplate(template.sections, { title, description, highlights, winners, author, pingRoles, dateStr });
 
     // Support multiple images
     const imageUrls = Array.isArray(images) ? images.filter(Boolean) : [];
