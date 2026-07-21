@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ChannelSelector } from "@/components/admin/ChannelSelector";
 
 interface AttendanceRecord {
   id: string;
@@ -47,6 +48,8 @@ export default function EventAttendancePage() {
   const [scannedNames, setScannedNames] = useState<{ rsn: string; discord_id: string | null; matched: boolean }[] | null>(null);
   const [uploading, setUploading] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState("");
+  const [reportChannelId, setReportChannelId] = useState("");
+  const [postingReport, setPostingReport] = useState(false);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -113,6 +116,25 @@ export default function EventAttendancePage() {
     const signedUp = attendance.filter((a) => a.signed_up && !a.attended);
     if (signedUp.length === 0) return;
     handleAction("mark_attended", { discord_ids: signedUp.map((a) => a.discord_id) });
+  };
+
+  const handlePostReport = async () => {
+    if (!reportChannelId) return;
+    setPostingReport(true);
+    setStatus("Posting report to Discord...");
+    try {
+      const res = await fetch(`/api/events/${eventId}/attendance/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelId: reportChannelId }),
+      });
+      const data = await res.json();
+      setStatus(res.ok ? `Report posted (${data.count} attendee${data.count === 1 ? "" : "s"}).` : data.error ?? "Failed to post report.");
+    } catch {
+      setStatus("Failed to post report.");
+    } finally {
+      setPostingReport(false);
+    }
   };
 
   const signedUpCount = attendance.filter((a) => a.signed_up).length;
@@ -186,6 +208,22 @@ export default function EventAttendancePage() {
           Copy Self Check-In Link
         </Button>
       </div>
+
+      {/* Post report to Discord */}
+      <Card hover={false} className="mb-6">
+        <h3 className="font-display text-base text-bark-brown mb-3">Post Attendance Report to Discord</h3>
+        <p className="text-xs text-bark-brown-light mb-3">
+          Posts the list of attendees ({attendedCount}) to a Discord channel of your choice.
+        </p>
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <ChannelSelector value={reportChannelId} onChange={setReportChannelId} label="Channel" />
+          </div>
+          <Button size="sm" disabled={!reportChannelId || postingReport} onClick={handlePostReport}>
+            {postingReport ? "Posting..." : "Post Report"}
+          </Button>
+        </div>
+      </Card>
 
       {/* Add manual attendee */}
       <Card hover={false} className="mb-6">
