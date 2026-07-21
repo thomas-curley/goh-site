@@ -170,8 +170,8 @@ function renderList(config: ListConfig, data: Record<string, unknown>): string |
   return lines.join("\n");
 }
 
-function renderStaticText(config: StaticTextConfig): string {
-  return config.template.replace(/\{emoji\}/g, config.emoji ?? "");
+function renderStaticText(config: StaticTextConfig, data: Record<string, unknown>): string {
+  return substitute(config.template, config.emoji ?? "", data);
 }
 
 function renderInstance(instance: SectionInstance, data: Record<string, unknown>): string | null {
@@ -185,7 +185,7 @@ function renderInstance(instance: SectionInstance, data: Record<string, unknown>
     case "list":
       return renderList(instance.config as unknown as ListConfig, data);
     case "static_text":
-      return renderStaticText(instance.config as unknown as StaticTextConfig);
+      return renderStaticText(instance.config as unknown as StaticTextConfig, data);
     default:
       return null;
   }

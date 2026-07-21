@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ConfigFields, emptyConfig } from "@/components/admin/SectionEditor";
 import { renderTemplate } from "@/lib/post-templates";
+import { parseImportedTemplate } from "@/lib/post-template-import";
 import type { PostTemplate, PostSection, SectionInstance, ContentType, BlockType } from "@/lib/post-templates";
 
 interface TemplateEditorProps {
@@ -46,6 +47,7 @@ const MOCK_DATA: Record<ContentType, Record<string, unknown>> = {
     highlights: ["Someone tanked the boss solo", "We found a rare drop"],
     winners: [{ rsn: "PlayerOne", prize: "10M GP" }, { rsn: "PlayerTwo", prize: "5M GP" }],
     author: "Tmansim21",
+    dateStr: "Saturday, July 25",
     pingRoles: [],
   },
   signup_thread: {
@@ -78,6 +80,8 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState("");
 
   const supabase = createSupabaseBrowserClient();
   const isNew = !template;
@@ -122,6 +126,20 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
         config: emptyConfig(addBlankType),
       },
     ]);
+  };
+
+  const handleImport = () => {
+    if (!importText.trim()) return;
+    if (sections.length > 0) {
+      const confirmed = window.confirm(
+        "This replaces the current sections with a best-effort parse of the pasted text. Continue?"
+      );
+      if (!confirmed) return;
+    }
+    setSections(parseImportedTemplate(importText));
+    setImportText("");
+    setShowImport(false);
+    setExpandedId(null);
   };
 
   const removeInstance = (instanceId: string) => {
@@ -223,6 +241,37 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
             <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
             Use as the default template for {contentType}
           </label>
+
+          {/* Import from pasted Discord template text */}
+          <div className="rounded-md border border-parchment-dark p-3">
+            <button
+              type="button"
+              onClick={() => setShowImport(!showImport)}
+              className="text-xs font-semibold text-gnome-green hover:underline cursor-pointer"
+            >
+              {showImport ? "▾" : "▸"} Import from Discord Text
+            </button>
+            {showImport && (
+              <div className="mt-2 space-y-2">
+                <p className="text-xs text-iron-grey">
+                  Paste a template you already use in Discord (like the ones in your pinned messages).
+                  Recognized placeholders (Event Name, Date, World, Host, etc.) become live fields;
+                  anything else is kept as a literal [bracket] reminder to fill in or rebind by hand
+                  afterward. This is a starting point, not a perfect conversion — review the result below.
+                </p>
+                <textarea
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  rows={8}
+                  className={`${inputClass} font-mono text-xs resize-y`}
+                  placeholder={"[emoji] **[Event Name] — Results** · [Day Date]\n\n**Attendees:** [number] members\n..."}
+                />
+                <Button type="button" size="sm" variant="secondary" disabled={!importText.trim()} onClick={handleImport}>
+                  Parse & {sections.length > 0 ? "Replace" : "Build"} Sections
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* Section list */}
           <div>
