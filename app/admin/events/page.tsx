@@ -113,13 +113,15 @@ export default function AdminEventsPage() {
       setTemplateSections([]);
       return;
     }
-    const supabase = createSupabaseBrowserClient();
-    supabase
-      .from("post_templates")
-      .select("sections")
-      .eq("id", templateId)
-      .single()
-      .then(({ data }) => setTemplateSections(data?.sections ?? []));
+    (async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase
+        .from("post_templates")
+        .select("sections")
+        .eq("id", templateId)
+        .single();
+      setTemplateSections(data?.sections ?? []);
+    })();
   }, [templateId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

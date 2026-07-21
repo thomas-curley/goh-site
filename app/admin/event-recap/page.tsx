@@ -61,12 +61,14 @@ export default function EventRecapPage() {
       setTemplateSections([]);
       return;
     }
-    supabase
-      .from("post_templates")
-      .select("sections")
-      .eq("id", templateId)
-      .single()
-      .then(({ data }) => setTemplateSections(data?.sections ?? []));
+    (async () => {
+      const { data } = await supabase
+        .from("post_templates")
+        .select("sections")
+        .eq("id", templateId)
+        .single();
+      setTemplateSections(data?.sections ?? []);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateId]);
 
