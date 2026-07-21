@@ -150,6 +150,27 @@ export async function createSignupThread(
   return { threadId: thread.id, messageId: msg.id };
 }
 
+/**
+ * Parse a pasted Discord message link into its channel/message components.
+ * Handles both full links (.../channels/<guild>/<channel>/<message>) and
+ * channel-only links (.../channels/<guild>/<channel>). Returns nulls for
+ * anything that isn't a recognizable Discord link — use `isDiscordSnowflake`
+ * to handle a bare pasted ID separately, since a raw ID is ambiguous
+ * (channel vs. message vs. thread) without link context.
+ */
+export function parseDiscordMessageLink(input: string): { channelId: string | null; messageId: string | null } {
+  const trimmed = input.trim();
+  const full = trimmed.match(/channels\/\d+\/(\d+)\/(\d+)/);
+  if (full) return { channelId: full[1], messageId: full[2] };
+  const channelOnly = trimmed.match(/channels\/\d+\/(\d+)\/?$/);
+  if (channelOnly) return { channelId: channelOnly[1], messageId: null };
+  return { channelId: null, messageId: null };
+}
+
+export function isDiscordSnowflake(input: string): boolean {
+  return /^\d{15,25}$/.test(input.trim());
+}
+
 export async function getDiscordEvents() {
   const guildId = process.env.DISCORD_GUILD_ID;
   if (!guildId) throw new Error("DISCORD_GUILD_ID not set");

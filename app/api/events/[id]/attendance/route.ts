@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { parseDiscordMessageLink, isDiscordSnowflake } from "@/lib/discord";
+
+// Custom guild emoji copied from Discord looks like <:name:id> or <a:name:id>;
+// the reactions endpoint wants it as "name:id". Unicode emoji pass through as-is.
+function encodeEmojiForReactionApi(raw: string): string {
+  const trimmed = raw.trim();
+  const custom = trimmed.match(/^<a?:(\w+):(\d+)>$/);
+  if (custom) return encodeURIComponent(`${custom[1]}:${custom[2]}`);
+  return encodeURIComponent(trimmed);
+}
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,27 +53,45 @@ export async function POST(
 
   switch (action) {
     case "import_signups": {
-      // Import from Discord thread reactions
+      // Import from Discord message reactions
       const botToken = process.env.DISCORD_BOT_TOKEN;
       const guildId = process.env.DISCORD_GUILD_ID;
       if (!botToken) return NextResponse.json({ error: "Bot token not set" }, { status: 503 });
 
-      // Get the event to find the signup thread
-      const { data: event } = await supabase
-        .from("events")
-        .select("title, discord_message_id")
-        .eq("id", id)
-        .single();
+      const { messageRef, emoji } = body;
 
-      // Try to get reactions from the signups channel message
-      const signupsChannelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID;
-      if (!signupsChannelId || !event?.discord_message_id) {
-        return NextResponse.json({ error: "No signup thread found for this event" }, { status: 404 });
+      let channelId: string | null = null;
+      let messageId: string | null = null;
+
+      if (typeof messageRef === "string" && messageRef.trim()) {
+        const parsed = parseDiscordMessageLink(messageRef);
+        channelId = parsed.channelId;
+        messageId = parsed.messageId ?? (isDiscordSnowflake(messageRef) ? messageRef.trim() : null);
       }
 
-      // Fetch ✅ reactions from the signup message
+      // Fall back to this event's stored signup thread, if one was created.
+      if (!messageId) {
+        const { data: event } = await supabase
+          .from("events")
+          .select("discord_message_id")
+          .eq("id", id)
+          .single();
+        messageId = event?.discord_message_id ?? null;
+      }
+      if (!channelId) channelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID ?? null;
+
+      if (!channelId || !messageId) {
+        return NextResponse.json(
+          { error: "Paste a signup message link (right-click the message → Copy Message Link), or this event needs a signup thread." },
+          { status: 400 }
+        );
+      }
+
+      const emojiParam = encodeEmojiForReactionApi(typeof emoji === "string" && emoji.trim() ? emoji : "✅");
+
+      // Fetch reactions from the signup message
       const reactionsRes = await fetch(
-        `https://discord.com/api/v10/channels/${signupsChannelId}/messages/${event.discord_message_id}/reactions/%E2%9C%85?limit=100`,
+        `https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/reactions/${emojiParam}?limit=100`,
         { headers: { Authorization: `Bot ${botToken}` } }
       );
 

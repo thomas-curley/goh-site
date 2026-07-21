@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { postToChannel } from "@/lib/discord";
+import { postToChannel, parseDiscordMessageLink, isDiscordSnowflake } from "@/lib/discord";
+
+function resolveChannelId(input?: string): string | null {
+  if (typeof input === "string" && input.trim()) {
+    const { channelId } = parseDiscordMessageLink(input);
+    if (channelId) return channelId;
+    if (isDiscordSnowflake(input)) return input.trim();
+    return null;
+  }
+  return process.env.DISCORD_RESULTS_CHANNEL_ID ?? null;
+}
 
 export async function POST(request: NextRequest) {
-  const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID;
-  if (!channelId) {
-    return NextResponse.json({ error: "DISCORD_RESULTS_CHANNEL_ID not set" }, { status: 503 });
-  }
-
   try {
-    const { title, description, highlights, winners, images, emojis, author, pingRoles } = await request.json();
+    const { title, description, highlights, winners, images, emojis, author, pingRoles, destination } = await request.json();
 
     if (!title) {
       return NextResponse.json({ error: "title is required" }, { status: 400 });
+    }
+
+    const channelId = resolveChannelId(destination);
+    if (!channelId) {
+      return NextResponse.json(
+        { error: "Enter a forum post link or ID to post the recap to (or a Discord message link from that post)." },
+        { status: 400 }
+      );
     }
 
     const e = (key: string, def: string) => emojis?.[key] ?? def;
