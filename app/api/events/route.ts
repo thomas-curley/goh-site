@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createDiscordEvent, postToChannel, createSignupThread } from "@/lib/discord";
-import { formatDiscordMessage, formatDiscordEventDescription } from "@/lib/discord-format";
+import { formatDiscordEventDescription } from "@/lib/discord-format";
+import { renderTemplate } from "@/lib/post-templates";
+import { resolveTemplate } from "@/lib/post-templates-server";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -92,23 +94,39 @@ export async function POST(request: NextRequest) {
 
         // Post formatted message to events channel
         const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID;
-        if (channelId) {
-          // Prepend role pings if any
-          let pingPrefix = "";
-          if (Array.isArray(body.ping_roles) && body.ping_roles.length > 0) {
-            pingPrefix = body.ping_roles.map((id: string) => {
-              if (id === "@everyone") return "@everyone";
-              if (id === "@here") return "@here";
-              return `<@&${id}>`;
-            }).join(" ") + "\n\n";
+        if (channelId && supabase) {
+          const template = await resolveTemplate(supabase, "event_post", body.templateId);
+          if (template) {
+            const startDate = new Date(eventRow.start_time);
+            const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+            const timeStr = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+
+            const message = renderTemplate(template.sections, {
+              title: eventRow.title,
+              description: eventRow.description,
+              host_rsn: eventRow.host_rsn,
+              dateStr,
+              timeStr,
+              world: eventRow.world,
+              meet_location: eventRow.meet_location,
+              spots: eventRow.spots,
+              signup_type: eventRow.signup_type,
+              voice_channel: eventRow.voice_channel,
+              prize_pool: eventRow.prize_pool,
+              requirements: eventRow.requirements,
+              requirements_list: eventRow.requirements_list,
+              guide_text: eventRow.guide_text,
+              video_url: eventRow.video_url,
+              pingRoles: body.ping_roles,
+            });
+
+            // Combine banner + extra images
+            const allImages: string[] = [];
+            if (body.banner_url) allImages.push(body.banner_url);
+            if (Array.isArray(body.extra_images)) allImages.push(...body.extra_images.filter(Boolean));
+            const discordMsg = await postToChannel(channelId, message, allImages.length > 0 ? allImages : undefined);
+            discordMessageId = discordMsg.id;
           }
-          const message = pingPrefix + formatDiscordMessage(eventRow);
-          // Combine banner + extra images
-          const allImages: string[] = [];
-          if (body.banner_url) allImages.push(body.banner_url);
-          if (Array.isArray(body.extra_images)) allImages.push(...body.extra_images.filter(Boolean));
-          const discordMsg = await postToChannel(channelId, message, allImages.length > 0 ? allImages : undefined);
-          discordMessageId = discordMsg.id;
         }
       } catch (discordError) {
         console.error("Discord post failed:", discordError);
@@ -121,29 +139,26 @@ export async function POST(request: NextRequest) {
     if (body.create_signup_thread) {
       try {
         const signupsChannelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID;
-        if (signupsChannelId) {
-          const startDate = new Date(eventRow.start_time);
-          const dateStr = startDate.toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          });
-          const threadMessage = [
-            `📋 **Sign-ups: ${eventRow.title}**`,
-            "",
-            `📅 ${dateStr}`,
-            eventRow.host_rsn ? `🤠 Host: ${eventRow.host_rsn}` : null,
-            eventRow.spots && eventRow.spots !== "Open" ? `👥 Spots: ${eventRow.spots}` : null,
-            "",
-            "React with ✅ to sign up, or reply with your RSN and role!",
-          ].filter((l) => l !== null).join("\n");
+        if (signupsChannelId && supabase) {
+          const template = await resolveTemplate(supabase, "signup_thread", body.signupThreadTemplateId);
+          if (template) {
+            const startDate = new Date(eventRow.start_time);
+            const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
-          const { threadId } = await createSignupThread(
-            signupsChannelId,
-            eventRow.title,
-            threadMessage
-          );
-          signupThreadId = threadId;
+            const threadMessage = renderTemplate(template.sections, {
+              title: eventRow.title,
+              dateStr,
+              host_rsn: eventRow.host_rsn,
+              spots: eventRow.spots,
+            });
+
+            const { threadId } = await createSignupThread(
+              signupsChannelId,
+              eventRow.title,
+              threadMessage
+            );
+            signupThreadId = threadId;
+          }
         }
       } catch (threadError) {
         console.error("Signup thread creation failed:", threadError);

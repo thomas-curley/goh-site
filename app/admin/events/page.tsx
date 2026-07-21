@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EVENT_TYPES } from "@/lib/constants";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
-import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
+import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
-import { EmojiConfig } from "@/components/admin/EmojiConfig";
+import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { renderTemplate } from "@/lib/post-templates";
+import type { SectionInstance } from "@/lib/post-templates";
 
 interface EventForm {
   title: string;
@@ -30,7 +33,6 @@ interface EventForm {
   prize_pool: string;
   banner_url: string;
   extra_images: string[];
-  emojis: Record<string, string>;
   ping_roles: string[];
   post_to_discord: boolean;
   create_signup_thread: boolean;
@@ -56,7 +58,6 @@ const EMPTY_FORM: EventForm = {
   prize_pool: "",
   banner_url: "",
   extra_images: [],
-  emojis: {},
   ping_roles: [],
   post_to_discord: true,
   create_signup_thread: false,
@@ -73,14 +74,53 @@ const inputClass =
   "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary focus:outline-none focus:ring-2 focus:ring-gnome-green";
 const labelClass = "block text-sm font-semibold text-bark-brown mb-1";
 
+function eventTemplateData(form: EventForm): Record<string, unknown> {
+  const startDate = form.start_time ? new Date(form.start_time) : null;
+  return {
+    title: form.title,
+    description: form.description,
+    host_rsn: form.host_rsn,
+    dateStr: startDate ? startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "",
+    timeStr: startDate ? startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "",
+    world: form.world,
+    meet_location: form.meet_location,
+    spots: form.spots,
+    signup_type: form.signup_type,
+    voice_channel: form.voice_channel,
+    prize_pool: form.prize_pool,
+    requirements: form.requirements,
+    requirements_list: form.requirements_list,
+    guide_text: form.guide_text,
+    video_url: form.video_url,
+    pingRoles: form.ping_roles,
+  };
+}
+
 export default function AdminEventsPage() {
   const [form, setForm] = useState<EventForm>(EMPTY_FORM);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [templateId, setTemplateId] = useState("");
+  const [signupThreadTemplateId, setSignupThreadTemplateId] = useState("");
+  const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
 
   const update = (field: keyof EventForm, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  useEffect(() => {
+    if (!templateId) {
+      setTemplateSections([]);
+      return;
+    }
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from("post_templates")
+      .select("sections")
+      .eq("id", templateId)
+      .single()
+      .then(({ data }) => setTemplateSections(data?.sections ?? []));
+  }, [templateId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +134,8 @@ export default function AdminEventsPage() {
         body: JSON.stringify({
           ...form,
           world: form.world ? parseInt(form.world) : null,
+          templateId,
+          signupThreadTemplateId,
         }),
       });
 
@@ -120,8 +162,7 @@ export default function AdminEventsPage() {
     }
   };
 
-  // Build preview
-  const preview = buildPreview(form);
+  const preview = renderTemplate(templateSections, eventTemplateData(form));
 
   return (
     <div>
@@ -272,24 +313,6 @@ export default function AdminEventsPage() {
             />
           </Card>
 
-          {/* Emoji Customization */}
-          <Card hover={false}>
-            <EmojiConfig
-              emojis={form.emojis}
-              onChange={(e) => setForm((prev) => ({ ...prev, emojis: e }))}
-              fields={[
-                { key: "header", label: "Header", default: "📢" },
-                { key: "event", label: "Event", default: "⚔️" },
-                { key: "host", label: "Host", default: "🤠" },
-                { key: "date", label: "Date", default: "📅" },
-                { key: "time", label: "Time", default: "⏰" },
-                { key: "world", label: "World", default: "🌍" },
-                { key: "meet", label: "Meet", default: "📍" },
-                { key: "requirements", label: "Requirements", default: "🎆" },
-              ]}
-            />
-          </Card>
-
           {/* Role Pings */}
           <Card hover={false}>
             <RolePingSelector
@@ -300,7 +323,7 @@ export default function AdminEventsPage() {
 
           {/* Discord + Submit */}
           <Card hover={false}>
-            <div className="flex items-start gap-3 mb-6">
+            <div className="flex items-start gap-3 mb-4">
               <button
                 type="button"
                 onClick={() => update("post_to_discord", !form.post_to_discord)}
@@ -325,8 +348,13 @@ export default function AdminEventsPage() {
                 </p>
               </div>
             </div>
+            {form.post_to_discord && (
+              <div className="mb-6 ml-9">
+                <TemplateSelector contentType="event_post" value={templateId} onChange={setTemplateId} label="Event Post Template" />
+              </div>
+            )}
 
-            <div className="flex items-start gap-3 mb-6">
+            <div className="flex items-start gap-3 mb-4">
               <button
                 type="button"
                 onClick={() => update("create_signup_thread", !form.create_signup_thread)}
@@ -350,6 +378,11 @@ export default function AdminEventsPage() {
                 </p>
               </div>
             </div>
+            {form.create_signup_thread && (
+              <div className="mb-6 ml-9">
+                <TemplateSelector contentType="signup_thread" value={signupThreadTemplateId} onChange={setSignupThreadTemplateId} label="Signup Thread Template" />
+              </div>
+            )}
 
             <div className="flex items-center gap-4">
               <Button type="submit" disabled={submitting} size="lg">
@@ -376,56 +409,4 @@ export default function AdminEventsPage() {
       </div>
     </div>
   );
-}
-
-function buildPreview(form: EventForm): string {
-  if (!form.title) return "";
-
-  const lines: string[] = [];
-  const pings = form.ping_roles.length > 0 ? formatRolePings(form.ping_roles) + " " : "";
-  lines.push(`📢 ${pings}${form.title} 📢`);
-  lines.push("");
-
-  if (form.description) {
-    lines.push(form.description);
-    lines.push("");
-  }
-
-  lines.push(`⚔️ Event: ${form.title}`);
-  if (form.host_rsn) lines.push(`🤠 Host: <@${form.host_rsn}>`);
-
-  if (form.start_time) {
-    const d = new Date(form.start_time);
-    lines.push(`📅 Date: ${d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`);
-    lines.push(`⏰ Time: ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} Eastern US`);
-  }
-
-  if (form.world) lines.push(`🌍 World: ${form.world}`);
-  if (form.meet_location) lines.push(`📍 Meet: ${form.meet_location}`);
-  if (form.spots) lines.push(`👥 Spots: ${form.spots}`);
-  if (form.signup_type) lines.push(`📝 Signup: ${form.signup_type}`);
-  if (form.voice_channel) lines.push(`🔊 Voice: ${form.voice_channel}`);
-  if (form.prize_pool) lines.push(`🏆 Prize Pool: ${form.prize_pool}`);
-
-  if (form.requirements_list) {
-    lines.push("");
-    lines.push("🎆 Recommended Requirements");
-    const reqs = form.requirements_list.split("\n").map((r) => r.trim()).filter(Boolean);
-    for (const req of reqs) {
-      lines.push(`• ${req.replace(/^[•\-*]\s*/, "")}`);
-    }
-  }
-
-  if (form.guide_text) {
-    lines.push("");
-    lines.push(`📄 Event-Specific Guide: ${form.title} Mechanics`);
-    lines.push(form.guide_text);
-  }
-
-  if (form.video_url) {
-    lines.push("");
-    lines.push(`Video Guide: ${form.video_url}`);
-  }
-
-  return lines.join("\n");
 }

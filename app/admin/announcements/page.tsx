@@ -6,9 +6,9 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
-import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
+import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
-import { EmojiConfig } from "@/components/admin/EmojiConfig";
+import { TemplateSelector } from "@/components/admin/TemplateSelector";
 
 interface Announcement {
   id: string;
@@ -42,7 +42,7 @@ export default function AdminAnnouncementsPage() {
   const [pinned, setPinned] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
   const [extraImages, setExtraImages] = useState<string[]>([]);
-  const [customEmoji, setCustomEmoji] = useState<Record<string, string>>({});
+  const [templateId, setTemplateId] = useState("");
   const [postToDiscord, setPostToDiscord] = useState(true);
   const [pingRoles, setPingRoles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -111,7 +111,7 @@ export default function AdminAnnouncementsPage() {
           await fetch("/api/announcements/post-discord", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content, category, author: authorName, bannerUrl, images: extraImages, customEmoji: customEmoji.header, pingRoles }),
+            body: JSON.stringify({ title, content, author: authorName, bannerUrl, images: extraImages, pingRoles, templateId }),
           });
           setStatus("Announcement published and posted to Discord!");
         } catch {
@@ -130,7 +130,6 @@ export default function AdminAnnouncementsPage() {
     setPostToDiscord(true);
     setPingRoles([]);
     setExtraImages([]);
-    setCustomEmoji({});
     setEditingId(null);
     setSaving(false);
     await load();
@@ -267,15 +266,9 @@ export default function AdminAnnouncementsPage() {
             <ImageUploader images={extraImages} onChange={setExtraImages} maxImages={4} label="Additional Images (posted to Discord)" />
           )}
 
-          {/* Emoji Customization */}
+          {/* Template */}
           {!editingId && (
-            <EmojiConfig
-              emojis={customEmoji}
-              onChange={setCustomEmoji}
-              fields={[
-                { key: "header", label: "Header emoji", default: "📢" },
-              ]}
-            />
+            <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} />
           )}
 
           {/* Role Pings */}

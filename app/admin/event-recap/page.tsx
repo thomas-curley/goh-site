@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { RolePingSelector, formatRolePings } from "@/components/admin/RolePingSelector";
+import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
-import { EmojiConfig, getEmoji } from "@/components/admin/EmojiConfig";
+import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { renderTemplate } from "@/lib/post-templates";
+import type { SectionInstance } from "@/lib/post-templates";
 
 interface PastEvent {
   id: string;
@@ -25,7 +27,8 @@ export default function EventRecapPage() {
   const [winners, setWinners] = useState<{ rsn: string; prize: string }[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [pingRoles, setPingRoles] = useState<string[]>([]);
-  const [emojis, setEmojis] = useState<Record<string, string>>({});
+  const [templateId, setTemplateId] = useState("");
+  const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +55,20 @@ export default function EventRecapPage() {
       if (ev) setTitle(ev.title);
     }
   }, [selectedEvent, events]);
+
+  useEffect(() => {
+    if (!templateId) {
+      setTemplateSections([]);
+      return;
+    }
+    supabase
+      .from("post_templates")
+      .select("sections")
+      .eq("id", templateId)
+      .single()
+      .then(({ data }) => setTemplateSections(data?.sections ?? []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateId]);
 
   const addHighlight = () => setHighlights([...highlights, ""]);
   const removeHighlight = (i: number) => setHighlights(highlights.filter((_, idx) => idx !== i));
@@ -98,11 +115,11 @@ export default function EventRecapPage() {
           highlights: highlights.filter((h) => h.trim()),
           winners: winners.filter((w) => w.rsn.trim()),
           images,
-          emojis,
           author,
           pingRoles,
           eventId: selectedEvent || undefined,
           destination,
+          templateId,
         }),
       });
 
@@ -114,7 +131,6 @@ export default function EventRecapPage() {
         setHighlights([""]);
         setWinners([]);
         setImages([]);
-        setEmojis({});
         setPingRoles([]);
         setSelectedEvent("");
         setDestination("");
@@ -139,9 +155,14 @@ export default function EventRecapPage() {
     );
   }
 
-  // Build preview
-  const pingPrefix = formatRolePings(pingRoles);
-  const previewLines = buildPreview({ title, description, highlights, winners, author: "You", imageUrl: images[0] ?? "", pingPrefix, emojis });
+  const previewLines = renderTemplate(templateSections, {
+    title,
+    description,
+    highlights: highlights.filter((h) => h.trim()),
+    winners: winners.filter((w) => w.rsn.trim()),
+    author: "You",
+    pingRoles,
+  });
 
   return (
     <div>
@@ -263,18 +284,9 @@ export default function EventRecapPage() {
             <ImageUploader images={images} onChange={setImages} maxImages={5} label="Event Screenshots" />
           </Card>
 
-          {/* Emoji Customization */}
+          {/* Template */}
           <Card hover={false}>
-            <EmojiConfig
-              emojis={emojis}
-              onChange={setEmojis}
-              fields={[
-                { key: "header", label: "Header", default: "🏰" },
-                { key: "highlights", label: "Highlights", default: "⭐" },
-                { key: "winners", label: "Winners", default: "🏆" },
-                { key: "signoff", label: "Sign-off", default: "🌳" },
-              ]}
-            />
+            <TemplateSelector contentType="event_recap" value={templateId} onChange={setTemplateId} />
           </Card>
 
           {/* Role Pings */}
@@ -314,66 +326,4 @@ export default function EventRecapPage() {
       </div>
     </div>
   );
-}
-
-function buildPreview({
-  title,
-  description,
-  highlights,
-  winners,
-  author,
-  pingPrefix,
-  emojis = {},
-}: {
-  title: string;
-  description: string;
-  highlights: string[];
-  winners: { rsn: string; prize: string }[];
-  author: string;
-  imageUrl: string;
-  pingPrefix?: string;
-  emojis?: Record<string, string>;
-}): string {
-  if (!title.trim()) return "";
-
-  const e = (key: string, def: string) => emojis[key] ?? def;
-  const lines: string[] = [];
-
-  if (pingPrefix) {
-    lines.push(pingPrefix);
-    lines.push("");
-  }
-
-  lines.push(`${e("header", "🏰")} **Event Recap: ${title}** ${e("header", "🏰")}`);
-  lines.push("");
-
-  if (description.trim()) {
-    lines.push(description);
-    lines.push("");
-  }
-
-  const validHighlights = highlights.filter((h) => h.trim());
-  if (validHighlights.length > 0) {
-    lines.push(`${e("highlights", "⭐")} **Highlights**`);
-    for (const h of validHighlights) {
-      lines.push(`• ${h}`);
-    }
-    lines.push("");
-  }
-
-  const validWinners = winners.filter((w) => w.rsn.trim());
-  if (validWinners.length > 0) {
-    lines.push(`${e("winners", "🏆")} **Winners**`);
-    validWinners.forEach((w, i) => {
-      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🎖️";
-      const prize = w.prize.trim() ? ` — ${w.prize}` : "";
-      lines.push(`${medal} **${w.rsn}**${prize}`);
-    });
-    lines.push("");
-  }
-
-  lines.push(`Thanks for coming! See you at the next one ${e("signoff", "🌳")}`);
-  lines.push(`— ${author}`);
-
-  return lines.join("\n");
 }
