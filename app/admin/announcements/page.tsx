@@ -9,6 +9,7 @@ import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { usePermission } from "@/lib/use-permission";
 
 interface Announcement {
   id: string;
@@ -19,6 +20,7 @@ interface Announcement {
   published: boolean;
   banner_url: string | null;
   author_name: string | null;
+  discord_message_id: string | null;
   created_at: string;
 }
 
@@ -47,7 +49,11 @@ export default function AdminAnnouncementsPage() {
   const [pingRoles, setPingRoles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDiscordMessageId, setEditingDiscordMessageId] = useState<string | null>(null);
+  const [syncDiscord, setSyncDiscord] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
+
+  const { allowed: canSyncDiscord, loading: permLoading } = usePermission("sync_discord_posts");
 
   const supabase = createSupabaseBrowserClient();
 
@@ -93,25 +99,42 @@ export default function AdminAnnouncementsPage() {
         .update({ title, content, category, pinned, banner_url: bannerUrl || null, author_name: authorName, updated_at: new Date().toISOString() })
         .eq("id", editingId);
       if (error) { setStatus(`Error: ${error.message}`); setSaving(false); return; }
-      setStatus("Announcement updated!");
+
+      if (editingDiscordMessageId && syncDiscord && canSyncDiscord) {
+        try {
+          const res = await fetch(`/api/announcements/${editingId}/sync-discord`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
+          const data = await res.json();
+          setStatus(res.ok ? "Announcement updated and Discord message synced!" : `Announcement updated, but Discord sync failed: ${data.error}`);
+        } catch {
+          setStatus("Announcement updated! (Discord sync failed)");
+        }
+      } else {
+        setStatus("Announcement updated!");
+      }
     } else {
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from("announcements")
         .insert({
           title, content, category, pinned,
           banner_url: bannerUrl || null,
           author_id: user?.id,
           author_name: authorName,
-        });
-      if (error) { setStatus(`Error: ${error.message}`); setSaving(false); return; }
+        })
+        .select()
+        .single();
+      if (error || !inserted) { setStatus(`Error: ${error?.message ?? "Failed to save"}`); setSaving(false); return; }
 
       // Post to Discord if checked
       if (postToDiscord) {
         try {
-          await fetch("/api/announcements/post-discord", {
+          await fetch(`/api/announcements/${inserted.id}/sync-discord`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content, author: authorName, bannerUrl, images: extraImages, pingRoles, templateId }),
+            body: JSON.stringify({ images: extraImages, pingRoles, templateId }),
           });
           setStatus("Announcement published and posted to Discord!");
         } catch {
@@ -131,12 +154,15 @@ export default function AdminAnnouncementsPage() {
     setPingRoles([]);
     setExtraImages([]);
     setEditingId(null);
+    setEditingDiscordMessageId(null);
+    setSyncDiscord(true);
     setSaving(false);
     await load();
   };
 
   const handleEdit = (a: Announcement) => {
     setEditingId(a.id);
+    setEditingDiscordMessageId(a.discord_message_id);
     setTitle(a.title);
     setContent(a.content);
     setCategory(a.category);
@@ -261,6 +287,14 @@ export default function AdminAnnouncementsPage() {
             onBannerGenerated={(url) => setBannerUrl(url)}
           />
 
+          {/* Update Discord message (only when editing an already-posted announcement) */}
+          {editingId && editingDiscordMessageId && !permLoading && canSyncDiscord && (
+            <label className="flex items-center gap-2 text-sm text-bark-brown-light">
+              <input type="checkbox" checked={syncDiscord} onChange={(e) => setSyncDiscord(e.target.checked)} />
+              Also update the Discord message
+            </label>
+          )}
+
           {/* Extra Images */}
           {!editingId && (
             <ImageUploader images={extraImages} onChange={setExtraImages} maxImages={4} label="Additional Images (posted to Discord)" />
@@ -311,7 +345,7 @@ export default function AdminAnnouncementsPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => { setEditingId(null); setTitle(""); setContent(""); setCategory("announcement"); setPinned(false); setBannerUrl(""); }}
+                onClick={() => { setEditingId(null); setEditingDiscordMessageId(null); setTitle(""); setContent(""); setCategory("announcement"); setPinned(false); setBannerUrl(""); }}
               >
                 Cancel
               </Button>

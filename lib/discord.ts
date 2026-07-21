@@ -120,6 +120,37 @@ export async function postToChannel(channelId: string, content: string, imageUrl
 }
 
 /**
+ * Edit an existing message in a Discord channel, optionally replacing its
+ * image embed(s). Pass the full desired image set, not a diff — Discord
+ * replaces embeds wholesale on PATCH. Unlike postToChannel, an absent
+ * imageUrl explicitly clears embeds (embeds: []) rather than omitting the
+ * key, so editing a post to remove its banner actually removes it.
+ */
+export async function editChannelMessage(channelId: string, messageId: string, content: string, imageUrl?: string | string[]) {
+  const body: Record<string, unknown> = { content };
+
+  if (imageUrl) {
+    const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
+    body.embeds = urls.length > 0 ? urls.slice(0, 10).map((url) => ({ image: { url } })) : [];
+  } else {
+    body.embeds = [];
+  }
+
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages/${messageId}`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error: ${res.status} ${error}`);
+  }
+
+  return res.json();
+}
+
+/**
  * Create a thread in a channel (for sign-ups).
  * Posts an initial message then creates a public thread from it.
  */

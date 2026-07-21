@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
 
     // Create sign-up thread if requested
     let signupThreadId: string | null = null;
+    let signupThreadMessageId: string | null = null;
     if (body.create_signup_thread) {
       try {
         const signupsChannelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID;
@@ -152,12 +153,13 @@ export async function POST(request: NextRequest) {
               spots: eventRow.spots,
             });
 
-            const { threadId } = await createSignupThread(
+            const { threadId, messageId } = await createSignupThread(
               signupsChannelId,
               eventRow.title,
               threadMessage
             );
             signupThreadId = threadId;
+            signupThreadMessageId = messageId;
           }
         }
       } catch (threadError) {
@@ -173,6 +175,8 @@ export async function POST(request: NextRequest) {
           ...eventRow,
           discord_event_id: discordEventId,
           discord_message_id: discordMessageId,
+          signup_thread_id: signupThreadId,
+          signup_thread_message_id: signupThreadMessageId,
         })
         .select()
         .single();
