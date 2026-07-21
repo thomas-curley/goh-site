@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createDiscordEvent, postToChannel, createSignupThread } from "@/lib/discord";
+import { createDiscordEvent, postToChannel, createSignupThread, resolvePostDestination } from "@/lib/discord";
 import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
     // Post to Discord if requested
     let discordEventId: string | null = null;
     let discordMessageId: string | null = null;
+    let discordChannelId: string | null = null;
 
     if (body.post_to_discord) {
       try {
@@ -92,8 +93,9 @@ export async function POST(request: NextRequest) {
 
         discordEventId = discordEvent.id;
 
-        // Post formatted message to events channel
-        const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID;
+        // Post formatted message — to an admin-chosen destination if given,
+        // otherwise the default events channel.
+        const channelId = resolvePostDestination(body.destination, process.env.DISCORD_EVENTS_CHANNEL_ID);
         if (channelId && supabase) {
           const template = await resolveTemplate(supabase, "event_post", body.templateId);
           if (template) {
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
             if (Array.isArray(body.extra_images)) allImages.push(...body.extra_images.filter(Boolean));
             const discordMsg = await postToChannel(channelId, message, allImages.length > 0 ? allImages : undefined);
             discordMessageId = discordMsg.id;
+            discordChannelId = channelId;
           }
         }
       } catch (discordError) {
@@ -175,6 +178,7 @@ export async function POST(request: NextRequest) {
           ...eventRow,
           discord_event_id: discordEventId,
           discord_message_id: discordMessageId,
+          discord_channel_id: discordChannelId,
           signup_thread_id: signupThreadId,
           signup_thread_message_id: signupThreadMessageId,
         })

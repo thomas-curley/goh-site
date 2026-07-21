@@ -17,6 +17,7 @@ export default function AdminEventsPage() {
   const [templateId, setTemplateId] = useState("");
   const [signupThreadTemplateId, setSignupThreadTemplateId] = useState("");
   const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
+  const [destination, setDestination] = useState("");
 
   const update = (field: keyof EventForm, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -52,6 +53,7 @@ export default function AdminEventsPage() {
           world: form.world ? parseInt(form.world) : null,
           templateId,
           signupThreadTemplateId,
+          destination,
         }),
       });
 
@@ -68,6 +70,7 @@ export default function AdminEventsPage() {
           message: `Event "${form.title}" created${discordNote}${threadNote}!`,
         });
         setForm(EMPTY_FORM);
+        setDestination("");
       } else {
         setStatus({ type: "error", message: data.error ?? "Failed to create event." });
       }
@@ -117,8 +120,22 @@ export default function AdminEventsPage() {
               </div>
             </div>
             {form.post_to_discord && (
-              <div className="mb-6 ml-9">
+              <div className="mb-6 ml-9 space-y-4">
                 <TemplateSelector contentType="event_post" value={templateId} onChange={setTemplateId} label="Event Post Template" />
+                <div>
+                  <label className="block text-sm font-semibold text-bark-brown mb-1">Post To (optional)</label>
+                  <input
+                    type="text"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    className="w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green"
+                    placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+                  />
+                  <p className="text-xs text-iron-grey mt-1">
+                    Leave blank to use the default events channel. To post somewhere else, right-click a
+                    message in that channel or thread → Copy Message Link, and paste it here.
+                  </p>
+                </div>
               </div>
             )}
 
