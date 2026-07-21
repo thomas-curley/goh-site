@@ -32,6 +32,11 @@ export const PERMISSIONS = {
     label: "Manage Post Templates",
     description: "Create and edit Discord post templates and section presets",
   },
+  sync_discord_posts: {
+    key: "sync_discord_posts",
+    label: "Update Posted Discord Messages",
+    description: "Push edits to announcements, event posts, signup threads, and event recaps that have already been posted to Discord",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",

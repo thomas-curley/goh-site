@@ -70,13 +70,16 @@ export async function POST(
       }
 
       // Fall back to this event's stored signup thread, if one was created.
-      if (!messageId) {
+      // (signup_thread_message_id/signup_thread_id — not discord_message_id,
+      // which is the separate event-post channel message, not the thread.)
+      if (!messageId || !channelId) {
         const { data: event } = await supabase
           .from("events")
-          .select("discord_message_id")
+          .select("signup_thread_id, signup_thread_message_id")
           .eq("id", id)
           .single();
-        messageId = event?.discord_message_id ?? null;
+        if (!messageId) messageId = event?.signup_thread_message_id ?? null;
+        if (!channelId) channelId = event?.signup_thread_id ?? null;
       }
       if (!channelId) channelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID ?? null;
 

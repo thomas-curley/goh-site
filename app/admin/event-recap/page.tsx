@@ -9,12 +9,28 @@ import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { renderTemplate } from "@/lib/post-templates";
 import type { SectionInstance } from "@/lib/post-templates";
+import { usePermission } from "@/lib/use-permission";
 
 interface PastEvent {
   id: string;
   title: string;
   event_type: string;
   start_time: string;
+}
+
+interface RecapPost {
+  id: string;
+  title: string;
+  description: string | null;
+  highlights: string[];
+  winners: { rsn: string; prize: string }[];
+  images: string[];
+  ping_roles: string[];
+  template_id: string | null;
+  destination_channel_id: string;
+  discord_message_id: string | null;
+  event_id: string | null;
+  created_at: string;
 }
 
 export default function EventRecapPage() {
@@ -32,6 +48,10 @@ export default function EventRecapPage() {
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingRecapId, setEditingRecapId] = useState<string | null>(null);
+  const [pastRecaps, setPastRecaps] = useState<RecapPost[]>([]);
+
+  const { allowed: canSyncDiscord, loading: permLoading } = usePermission("sync_discord_posts");
 
   const supabase = createSupabaseBrowserClient();
 
@@ -46,7 +66,16 @@ export default function EventRecapPage() {
     setLoading(false);
   }, [supabase]);
 
-  useEffect(() => { loadEvents(); }, [loadEvents]);
+  const loadPastRecaps = useCallback(async () => {
+    const { data } = await supabase
+      .from("event_recap_posts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setPastRecaps(data);
+  }, [supabase]);
+
+  useEffect(() => { loadEvents(); loadPastRecaps(); }, [loadEvents, loadPastRecaps]);
 
   // When selecting an event, prefill title
   useEffect(() => {
@@ -93,6 +122,20 @@ export default function EventRecapPage() {
     setWinners(next);
   };
 
+  const handleEditRecap = (recap: RecapPost) => {
+    setEditingRecapId(recap.id);
+    setSelectedEvent(recap.event_id ?? "");
+    setTitle(recap.title);
+    setDescription(recap.description ?? "");
+    setHighlights(recap.highlights.length > 0 ? recap.highlights : [""]);
+    setWinners(recap.winners ?? []);
+    setImages(recap.images ?? []);
+    setPingRoles(recap.ping_roles ?? []);
+    setTemplateId(recap.template_id ?? "");
+    setDestination(recap.destination_channel_id);
+    window.scrollTo(0, 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !destination.trim()) return;
@@ -128,12 +171,13 @@ export default function EventRecapPage() {
           destination,
           templateId,
           dateStr,
+          recapId: editingRecapId || undefined,
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        setStatus("Event recap posted to Discord!");
+        setStatus(data.edited ? "Recap updated on Discord!" : "Event recap posted to Discord!");
         setTitle("");
         setDescription("");
         setHighlights([""]);
@@ -142,6 +186,8 @@ export default function EventRecapPage() {
         setPingRoles([]);
         setSelectedEvent("");
         setDestination("");
+        setEditingRecapId(null);
+        await loadPastRecaps();
       } else {
         setStatus(`Error: ${data.error}`);
       }
@@ -306,8 +352,21 @@ export default function EventRecapPage() {
           {/* Submit */}
           <div className="flex items-center gap-4">
             <Button type="submit" disabled={submitting || !destination.trim()} size="lg">
-              {submitting ? "Posting..." : "Post Recap to Discord"}
+              {submitting ? "Posting..." : editingRecapId ? "Update Recap on Discord" : "Post Recap to Discord"}
             </Button>
+            {editingRecapId && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setEditingRecapId(null);
+                  setTitle(""); setDescription(""); setHighlights([""]); setWinners([]);
+                  setImages([]); setPingRoles([]); setSelectedEvent(""); setDestination(""); setTemplateId("");
+                }}
+              >
+                Cancel
+              </Button>
+            )}
             {status && (
               <span className={`text-sm ${status.startsWith("Error") ? "text-red-accent" : "text-gnome-green"}`}>
                 {status}
@@ -332,6 +391,39 @@ export default function EventRecapPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Past Recaps */}
+      <div className="mt-10">
+        <h2 className="font-display text-lg text-bark-brown mb-2">Past Recaps</h2>
+        <p className="text-xs text-iron-grey mb-4">
+          Recaps posted before this list existed aren&apos;t tracked here and can&apos;t be edited.
+          {!permLoading && !canSyncDiscord && " You need the “Update Posted Discord Messages” permission to edit a past recap."}
+        </p>
+        {pastRecaps.length === 0 ? (
+          <p className="text-sm text-iron-grey">No tracked recaps yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {pastRecaps.map((recap) => (
+              <Card key={recap.id} hover={false}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-bark-brown truncate">{recap.title}</p>
+                    <p className="text-xs text-iron-grey">{new Date(recap.created_at).toLocaleDateString()}</p>
+                  </div>
+                  {!permLoading && canSyncDiscord && (
+                    <button
+                      onClick={() => handleEditRecap(recap)}
+                      className="text-xs text-gnome-green hover:underline cursor-pointer shrink-0"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

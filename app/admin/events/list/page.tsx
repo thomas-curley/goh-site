@@ -198,6 +198,12 @@ function EventRow({
         </div>
         <div className="flex gap-2 shrink-0">
           <Link
+            href={`/admin/events/${event.id}/edit`}
+            className="text-xs text-gnome-green hover:underline"
+          >
+            Edit
+          </Link>
+          <Link
             href={`/admin/events/${event.id}/attendance`}
             className="text-xs text-gnome-green hover:underline"
           >
