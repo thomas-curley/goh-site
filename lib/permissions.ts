@@ -27,6 +27,11 @@ export const PERMISSIONS = {
     label: "Manage Commands",
     description: "Create, edit, and delete custom bot commands",
   },
+  manage_templates: {
+    key: "manage_templates",
+    label: "Manage Post Templates",
+    description: "Create and edit Discord post templates and section presets",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
