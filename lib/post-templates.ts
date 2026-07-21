@@ -179,13 +179,13 @@ function renderInstance(instance: SectionInstance, data: Record<string, unknown>
     case "role_ping_prefix":
       return renderRolePingPrefix(data);
     case "line":
-      return renderLine(instance.config as LineConfig, data);
+      return renderLine(instance.config as unknown as LineConfig, data);
     case "paragraph":
-      return renderParagraph(instance.config as ParagraphConfig, data);
+      return renderParagraph(instance.config as unknown as ParagraphConfig, data);
     case "list":
-      return renderList(instance.config as ListConfig, data);
+      return renderList(instance.config as unknown as ListConfig, data);
     case "static_text":
-      return renderStaticText(instance.config as StaticTextConfig);
+      return renderStaticText(instance.config as unknown as StaticTextConfig);
     default:
       return null;
   }
