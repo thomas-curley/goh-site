@@ -30,10 +30,11 @@ export function TemplateSelector({ contentType, value, onChange, label = "Templa
       .order("is_default", { ascending: false })
       .order("name", { ascending: true });
 
-    if (data) {
-      setTemplates(data);
+    const rows = (data ?? []) as TemplateOption[];
+    if (rows.length > 0) {
+      setTemplates(rows);
       if (!value) {
-        const def = data.find((t) => t.is_default) ?? data[0];
+        const def = rows.find((t) => t.is_default) ?? rows[0];
         if (def) onChange(def.id);
       }
     }
