@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { postToChannel, editChannelMessage, parseDiscordMessageLink, isDiscordSnowflake } from "@/lib/discord";
+import { postToChannel, editChannelMessage, resolvePostDestination } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 
@@ -9,16 +9,6 @@ function getServiceClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   return createClient(url, key);
-}
-
-function resolveChannelId(input?: string): string | null {
-  if (typeof input === "string" && input.trim()) {
-    const { channelId } = parseDiscordMessageLink(input);
-    if (channelId) return channelId;
-    if (isDiscordSnowflake(input)) return input.trim();
-    return null;
-  }
-  return process.env.DISCORD_RESULTS_CHANNEL_ID ?? null;
 }
 
 export async function POST(request: NextRequest) {
@@ -46,7 +36,7 @@ export async function POST(request: NextRequest) {
       existing = data ?? null;
     }
 
-    const requestedChannelId = typeof destination === "string" && destination.trim() ? resolveChannelId(destination) : null;
+    const requestedChannelId = typeof destination === "string" && destination.trim() ? resolvePostDestination(destination, null) : null;
     const channelId = requestedChannelId ?? existing?.destination_channel_id ?? null;
     if (!channelId) {
       return NextResponse.json(

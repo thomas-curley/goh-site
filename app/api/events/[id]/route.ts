@@ -105,7 +105,9 @@ export async function PUT(
     const timeStr = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
 
     if (sync_discord_post && data.discord_message_id) {
-      const channelId = process.env.DISCORD_EVENTS_CHANNEL_ID;
+      // Sync to wherever this event was actually posted, not always the
+      // default channel — events can be posted to a custom destination now.
+      const channelId = data.discord_channel_id ?? process.env.DISCORD_EVENTS_CHANNEL_ID;
       try {
         if (!channelId) throw new Error("DISCORD_EVENTS_CHANNEL_ID not set");
         const template = await resolveTemplate(supabase, "event_post", templateId);

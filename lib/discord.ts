@@ -202,6 +202,22 @@ export function isDiscordSnowflake(input: string): boolean {
   return /^\d{15,25}$/.test(input.trim());
 }
 
+/**
+ * Resolve a "Post To" destination: a pasted message link or raw channel/
+ * thread ID overrides where to post, an empty input falls back to a fixed
+ * channel (typically an env var). Shared by every posting flow that lets an
+ * admin redirect a post instead of always using one hardcoded channel.
+ */
+export function resolvePostDestination(input: string | undefined | null, fallbackChannelId: string | undefined | null): string | null {
+  if (typeof input === "string" && input.trim()) {
+    const { channelId } = parseDiscordMessageLink(input);
+    if (channelId) return channelId;
+    if (isDiscordSnowflake(input)) return input.trim();
+    return null;
+  }
+  return fallbackChannelId ?? null;
+}
+
 export async function getDiscordEvents() {
   const guildId = process.env.DISCORD_GUILD_ID;
   if (!guildId) throw new Error("DISCORD_GUILD_ID not set");
