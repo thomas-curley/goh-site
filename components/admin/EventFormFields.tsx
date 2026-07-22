@@ -95,6 +95,19 @@ interface EventFormFieldsProps {
   form: EventForm;
   update: (field: keyof EventForm, value: string | boolean) => void;
   setForm: React.Dispatch<React.SetStateAction<EventForm>>;
+  /**
+   * Data-object keys the currently selected post template actually
+   * references (see lib/post-templates.ts's getUsedFields) — when provided,
+   * fields the template doesn't use are hidden so the form matches what
+   * will actually get posted. `null`/undefined shows every field, which is
+   * what the edit page always passes (it doesn't do this narrowing).
+   *
+   * Note: several of these fields (World, Meet Location, Spots,
+   * Requirements, ...) are also shown on the public events calendar, not
+   * just in the Discord message — hiding one because the chosen template
+   * skips it also means that data won't get entered for the calendar.
+   */
+  visibleFields?: Set<string> | null;
 }
 
 /**
@@ -102,7 +115,12 @@ interface EventFormFieldsProps {
  * page — everything except the Discord posting/sync options, which differ
  * enough between create and edit that each page owns its own card.
  */
-export function EventFormFields({ form, update, setForm }: EventFormFieldsProps) {
+export function EventFormFields({ form, update, setForm, visibleFields = null }: EventFormFieldsProps) {
+  const shows = (key: string) => !visibleFields || visibleFields.has(key);
+
+  const anyLogisticsRow2 = shows("spots") || shows("signup_type") || shows("voice_channel");
+  const anyRequirements = shows("requirements") || shows("requirements_list") || shows("guide_text") || shows("video_url");
+
   return (
     <>
       {/* Basic Info */}
@@ -164,68 +182,92 @@ export function EventFormFields({ form, update, setForm }: EventFormFieldsProps)
         <h2 className="font-display text-lg text-bark-brown mb-4">Logistics</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>World</label>
-              <input type="number" value={form.world} onChange={(e) => update("world", e.target.value)} className={inputClass} placeholder="404" />
-            </div>
+            {shows("world") && (
+              <div>
+                <label className={labelClass}>World</label>
+                <input type="number" value={form.world} onChange={(e) => update("world", e.target.value)} className={inputClass} placeholder="404" />
+              </div>
+            )}
             <div>
               <label className={labelClass}>Location</label>
               <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)} className={inputClass} placeholder="Jungle Ruins" />
             </div>
-            <div>
-              <label className={labelClass}>Meet Location</label>
-              <input type="text" value={form.meet_location} onChange={(e) => update("meet_location", e.target.value)} className={inputClass} placeholder="GE" />
-            </div>
+            {shows("meet_location") && (
+              <div>
+                <label className={labelClass}>Meet Location</label>
+                <input type="text" value={form.meet_location} onChange={(e) => update("meet_location", e.target.value)} className={inputClass} placeholder="GE" />
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Spots</label>
-              <input type="text" value={form.spots} onChange={(e) => update("spots", e.target.value)} className={inputClass} placeholder="Open" />
+          {anyLogisticsRow2 && (
+            <div className="grid grid-cols-3 gap-4">
+              {shows("spots") && (
+                <div>
+                  <label className={labelClass}>Spots</label>
+                  <input type="text" value={form.spots} onChange={(e) => update("spots", e.target.value)} className={inputClass} placeholder="Open" />
+                </div>
+              )}
+              {shows("signup_type") && (
+                <div>
+                  <label className={labelClass}>Signup Type</label>
+                  <select value={form.signup_type} onChange={(e) => update("signup_type", e.target.value)} className={`${inputClass} cursor-pointer`}>
+                    {SIGNUP_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {shows("voice_channel") && (
+                <div>
+                  <label className={labelClass}>Voice Channel</label>
+                  <input type="text" value={form.voice_channel} onChange={(e) => update("voice_channel", e.target.value)} className={inputClass} placeholder="Event Room 1" />
+                </div>
+              )}
             </div>
-            <div>
-              <label className={labelClass}>Signup Type</label>
-              <select value={form.signup_type} onChange={(e) => update("signup_type", e.target.value)} className={`${inputClass} cursor-pointer`}>
-                {SIGNUP_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Voice Channel</label>
-              <input type="text" value={form.voice_channel} onChange={(e) => update("voice_channel", e.target.value)} className={inputClass} placeholder="Event Room 1" />
-            </div>
-          </div>
+          )}
 
-          <div>
-            <label className={labelClass}>Prize Pool</label>
-            <input type="text" value={form.prize_pool} onChange={(e) => update("prize_pool", e.target.value)} className={inputClass} placeholder="50M GP" />
-          </div>
+          {shows("prize_pool") && (
+            <div>
+              <label className={labelClass}>Prize Pool</label>
+              <input type="text" value={form.prize_pool} onChange={(e) => update("prize_pool", e.target.value)} className={inputClass} placeholder="50M GP" />
+            </div>
+          )}
         </div>
       </Card>
 
       {/* Requirements & Guide */}
-      <Card hover={false}>
-        <h2 className="font-display text-lg text-bark-brown mb-4">Requirements & Guide</h2>
-        <div className="space-y-4">
-          <div>
-            <label className={labelClass}>Short Requirements Summary</label>
-            <input type="text" value={form.requirements} onChange={(e) => update("requirements", e.target.value)} className={inputClass} placeholder="70+ combat, bring own supplies" />
+      {anyRequirements && (
+        <Card hover={false}>
+          <h2 className="font-display text-lg text-bark-brown mb-4">Requirements & Guide</h2>
+          <div className="space-y-4">
+            {shows("requirements") && (
+              <div>
+                <label className={labelClass}>Short Requirements Summary</label>
+                <input type="text" value={form.requirements} onChange={(e) => update("requirements", e.target.value)} className={inputClass} placeholder="70+ combat, bring own supplies" />
+              </div>
+            )}
+            {shows("requirements_list") && (
+              <div>
+                <label className={labelClass}>Detailed Requirements (one per line)</label>
+                <textarea value={form.requirements_list} onChange={(e) => update("requirements_list", e.target.value)} rows={5} className={`${inputClass} resize-y font-mono text-sm`} placeholder={"70+ Combat\nStrong Magic or Ranged setup\nDecent Prayer level\nAnti-poison or Venom protection\nFood, Prayer pots, and Teleports"} />
+              </div>
+            )}
+            {shows("guide_text") && (
+              <div>
+                <label className={labelClass}>Event-Specific Guide / Mechanics</label>
+                <textarea value={form.guide_text} onChange={(e) => update("guide_text", e.target.value)} rows={6} className={`${inputClass} resize-y text-sm`} placeholder={"Phases & Attacks:\n• Serpent Strike: A fast melee hit — step back or pray melee.\n• Venom Spit: Ranged green projectile — bring anti-venom.\n\nSafe Spots & Movement:\n• Use the outer ring of the arena to avoid tail sweeps."} />
+              </div>
+            )}
+            {shows("video_url") && (
+              <div>
+                <label className={labelClass}>Video Guide URL</label>
+                <input type="url" value={form.video_url} onChange={(e) => update("video_url", e.target.value)} className={inputClass} placeholder="https://www.youtube.com/watch?v=..." />
+              </div>
+            )}
           </div>
-          <div>
-            <label className={labelClass}>Detailed Requirements (one per line)</label>
-            <textarea value={form.requirements_list} onChange={(e) => update("requirements_list", e.target.value)} rows={5} className={`${inputClass} resize-y font-mono text-sm`} placeholder={"70+ Combat\nStrong Magic or Ranged setup\nDecent Prayer level\nAnti-poison or Venom protection\nFood, Prayer pots, and Teleports"} />
-          </div>
-          <div>
-            <label className={labelClass}>Event-Specific Guide / Mechanics</label>
-            <textarea value={form.guide_text} onChange={(e) => update("guide_text", e.target.value)} rows={6} className={`${inputClass} resize-y text-sm`} placeholder={"Phases & Attacks:\n• Serpent Strike: A fast melee hit — step back or pray melee.\n• Venom Spit: Ranged green projectile — bring anti-venom.\n\nSafe Spots & Movement:\n• Use the outer ring of the arena to avoid tail sweeps."} />
-          </div>
-          <div>
-            <label className={labelClass}>Video Guide URL</label>
-            <input type="url" value={form.video_url} onChange={(e) => update("video_url", e.target.value)} className={inputClass} placeholder="https://www.youtube.com/watch?v=..." />
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Banner Generator */}
       <BannerGenerator
@@ -248,12 +290,14 @@ export function EventFormFields({ form, update, setForm }: EventFormFieldsProps)
       </Card>
 
       {/* Role Pings */}
-      <Card hover={false}>
-        <RolePingSelector
-          selectedRoles={form.ping_roles}
-          onChange={(roles) => setForm((prev) => ({ ...prev, ping_roles: roles }))}
-        />
-      </Card>
+      {shows("pingRoles") && (
+        <Card hover={false}>
+          <RolePingSelector
+            selectedRoles={form.ping_roles}
+            onChange={(roles) => setForm((prev) => ({ ...prev, ping_roles: roles }))}
+          />
+        </Card>
+      )}
     </>
   );
 }

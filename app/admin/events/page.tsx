@@ -7,7 +7,7 @@ import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { EventFormFields, EMPTY_FORM, eventTemplateData } from "@/components/admin/EventFormFields";
 import type { EventForm } from "@/components/admin/EventFormFields";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { renderTemplate } from "@/lib/post-templates";
+import { renderTemplate, getUsedFields } from "@/lib/post-templates";
 import type { SectionInstance } from "@/lib/post-templates";
 
 export default function AdminEventsPage() {
@@ -17,6 +17,7 @@ export default function AdminEventsPage() {
   const [templateId, setTemplateId] = useState("");
   const [signupThreadTemplateId, setSignupThreadTemplateId] = useState("");
   const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
+  const [sectionsLoaded, setSectionsLoaded] = useState(false);
   const [destination, setDestination] = useState("");
 
   const update = (field: keyof EventForm, value: string | boolean) => {
@@ -26,8 +27,13 @@ export default function AdminEventsPage() {
   useEffect(() => {
     if (!templateId) {
       setTemplateSections([]);
+      setSectionsLoaded(false);
       return;
     }
+    // Deliberately doesn't reset sectionsLoaded/templateSections to their
+    // "unloaded" state before the fetch — keeps showing the previous
+    // template's fields until the new one is ready, instead of the form
+    // flashing to "everything hidden" or "everything shown" mid-switch.
     (async () => {
       const supabase = createSupabaseBrowserClient();
       const { data } = await supabase
@@ -36,8 +42,14 @@ export default function AdminEventsPage() {
         .eq("id", templateId)
         .single();
       setTemplateSections(data?.sections ?? []);
+      setSectionsLoaded(true);
     })();
   }, [templateId]);
+
+  // Only narrow the visible fields once we've actually loaded a template's
+  // sections, and only while posting to Discord is on — otherwise (still
+  // loading, or not posting to Discord at all) show every field.
+  const visibleFields = form.post_to_discord && sectionsLoaded ? getUsedFields(templateSections) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +102,13 @@ export default function AdminEventsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <EventFormFields form={form} update={update} setForm={setForm} />
+          {visibleFields && (
+            <p className="text-xs text-iron-grey -mb-2">
+              Showing only the fields the selected template uses. Uncheck &quot;Post to Discord&quot; or
+              pick a different template to see more.
+            </p>
+          )}
+          <EventFormFields form={form} update={update} setForm={setForm} visibleFields={visibleFields} />
 
           {/* Discord + Submit */}
           <Card hover={false}>
