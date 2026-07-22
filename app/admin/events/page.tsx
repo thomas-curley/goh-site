@@ -102,15 +102,7 @@ export default function AdminEventsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {visibleFields && (
-            <p className="text-xs text-iron-grey -mb-2">
-              Showing only the fields the selected template uses. Uncheck &quot;Post to Discord&quot; or
-              pick a different template to see more.
-            </p>
-          )}
-          <EventFormFields form={form} update={update} setForm={setForm} visibleFields={visibleFields} />
-
-          {/* Discord + Submit */}
+          {/* Post to Discord — up top since it controls which fields below are shown */}
           <Card hover={false}>
             <div className="flex items-start gap-3 mb-4">
               <button
@@ -138,8 +130,13 @@ export default function AdminEventsPage() {
               </div>
             </div>
             {form.post_to_discord && (
-              <div className="mb-6 ml-9 space-y-4">
+              <div className="ml-9 space-y-4">
                 <TemplateSelector contentType="event_post" value={templateId} onChange={setTemplateId} label="Event Post Template" />
+                {visibleFields && (
+                  <p className="text-xs text-iron-grey">
+                    The form below only shows the fields this template uses — pick a different one to see more.
+                  </p>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-bark-brown mb-1">Post To (optional)</label>
                   <input
@@ -156,7 +153,12 @@ export default function AdminEventsPage() {
                 </div>
               </div>
             )}
+          </Card>
 
+          <EventFormFields form={form} update={update} setForm={setForm} visibleFields={visibleFields} />
+
+          {/* Sign-up Thread + Submit */}
+          <Card hover={false}>
             <div className="flex items-start gap-3 mb-4">
               <button
                 type="button"
