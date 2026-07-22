@@ -209,3 +209,57 @@ export function renderTemplate(sections: SectionInstance[], data: Record<string,
   }
   return out.join("\n");
 }
+
+function addPlaceholderKeys(template: string | undefined, into: Set<string>): void {
+  if (!template) return;
+  for (const match of template.matchAll(/\{(\w+)\}/g)) {
+    if (match[1] !== "emoji") into.add(match[1]);
+  }
+}
+
+/**
+ * Which data-object keys a template's sections actually reference — used to
+ * drive "only show the form fields this template cares about" UIs. Not
+ * exhaustive for every conceivable config shape, but covers every field a
+ * bindKey, requireKeys entry, skipIf check, or {placeholder} token can name.
+ */
+export function getUsedFields(sections: SectionInstance[]): Set<string> {
+  const used = new Set<string>();
+
+  for (const instance of sections) {
+    const config = instance.config;
+    switch (instance.block_type) {
+      case "role_ping_prefix":
+        used.add("pingRoles");
+        break;
+      case "line": {
+        const c = config as unknown as LineConfig;
+        addPlaceholderKeys(c.template, used);
+        c.requireKeys?.forEach((key) => used.add(key));
+        if (c.skipIf?.key) used.add(c.skipIf.key);
+        break;
+      }
+      case "paragraph": {
+        const c = config as unknown as ParagraphConfig;
+        if (c.bindKey) used.add(c.bindKey);
+        addPlaceholderKeys(c.headingTemplate, used);
+        break;
+      }
+      case "list": {
+        const c = config as unknown as ListConfig;
+        if (c.bindKey) used.add(c.bindKey);
+        if (c.fallbackBindKey) used.add(c.fallbackBindKey);
+        addPlaceholderKeys(c.headingTemplate, used);
+        addPlaceholderKeys(c.fallbackTemplate, used);
+        break;
+      }
+      case "static_text": {
+        const c = config as unknown as StaticTextConfig;
+        addPlaceholderKeys(c.template, used);
+        break;
+      }
+    }
+  }
+
+  return used;
+}
