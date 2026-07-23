@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { href: "/guides", label: "Guides" },
   { href: "/members", label: "Members" },
   { href: "/hiscores", label: "Hiscores" },
-  { href: "/loot-split", label: "Loot Split" },
+  { href: "/tools", label: "Tools" },
   { href: "/about", label: "About" },
 ];
 

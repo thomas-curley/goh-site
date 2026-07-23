@@ -46,7 +46,7 @@ const GUIDE_CATEGORIES = [
   },
   {
     title: "Tools & Links",
-    href: "/guides/tools",
+    href: "/tools",
     description: "DPS calculators, collection log trackers, and our own clan tools.",
     icon: "wrench",
   },

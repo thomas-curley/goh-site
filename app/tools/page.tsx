@@ -8,6 +8,14 @@ export const metadata: Metadata = {
   description: "Useful OSRS tools, calculators, RuneLite plugins, and clan resources.",
 };
 
+const SITE_TOOLS = [
+  {
+    name: "Loot Split Calculator",
+    href: "/loot-split",
+    description: "Search items for live Grand Exchange prices, add participants, and split the loot.",
+  },
+];
+
 const COMMUNITY_TOOLS = [
   {
     name: "Wise Old Man",
@@ -36,22 +44,31 @@ const COMMUNITY_TOOLS = [
   },
 ];
 
-// RuneLite plugins now have their own dedicated page at /guides/runelite
-
 export default function ToolsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <Link href="/guides" className="inline-flex items-center text-sm text-gnome-green hover:text-gnome-green-light mb-6 gap-1">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Guides
-      </Link>
-
       <h1 className="font-display text-4xl text-gnome-green mb-2">Tools & Links</h1>
       <p className="text-bark-brown-light mb-8">
         Curated tools, calculators, and resources for OSRS players.
       </p>
+
+      {/* Site Tools */}
+      <section className="mb-10">
+        <h2 className="font-display text-2xl text-bark-brown mb-4">Site Tools</h2>
+        <div className="space-y-3">
+          {SITE_TOOLS.map((tool) => (
+            <Link key={tool.name} href={tool.href}>
+              <Card className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="font-semibold text-bark-brown">{tool.name}</h3>
+                  <p className="text-xs text-bark-brown-light">{tool.description}</p>
+                </div>
+                <span className="text-sm text-gnome-green shrink-0 ml-4">Open &rarr;</span>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Clan Tools */}
       <section className="mb-10">

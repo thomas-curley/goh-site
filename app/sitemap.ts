@@ -12,7 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/guides/quests",
     "/guides/pvm",
     "/guides/skilling",
-    "/guides/tools",
+    "/tools",
     "/members",
     "/competitions",
     "/about",
