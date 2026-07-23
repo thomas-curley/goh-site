@@ -218,6 +218,86 @@ export function resolvePostDestination(input: string | undefined | null, fallbac
   return fallbackChannelId ?? null;
 }
 
+export interface PollOption {
+  answerId: number;
+  text: string;
+}
+
+/**
+ * Create a native Discord poll message. Discord assigns each answer's
+ * answer_id in the response and explicitly says not to rely on array order
+ * to map it back to what was submitted — so we match by poll_media.text
+ * instead of by index.
+ */
+export async function createPoll(
+  channelId: string,
+  question: string,
+  answerTexts: string[],
+  durationHours: number,
+  allowMultiselect: boolean
+): Promise<{ messageId: string; options: PollOption[] }> {
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      poll: {
+        question: { text: question },
+        answers: answerTexts.map((text) => ({ poll_media: { text } })),
+        duration: durationHours,
+        allow_multiselect: allowMultiselect,
+        layout_type: 1,
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error creating poll: ${res.status} ${error}`);
+  }
+
+  const message = await res.json();
+  const answers: { answer_id: number; poll_media: { text: string } }[] = message.poll?.answers ?? [];
+
+  const options: PollOption[] = answerTexts.map((text) => {
+    const match = answers.find((a) => a.poll_media?.text === text);
+    return { answerId: match?.answer_id ?? -1, text };
+  });
+
+  return { messageId: message.id, options };
+}
+
+/**
+ * Fetch a message that has a poll on it, so the caller can read
+ * `.poll.results.answer_counts` / `.poll.results.is_finalized`.
+ */
+export async function getPollMessage(channelId: string, messageId: string) {
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages/${messageId}`, {
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error fetching poll message: ${res.status} ${error}`);
+  }
+
+  return res.json();
+}
+
+/** End a poll early. Cannot be undone — Discord does not allow restarting an ended poll. */
+export async function endPoll(channelId: string, messageId: string) {
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/polls/${messageId}/expire`, {
+    method: "POST",
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error ending poll: ${res.status} ${error}`);
+  }
+
+  return res.json();
+}
+
 export async function getDiscordEvents() {
   const guildId = process.env.DISCORD_GUILD_ID;
   if (!guildId) throw new Error("DISCORD_GUILD_ID not set");
