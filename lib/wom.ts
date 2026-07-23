@@ -88,3 +88,24 @@ export async function getGroupCompetitions() {
     return [];
   }
 }
+
+export interface GroupGainEntry {
+  username: string;
+  displayName: string;
+  gained: number;
+}
+
+/** Per-member gained amount for one metric (e.g. "ehp"/"ehb") over a date range. */
+export async function getGroupGains(metric: "ehp" | "ehb", startDate: Date, endDate: Date, limit: number = 500): Promise<GroupGainEntry[]> {
+  try {
+    const result = await womClient.groups.getGroupGains(WOM_GROUP_ID, { metric: metric as never, startDate, endDate }, { limit });
+    return result.map((r) => ({
+      username: r.player.username,
+      displayName: r.player.displayName,
+      gained: r.data.gained,
+    }));
+  } catch (error) {
+    console.error(`Failed to fetch group gains for ${metric}:`, error);
+    return [];
+  }
+}
