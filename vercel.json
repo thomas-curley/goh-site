@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/snapshots/capture",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

@@ -122,10 +122,7 @@ export default function AdminDashboard() {
 
   const captureSnapshot = async () => {
     setCapturing(true);
-    await fetch("/api/snapshots/capture", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_SITE_URL ? "" : ""}` },
-    });
+    await fetch("/api/snapshots/capture", { method: "POST" });
     await loadData();
     setCapturing(false);
   };
@@ -228,8 +225,8 @@ export default function AdminDashboard() {
       {snapshots.length <= 1 && (
         <Card hover={false} className="mb-8 text-center py-8">
           <p className="text-bark-brown-light">
-            No historical data yet. Click &quot;Capture Snapshot&quot; to start tracking trends.
-            Set up a daily cron to <code className="font-mono text-gnome-green text-xs">POST /api/snapshots/capture</code> for automatic tracking.
+            Not enough historical data yet to chart trends. A daily snapshot is captured
+            automatically — click &quot;Capture Snapshot&quot; above if you want one right now.
           </p>
         </Card>
       )}

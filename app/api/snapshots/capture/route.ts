@@ -2,16 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Captures a daily clan snapshot. Call this via cron job or manually.
- * Authenticated with DISCORD_WEBHOOK_SECRET.
+ * Captures a daily clan snapshot. Triggered two ways:
+ * - GET, by Vercel Cron (see vercel.json) — requires CRON_SECRET if set,
+ *   since there's no user session on a cron-triggered request.
+ * - POST, by the "Capture Snapshot" button on /admin — no extra secret
+ *   needed, since the /admin layout already gates that page server-side.
  */
-export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const secret = process.env.DISCORD_WEBHOOK_SECRET;
-  if (secret && authHeader !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+async function runCapture() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceKey) {
@@ -84,4 +81,19 @@ export async function POST(request: NextRequest) {
     console.error("Snapshot capture error:", err);
     return NextResponse.json({ error: "Failed to capture snapshot" }, { status: 500 });
   }
+}
+
+export async function GET(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+  return runCapture();
+}
+
+export async function POST() {
+  return runCapture();
 }
