@@ -245,11 +245,11 @@ export default function AdminActivityPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={focusData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-                  <XAxis dataKey="key" tickFormatter={(k: Focus) => FOCUS_LABELS[k]} tick={{ fontSize: 11, fill: "#555" }} />
+                  <XAxis dataKey="key" tickFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k} tick={{ fontSize: 11, fill: "#555" }} />
                   <YAxis tick={{ fontSize: 10, fill: "#555" }} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
-                    labelFormatter={(k: Focus) => FOCUS_LABELS[k]}
+                    labelFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k}
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {focusData.map((d) => (
