@@ -229,7 +229,7 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
           {isNew ? `New ${contentType} Template` : `Edit: ${template.name}`}
         </h3>
         <form onSubmit={handleSave} className="space-y-4">
-          <div>
+          <div data-tour="template-editor-name">
             <label className={labelClass}>Name</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} placeholder="Raid Night Recap" />
           </div>
@@ -243,7 +243,7 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
           </label>
 
           {/* Import from pasted Discord template text */}
-          <div className="rounded-md border border-parchment-dark p-3">
+          <div className="rounded-md border border-parchment-dark p-3" data-tour="template-editor-import">
             <button
               type="button"
               onClick={() => setShowImport(!showImport)}
@@ -274,7 +274,7 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
           </div>
 
           {/* Section list */}
-          <div>
+          <div data-tour="template-editor-sections">
             <label className={labelClass}>Sections</label>
             {sections.length === 0 ? (
               <p className="text-xs text-iron-grey mb-2">No sections yet — add one from the library below.</p>
@@ -326,28 +326,28 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
                 ))}
               </div>
             )}
+          </div>
 
-            <div className="flex flex-wrap gap-2 items-center">
-              <select value={addFromLibraryId} onChange={(e) => setAddFromLibraryId(e.target.value)} className={`${inputClass} flex-1 min-w-[180px] cursor-pointer`}>
-                <option value="">Add from library...</option>
-                {library.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.block_type})</option>
-                ))}
-              </select>
-              <Button type="button" size="sm" variant="secondary" disabled={!addFromLibraryId} onClick={addFromLibrary}>Add</Button>
-            </div>
-            <div className="flex flex-wrap gap-2 items-center mt-2">
-              <select value={addBlankType} onChange={(e) => setAddBlankType(e.target.value as BlockType)} className={`${inputClass} flex-1 min-w-[180px] cursor-pointer`}>
-                {BLANK_BLOCK_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
-              </select>
-              <Button type="button" size="sm" variant="ghost" onClick={addBlank}>+ Blank Section</Button>
-            </div>
+          <div className="flex flex-wrap gap-2 items-center" data-tour="template-editor-add-library">
+            <select value={addFromLibraryId} onChange={(e) => setAddFromLibraryId(e.target.value)} className={`${inputClass} flex-1 min-w-[180px] cursor-pointer`}>
+              <option value="">Add from library...</option>
+              {library.map((s) => (
+                <option key={s.id} value={s.id}>{s.name} ({s.block_type})</option>
+              ))}
+            </select>
+            <Button type="button" size="sm" variant="secondary" disabled={!addFromLibraryId} onClick={addFromLibrary}>Add</Button>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center mt-2">
+            <select value={addBlankType} onChange={(e) => setAddBlankType(e.target.value as BlockType)} className={`${inputClass} flex-1 min-w-[180px] cursor-pointer`}>
+              {BLANK_BLOCK_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+            </select>
+            <Button type="button" size="sm" variant="ghost" onClick={addBlank}>+ Blank Section</Button>
           </div>
 
           {error && <p className="text-red-accent text-sm">{error}</p>}
 
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={saving}>{saving ? "Saving..." : isNew ? "Create Template" : "Save Changes"}</Button>
+            <Button type="submit" disabled={saving} data-tour="template-editor-save">{saving ? "Saving..." : isNew ? "Create Template" : "Save Changes"}</Button>
             <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
             {!isNew && (
               <button type="button" onClick={handleDelete} className="text-xs text-red-accent hover:underline ml-auto cursor-pointer">
@@ -359,7 +359,7 @@ export function TemplateEditor({ template, contentType, onSaved, onCancel }: Tem
       </Card>
 
       {/* Live Preview */}
-      <div className="xl:sticky xl:top-20 xl:self-start">
+      <div className="xl:sticky xl:top-20 xl:self-start" data-tour="template-editor-preview">
         <h3 className="font-display text-base text-bark-brown mb-2">Preview (sample data)</h3>
         <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[70vh] rounded-lg border border-[#1e1f22] p-4 shadow-lg">
           <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">

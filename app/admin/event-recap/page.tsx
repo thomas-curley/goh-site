@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { PageTour } from "@/components/admin/tour/PageTour";
 import { renderTemplate } from "@/lib/post-templates";
 import type { SectionInstance } from "@/lib/post-templates";
 import { usePermission } from "@/lib/use-permission";
+import { EVENT_RECAP_TOUR } from "@/lib/tours";
 
 interface PastEvent {
   id: string;
@@ -221,7 +224,13 @@ export default function EventRecapPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-6">Post Event Recap</h1>
+      <PageTour tour={EVENT_RECAP_TOUR} />
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-3xl text-gnome-green">Post Event Recap</h1>
+        <Link href="/admin/event-recap?tour=recap" className="text-sm text-gnome-green hover:underline">
+          Take the Tour →
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -229,7 +238,7 @@ export default function EventRecapPage() {
           <Card hover={false}>
             <h2 className="font-display text-lg text-bark-brown mb-4">Event</h2>
             <div className="space-y-4">
-              <div>
+              <div data-tour="recap-link-event">
                 <label className={labelClass}>Link to Past Event (optional)</label>
                 <select
                   value={selectedEvent}
@@ -244,7 +253,7 @@ export default function EventRecapPage() {
                   ))}
                 </select>
               </div>
-              <div>
+              <div data-tour="recap-destination">
                 <label className={labelClass}>Post To (forum post link or ID) *</label>
                 <input
                   type="text"
@@ -266,11 +275,11 @@ export default function EventRecapPage() {
           <Card hover={false}>
             <h2 className="font-display text-lg text-bark-brown mb-4">Recap Details</h2>
             <div className="space-y-4">
-              <div>
+              <div data-tour="recap-title">
                 <label className={labelClass}>Title *</label>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} placeholder="Hueycotl Boss Event Recap" />
               </div>
-              <div>
+              <div data-tour="recap-description">
                 <label className={labelClass}>Description</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="What a night! The clan gathered to take on Hueycotl and it was an absolute blast..." />
               </div>
@@ -278,80 +287,90 @@ export default function EventRecapPage() {
           </Card>
 
           {/* Highlights */}
-          <Card hover={false}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg text-bark-brown">Highlights</h2>
-              <Button type="button" variant="ghost" size="sm" onClick={addHighlight}>+ Add</Button>
-            </div>
-            <div className="space-y-2">
-              {highlights.map((h, i) => (
-                <div key={i} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={h}
-                    onChange={(e) => updateHighlight(i, e.target.value)}
-                    className={`${inputClass} flex-1`}
-                    placeholder="Pizza Queen tanked the boss for 15 minutes straight"
-                  />
-                  {highlights.length > 1 && (
-                    <button type="button" onClick={() => removeHighlight(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Winners */}
-          <Card hover={false}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg text-bark-brown">Winners (optional)</h2>
-              <Button type="button" variant="ghost" size="sm" onClick={addWinner}>+ Add Winner</Button>
-            </div>
-            {winners.length === 0 ? (
-              <p className="text-xs text-iron-grey">No winners — click &quot;+ Add Winner&quot; if this was a competitive event.</p>
-            ) : (
+          <div data-tour="recap-highlights">
+            <Card hover={false}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display text-lg text-bark-brown">Highlights</h2>
+                <Button type="button" variant="ghost" size="sm" onClick={addHighlight}>+ Add</Button>
+              </div>
               <div className="space-y-2">
-                {winners.map((w, i) => (
+                {highlights.map((h, i) => (
                   <div key={i} className="flex gap-2">
                     <input
                       type="text"
-                      value={w.rsn}
-                      onChange={(e) => updateWinner(i, "rsn", e.target.value)}
-                      className={`${inputClass} flex-1 font-mono`}
-                      placeholder="RSN"
-                    />
-                    <input
-                      type="text"
-                      value={w.prize}
-                      onChange={(e) => updateWinner(i, "prize", e.target.value)}
+                      value={h}
+                      onChange={(e) => updateHighlight(i, e.target.value)}
                       className={`${inputClass} flex-1`}
-                      placeholder="Prize (e.g. 10M GP)"
+                      placeholder="Pizza Queen tanked the boss for 15 minutes straight"
                     />
-                    <button type="button" onClick={() => removeWinner(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
+                    {highlights.length > 1 && (
+                      <button type="button" onClick={() => removeHighlight(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
+                    )}
                   </div>
                 ))}
               </div>
-            )}
-          </Card>
+            </Card>
+          </div>
+
+          {/* Winners */}
+          <div data-tour="recap-winners">
+            <Card hover={false}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display text-lg text-bark-brown">Winners (optional)</h2>
+                <Button type="button" variant="ghost" size="sm" onClick={addWinner}>+ Add Winner</Button>
+              </div>
+              {winners.length === 0 ? (
+                <p className="text-xs text-iron-grey">No winners — click &quot;+ Add Winner&quot; if this was a competitive event.</p>
+              ) : (
+                <div className="space-y-2">
+                  {winners.map((w, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={w.rsn}
+                        onChange={(e) => updateWinner(i, "rsn", e.target.value)}
+                        className={`${inputClass} flex-1 font-mono`}
+                        placeholder="RSN"
+                      />
+                      <input
+                        type="text"
+                        value={w.prize}
+                        onChange={(e) => updateWinner(i, "prize", e.target.value)}
+                        className={`${inputClass} flex-1`}
+                        placeholder="Prize (e.g. 10M GP)"
+                      />
+                      <button type="button" onClick={() => removeWinner(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
 
           {/* Screenshots */}
-          <Card hover={false}>
-            <ImageUploader images={images} onChange={setImages} maxImages={5} label="Event Screenshots" />
-          </Card>
+          <div data-tour="recap-screenshots">
+            <Card hover={false}>
+              <ImageUploader images={images} onChange={setImages} maxImages={5} label="Event Screenshots" />
+            </Card>
+          </div>
 
           {/* Template */}
-          <Card hover={false}>
-            <TemplateSelector contentType="event_recap" value={templateId} onChange={setTemplateId} />
-          </Card>
+          <div data-tour="recap-template">
+            <Card hover={false}>
+              <TemplateSelector contentType="event_recap" value={templateId} onChange={setTemplateId} />
+            </Card>
+          </div>
 
           {/* Role Pings */}
-          <Card hover={false}>
-            <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
-          </Card>
+          <div data-tour="recap-role-pings">
+            <Card hover={false}>
+              <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
+            </Card>
+          </div>
 
           {/* Submit */}
           <div className="flex items-center gap-4">
-            <Button type="submit" disabled={submitting || !destination.trim()} size="lg">
+            <Button type="submit" disabled={submitting || !destination.trim()} size="lg" data-tour="recap-submit">
               {submitting ? "Posting..." : editingRecapId ? "Update Recap on Discord" : "Post Recap to Discord"}
             </Button>
             {editingRecapId && (

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SectionEditor } from "@/components/admin/SectionEditor";
 import { TemplateEditor } from "@/components/admin/TemplateEditor";
+import { PageTour } from "@/components/admin/tour/PageTour";
 import type { PostSection, PostTemplate, ContentType } from "@/lib/post-templates";
+import { TEMPLATE_TOUR } from "@/lib/tours";
 
 const CONTENT_TYPES: { key: ContentType; label: string }[] = [
   { key: "announcement", label: "Announcements" },
@@ -59,7 +62,13 @@ export default function AdminTemplatesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-1">Post Templates</h1>
+      <PageTour tour={TEMPLATE_TOUR} />
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="font-display text-3xl text-gnome-green">Post Templates</h1>
+        <Link href="/admin/templates?tour=template" className="text-sm text-gnome-green hover:underline">
+          Take the Tour →
+        </Link>
+      </div>
       <p className="text-bark-brown-light mb-6">
         Build reusable layouts for announcements, event posts, event recaps, and signup threads,
         assembled from a shared library of sections.
@@ -87,7 +96,12 @@ export default function AdminTemplatesPage() {
               <Card hover={false} key={ct.key} className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-display text-lg text-bark-brown">{ct.label}</h2>
-                  <Button size="sm" variant="secondary" onClick={() => setEditingTemplate({ template: null, contentType: ct.key })}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setEditingTemplate({ template: null, contentType: ct.key })}
+                    data-tour={ct.key === "event_recap" ? "template-new-event-recap" : undefined}
+                  >
                     + New Template
                   </Button>
                 </div>

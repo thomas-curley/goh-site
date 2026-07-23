@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +10,9 @@ import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { PageTour } from "@/components/admin/tour/PageTour";
 import { usePermission } from "@/lib/use-permission";
+import { ANNOUNCEMENT_TOUR } from "@/lib/tours";
 
 interface Announcement {
   id: string;
@@ -195,7 +198,13 @@ export default function AdminAnnouncementsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-6">Announcements</h1>
+      <PageTour tour={ANNOUNCEMENT_TOUR} />
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-3xl text-gnome-green">Announcements</h1>
+        <Link href="/admin/announcements?tour=announcement" className="text-sm text-gnome-green hover:underline">
+          Take the Tour →
+        </Link>
+      </div>
 
       {/* Import from Discord */}
       <Card hover={false} className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -241,11 +250,11 @@ export default function AdminAnnouncementsPage() {
           {editingId ? "Edit Announcement" : "New Announcement"}
         </h2>
         <form onSubmit={handleSave} className="space-y-4">
-          <div>
+          <div data-tour="announcement-title">
             <label className="block text-sm font-semibold text-bark-brown mb-1">Title</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} placeholder="Weekly Update" />
           </div>
-          <div>
+          <div data-tour="announcement-content">
             <label className="block text-sm font-semibold text-bark-brown mb-1">Content</label>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} required rows={4} className={`${inputClass} resize-y`} placeholder="Write your announcement here..." />
             <div className="mt-2">
@@ -258,7 +267,7 @@ export default function AdminAnnouncementsPage() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-1" data-tour="announcement-category">
               <label className="block text-sm font-semibold text-bark-brown mb-1">Category</label>
               <select value={category} onChange={(e) => setCategory(e.target.value)} className={`${inputClass} cursor-pointer`}>
                 {CATEGORIES.map((c) => (
@@ -279,13 +288,15 @@ export default function AdminAnnouncementsPage() {
             </div>
           </div>
           {/* Banner Generator */}
-          <BannerGenerator
-            title={title}
-            description={content}
-            type="announcement"
-            currentBanner={bannerUrl || null}
-            onBannerGenerated={(url) => setBannerUrl(url)}
-          />
+          <div data-tour="announcement-banner">
+            <BannerGenerator
+              title={title}
+              description={content}
+              type="announcement"
+              currentBanner={bannerUrl || null}
+              onBannerGenerated={(url) => setBannerUrl(url)}
+            />
+          </div>
 
           {/* Update Discord message (only when editing an already-posted announcement) */}
           {editingId && editingDiscordMessageId && !permLoading && canSyncDiscord && (
@@ -302,17 +313,21 @@ export default function AdminAnnouncementsPage() {
 
           {/* Template */}
           {!editingId && (
-            <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} />
+            <div data-tour="announcement-template">
+              <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} />
+            </div>
           )}
 
           {/* Role Pings */}
           {!editingId && (
-            <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
+            <div data-tour="announcement-role-pings">
+              <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
+            </div>
           )}
 
           {/* Post to Discord checkbox (only for new announcements) */}
           {!editingId && (
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3" data-tour="announcement-post-discord">
               <button
                 type="button"
                 onClick={() => setPostToDiscord(!postToDiscord)}
@@ -338,7 +353,7 @@ export default function AdminAnnouncementsPage() {
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving} data-tour="announcement-publish">
               {saving ? "Saving..." : editingId ? "Update" : "Publish"}
             </Button>
             {editingId && (
