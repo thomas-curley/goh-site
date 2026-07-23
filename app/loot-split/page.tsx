@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { formatNumber } from "@/lib/utils";
 
 interface SearchResult {
@@ -18,6 +19,19 @@ interface LootRow {
   qty: number;
 }
 
+interface Participant {
+  id: string;
+  name: string;
+}
+
+interface PastEvent {
+  id: string;
+  title: string;
+  start_time: string;
+}
+
+const MAX_PARTICIPANTS = 50;
+
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
 export default function LootSplitPage() {
@@ -29,13 +43,31 @@ export default function LootSplitPage() {
   const [customValue, setCustomValue] = useState("");
 
   const [loot, setLoot] = useState<LootRow[]>([]);
-  const [participants, setParticipants] = useState<string[]>([]);
-  const [participantInput, setParticipantInput] = useState("");
-  const [taxPct, setTaxPct] = useState(0);
+
+  const [events, setEvents] = useState<PastEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [loadingAttendees, setLoadingAttendees] = useState(false);
+  const [attendeeError, setAttendeeError] = useState<string | null>(null);
+
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [mode, setMode] = useState<"even" | "weighted">("even");
   const [weights, setWeights] = useState<Record<string, number>>({});
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    async function loadEvents() {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase
+        .from("events")
+        .select("id, title, start_time")
+        .lte("start_time", new Date().toISOString())
+        .order("start_time", { ascending: false })
+        .limit(20);
+      if (data) setEvents(data);
+    }
+    loadEvents().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -85,40 +117,92 @@ export default function LootSplitPage() {
     setLoot((prev) => prev.map((r) => (r.key === key ? { ...r, qty: Math.max(1, qty) } : r)));
   };
 
+  const updatePrice = (key: string, unitPrice: number) => {
+    setLoot((prev) => prev.map((r) => (r.key === key ? { ...r, unitPrice: Math.max(0, unitPrice) } : r)));
+  };
+
   const removeItem = (key: string) => {
     setLoot((prev) => prev.filter((r) => r.key !== key));
   };
 
-  const addParticipant = () => {
-    const name = participantInput.trim();
-    if (!name || participants.includes(name)) return;
-    setParticipants((prev) => [...prev, name]);
-    setWeights((prev) => ({ ...prev, [name]: prev[name] ?? 1 }));
-    setParticipantInput("");
+  const resizeParticipants = (count: number) => {
+    const n = Math.max(0, Math.min(MAX_PARTICIPANTS, Math.floor(count) || 0));
+    setParticipants((prev) => {
+      if (n <= prev.length) return prev.slice(0, n);
+      const additions: Participant[] = Array.from({ length: n - prev.length }, (_, i) => ({
+        id: `p-${Date.now()}-${prev.length + i}`,
+        name: `Participant ${prev.length + i + 1}`,
+      }));
+      return [...prev, ...additions];
+    });
   };
 
-  const removeParticipant = (name: string) => {
-    setParticipants((prev) => prev.filter((p) => p !== name));
+  const addParticipant = () => resizeParticipants(participants.length + 1);
+
+  const removeParticipant = (id: string) => {
+    setParticipants((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const renameParticipant = (id: string, name: string) => {
+    setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
+  };
+
+  const loadAttendees = useCallback(async () => {
+    if (!selectedEventId) return;
+    setLoadingAttendees(true);
+    setAttendeeError(null);
+    try {
+      const res = await fetch(`/api/events/${selectedEventId}/attendance`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load attendees.");
+
+      interface AttendanceRow {
+        discord_id: string;
+        discord_username: string | null;
+        discord_nickname: string | null;
+        rsn: string | null;
+        attended: boolean;
+      }
+      const rows: AttendanceRow[] = (data.attendance ?? []).filter((r: AttendanceRow) => r.attended);
+
+      if (rows.length === 0) {
+        setAttendeeError("No one is marked as attended for this event yet.");
+        return;
+      }
+
+      setParticipants(
+        rows.map((r, i) => ({
+          id: r.discord_id || `att-${i}`,
+          name: r.rsn || r.discord_nickname || r.discord_username || `Participant ${i + 1}`,
+        }))
+      );
+      setWeights({});
+    } catch (err) {
+      setAttendeeError(err instanceof Error ? err.message : "Failed to load attendees.");
+    } finally {
+      setLoadingAttendees(false);
+    }
+  }, [selectedEventId]);
+
+  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
 
   const totalValue = useMemo(() => loot.reduce((sum, r) => sum + r.unitPrice * r.qty, 0), [loot]);
-  const afterTax = useMemo(() => Math.max(0, totalValue * (1 - taxPct / 100)), [totalValue, taxPct]);
 
   const splits = useMemo(() => {
     if (participants.length === 0) return [];
     if (mode === "even") {
-      const share = afterTax / participants.length;
-      return participants.map((p) => ({ name: p, weight: 1, share }));
+      const share = totalValue / participants.length;
+      return participants.map((p) => ({ name: p.name, weight: 1, share }));
     }
-    const totalWeight = participants.reduce((sum, p) => sum + (weights[p] ?? 1), 0) || 1;
+    const totalWeight = participants.reduce((sum, p) => sum + (weights[p.id] ?? 1), 0) || 1;
     return participants.map((p) => {
-      const w = weights[p] ?? 1;
-      return { name: p, weight: w, share: afterTax * (w / totalWeight) };
+      const w = weights[p.id] ?? 1;
+      return { name: p.name, weight: w, share: totalValue * (w / totalWeight) };
     });
-  }, [participants, mode, weights, afterTax]);
+  }, [participants, mode, weights, totalValue]);
 
   const floored = splits.map((s) => ({ ...s, amount: Math.floor(s.share) }));
-  const remainder = afterTax - floored.reduce((sum, s) => sum + s.amount, 0);
+  const remainder = totalValue - floored.reduce((sum, s) => sum + s.amount, 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
@@ -188,18 +272,33 @@ export default function LootSplitPage() {
 
         {loot.length > 0 && (
           <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-3 text-xs text-iron-grey uppercase tracking-wide">
+              <span className="flex-1">Item</span>
+              <span className="w-28 text-right">Unit Price</span>
+              <span className="w-16 text-right">Qty</span>
+              <span className="w-24 text-right">Total</span>
+              <span className="w-14" />
+            </div>
             {loot.map((row) => (
               <div key={row.key} className="flex items-center gap-3 text-sm">
                 <span className="flex-1 text-bark-brown truncate">{row.name}</span>
                 <input
                   type="number"
+                  min={0}
+                  value={row.unitPrice}
+                  onChange={(e) => updatePrice(row.key, Number(e.target.value))}
+                  title="Override the price — useful when the market's bad or you're instant-selling for less"
+                  className="w-28 px-2 py-1 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm text-right"
+                />
+                <input
+                  type="number"
                   min={1}
                   value={row.qty}
                   onChange={(e) => updateQty(row.key, Number(e.target.value))}
-                  className="w-16 px-2 py-1 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm"
+                  className="w-16 px-2 py-1 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm text-right"
                 />
                 <span className="w-24 text-right font-stats text-gnome-green">{formatNumber(row.unitPrice * row.qty)}</span>
-                <button onClick={() => removeItem(row.key)} className="text-red-accent text-xs cursor-pointer">Remove</button>
+                <button onClick={() => removeItem(row.key)} className="w-14 text-red-accent text-xs cursor-pointer text-right">Remove</button>
               </div>
             ))}
           </div>
@@ -211,65 +310,108 @@ export default function LootSplitPage() {
       </Card>
 
       <Card hover={false} className="mb-6">
-        <h3 className="font-display text-lg text-bark-brown mb-3">Participants</h3>
-        <div className="flex gap-2 mb-3">
-          <input
-            type="text"
-            value={participantInput}
-            onChange={(e) => setParticipantInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addParticipant(); } }}
-            placeholder="RSN or name"
-            className={inputClass}
-          />
-          <Button type="button" size="sm" onClick={addParticipant}>Add</Button>
+        <h3 className="font-display text-lg text-bark-brown mb-3">Event (optional)</h3>
+        <p className="text-xs text-iron-grey mb-3">
+          Reference the event this loot is from, and optionally load its attendees as participants.
+        </p>
+        <div className="flex flex-wrap gap-2 items-end">
+          <div className="flex-1 min-w-[220px]">
+            <select
+              value={selectedEventId}
+              onChange={(e) => { setSelectedEventId(e.target.value); setAttendeeError(null); }}
+              className={inputClass}
+            >
+              <option value="">No event selected</option>
+              {events.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.title} — {new Date(ev.start_time).toLocaleDateString()}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button type="button" size="sm" variant="secondary" disabled={!selectedEventId || loadingAttendees} onClick={loadAttendees}>
+            {loadingAttendees ? "Loading..." : "Load Attendees as Participants"}
+          </Button>
         </div>
+        {attendeeError && <p className="text-xs text-red-accent mt-2">{attendeeError}</p>}
+      </Card>
+
+      <Card hover={false} className="mb-6">
+        <h3 className="font-display text-lg text-bark-brown mb-3">Participants</h3>
+
+        <div className="flex items-center gap-3 mb-4">
+          <label className="text-sm text-bark-brown">Number of participants</label>
+          <button
+            type="button"
+            onClick={() => resizeParticipants(participants.length - 1)}
+            className="w-7 h-7 rounded-md border border-bark-brown-light text-bark-brown cursor-pointer"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={0}
+            max={MAX_PARTICIPANTS}
+            value={participants.length}
+            onChange={(e) => resizeParticipants(Number(e.target.value))}
+            className="w-16 px-2 py-1 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm text-center"
+          />
+          <button
+            type="button"
+            onClick={() => resizeParticipants(participants.length + 1)}
+            className="w-7 h-7 rounded-md border border-bark-brown-light text-bark-brown cursor-pointer"
+          >
+            +
+          </button>
+        </div>
+
         {participants.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {participants.map((p) => (
-              <span key={p} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gnome-green/10 text-gnome-green text-sm">
-                {p}
-                <button onClick={() => removeParticipant(p)} className="cursor-pointer">×</button>
-              </span>
+              <div key={p.id} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={p.name}
+                  onChange={(e) => renameParticipant(p.id, e.target.value)}
+                  className={inputClass}
+                />
+                <button onClick={() => removeParticipant(p.id)} className="text-red-accent text-xs cursor-pointer shrink-0">×</button>
+              </div>
             ))}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={addParticipant}
+          className="text-xs text-gnome-green hover:underline mt-3 cursor-pointer"
+        >
+          + Add participant
+        </button>
       </Card>
 
       <Card hover={false} className="mb-6">
         <h3 className="font-display text-lg text-bark-brown mb-3">Split Settings</h3>
-        <div className="flex flex-wrap gap-6 items-end">
-          <div>
-            <label className="block text-xs text-iron-grey mb-1">Clan tax %</label>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={taxPct}
-              onChange={(e) => setTaxPct(Math.min(100, Math.max(0, Number(e.target.value))))}
-              className={`${inputClass} w-24`}
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <Button type="button" size="sm" variant={mode === "even" ? "primary" : "ghost"} onClick={() => setMode("even")}>
-              Even Split
-            </Button>
-            <Button type="button" size="sm" variant={mode === "weighted" ? "primary" : "ghost"} onClick={() => setMode("weighted")}>
-              Weighted Split
-            </Button>
-          </div>
+        <div className="flex items-center gap-3">
+          <Button type="button" size="sm" variant={mode === "even" ? "primary" : "ghost"} onClick={() => setMode("even")}>
+            Even Split
+          </Button>
+          <Button type="button" size="sm" variant={mode === "weighted" ? "primary" : "ghost"} onClick={() => setMode("weighted")}>
+            Weighted Split
+          </Button>
         </div>
 
         {mode === "weighted" && participants.length > 0 && (
           <div className="mt-4 space-y-2">
             {participants.map((p) => (
-              <div key={p} className="flex items-center gap-3">
-                <span className="flex-1 text-sm text-bark-brown">{p}</span>
+              <div key={p.id} className="flex items-center gap-3">
+                <span className="flex-1 text-sm text-bark-brown">{p.name}</span>
                 <input
                   type="number"
                   min={0}
                   step={0.1}
-                  value={weights[p] ?? 1}
-                  onChange={(e) => setWeights((prev) => ({ ...prev, [p]: Number(e.target.value) }))}
+                  value={weights[p.id] ?? 1}
+                  onChange={(e) => setWeights((prev) => ({ ...prev, [p.id]: Number(e.target.value) }))}
                   className="w-20 px-2 py-1 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm"
                 />
               </div>
@@ -279,7 +421,12 @@ export default function LootSplitPage() {
       </Card>
 
       <Card hover={false}>
-        <h3 className="font-display text-lg text-bark-brown mb-3">Results</h3>
+        <h3 className="font-display text-lg text-bark-brown mb-1">Results</h3>
+        {selectedEvent && (
+          <p className="text-xs text-iron-grey mb-3">
+            For: {selectedEvent.title} ({new Date(selectedEvent.start_time).toLocaleDateString()})
+          </p>
+        )}
         {participants.length === 0 || loot.length === 0 ? (
           <p className="text-sm text-iron-grey">Add loot and at least one participant to see the split.</p>
         ) : (
@@ -293,8 +440,8 @@ export default function LootSplitPage() {
                 </tr>
               </thead>
               <tbody>
-                {floored.map((s) => (
-                  <tr key={s.name} className="border-b border-parchment-dark last:border-0">
+                {floored.map((s, i) => (
+                  <tr key={`${s.name}-${i}`} className="border-b border-parchment-dark last:border-0">
                     <td className="py-2 text-bark-brown">{s.name}</td>
                     {mode === "weighted" && <td className="py-2 text-right text-iron-grey">{s.weight}</td>}
                     <td className="py-2 text-right font-stats text-gnome-green">{s.amount.toLocaleString()}</td>
@@ -302,13 +449,8 @@ export default function LootSplitPage() {
                 ))}
               </tbody>
             </table>
-            {taxPct > 0 && (
-              <p className="text-xs text-iron-grey mt-3">
-                {taxPct}% clan tax deducted: {(totalValue - afterTax).toLocaleString()} gp
-              </p>
-            )}
             {remainder > 0 && (
-              <p className="text-xs text-iron-grey mt-1">
+              <p className="text-xs text-iron-grey mt-3">
                 {Math.round(remainder).toLocaleString()} gp leftover due to rounding — hand it to whoever cleaned up.
               </p>
             )}
