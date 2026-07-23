@@ -274,7 +274,13 @@ export default function AdminActivityPage() {
                     <th className="text-left py-2 px-2">Linked</th>
                     <th className="text-left py-2 px-2">Role</th>
                     <th className={thClass} onClick={() => toggleSort("registeredAt")}>Registered{sortArrow("registeredAt")}</th>
-                    <th className={thClass} onClick={() => toggleSort("daysSinceActive")}>Last Active{sortArrow("daysSinceActive")}</th>
+                    <th
+                      className={thClass}
+                      onClick={() => toggleSort("daysSinceActive")}
+                      title="Last time Wise Old Man detected a stat change — logging in without gaining XP won't update this"
+                    >
+                      Last XP Update{sortArrow("daysSinceActive")}
+                    </th>
                     <th className={`${thClass} text-right`} onClick={() => toggleSort("ehpGained")}>EHP Gained{sortArrow("ehpGained")}</th>
                     <th className={`${thClass} text-right`} onClick={() => toggleSort("ehbGained")}>EHB Gained{sortArrow("ehbGained")}</th>
                     <th className="text-left py-2 px-2">Focus</th>
@@ -292,7 +298,7 @@ export default function AdminActivityPage() {
                         {m.isNew && <span className="ml-1 text-gnome-green">new</span>}
                       </td>
                       <td className="py-2 px-2 text-xs text-iron-grey">
-                        {m.daysSinceActive === null ? "—" : `${m.daysSinceActive}d ago`}
+                        {m.daysSinceActive === null ? "—" : `${m.daysSinceActive}d since XP gain`}
                       </td>
                       <td className="py-2 px-2 text-right font-stats text-gnome-green">{m.ehpGained.toFixed(1)}</td>
                       <td className="py-2 px-2 text-right font-stats text-red-accent">{m.ehbGained.toFixed(1)}</td>
