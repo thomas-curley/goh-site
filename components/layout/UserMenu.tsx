@@ -100,6 +100,13 @@ export function UserMenu() {
           >
             Admin Panel
           </Link>
+          <Link
+            href="/apply"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"
+          >
+            Apply for Staff
+          </Link>
           <div className="border-t border-parchment-dark my-1" />
           <button
             onClick={handleLogout}

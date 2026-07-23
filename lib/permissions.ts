@@ -37,6 +37,16 @@ export const PERMISSIONS = {
     label: "Update Posted Discord Messages",
     description: "Push edits to announcements, event posts, signup threads, and event recaps that have already been posted to Discord",
   },
+  manage_staff_applications: {
+    key: "manage_staff_applications",
+    label: "Review Staff Applications",
+    description: "Review and decide on member applications for staff roles",
+  },
+  manage_polls: {
+    key: "manage_polls",
+    label: "Create & Manage Polls",
+    description: "Create Discord polls for clan votes and view results",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
