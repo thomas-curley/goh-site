@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: "/guides", label: "Guides" },
   { href: "/members", label: "Members" },
   { href: "/hiscores", label: "Hiscores" },
+  { href: "/loot-split", label: "Loot Split" },
   { href: "/about", label: "About" },
 ];
 
@@ -160,6 +161,13 @@ export function Navbar() {
                     className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                   >
                     Admin Panel
+                  </Link>
+                  <Link
+                    href="/apply"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
+                  >
+                    Apply for Staff
                   </Link>
                   <button
                     onClick={() => { setMobileOpen(false); handleLogout(); }}

@@ -45,6 +45,10 @@ interface Summary {
 }
 
 type SortKey = "displayName" | "registeredAt" | "daysSinceActive" | "ehpGained" | "ehbGained" | "eventsAttended";
+type LinkedFilter = "linked" | "unlinked";
+
+const ALL_LINKED_FILTERS: LinkedFilter[] = ["linked", "unlinked"];
+const ALL_FOCUS_FILTERS: Focus[] = ["skiller", "bosser", "balanced", "inactive"];
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -65,6 +69,8 @@ export default function AdminActivityPage() {
   const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("ehpGained");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [linkedFilter, setLinkedFilter] = useState<Set<LinkedFilter>>(new Set(ALL_LINKED_FILTERS));
+  const [focusFilter, setFocusFilter] = useState<Set<Focus>>(new Set(ALL_FOCUS_FILTERS));
 
   const load = useCallback(async (activePreset: Preset, start: string, end: string) => {
     setLoading(true);
@@ -116,8 +122,39 @@ export default function AdminActivityPage() {
     }
   };
 
+  const toggleLinkedFilter = (key: LinkedFilter) => {
+    setLinkedFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleFocusFilter = (key: Focus) => {
+    setFocusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const filtersActive = linkedFilter.size < ALL_LINKED_FILTERS.length || focusFilter.size < ALL_FOCUS_FILTERS.length;
+
+  const resetFilters = () => {
+    setLinkedFilter(new Set(ALL_LINKED_FILTERS));
+    setFocusFilter(new Set(ALL_FOCUS_FILTERS));
+  };
+
+  const filteredMembers = useMemo(() => {
+    return members.filter(
+      (m) => linkedFilter.has(m.linked ? "linked" : "unlinked") && focusFilter.has(m.focus)
+    );
+  }, [members, linkedFilter, focusFilter]);
+
   const sortedMembers = useMemo(() => {
-    const copy = [...members];
+    const copy = [...filteredMembers];
     copy.sort((a, b) => {
       let av: string | number = a[sortKey] as string | number;
       let bv: string | number = b[sortKey] as string | number;
@@ -134,7 +171,7 @@ export default function AdminActivityPage() {
       return 0;
     });
     return copy;
-  }, [members, sortKey, sortDir]);
+  }, [filteredMembers, sortKey, sortDir]);
 
   const topGainers = useMemo(() => {
     return [...members]
@@ -264,8 +301,45 @@ export default function AdminActivityPage() {
           {/* Full roster table */}
           <Card hover={false}>
             <h3 className="font-display text-lg text-bark-brown mb-4">
-              Full Roster ({sortedMembers.length})
+              Full Roster ({sortedMembers.length}{sortedMembers.length !== members.length ? ` of ${members.length}` : ""})
             </h3>
+
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-iron-grey uppercase tracking-wide">Linked</span>
+                {ALL_LINKED_FILTERS.map((key) => (
+                  <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={linkedFilter.has(key)}
+                      onChange={() => toggleLinkedFilter(key)}
+                      className="accent-gnome-green"
+                    />
+                    {key === "linked" ? "Linked" : "Not Linked"}
+                  </label>
+                ))}
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-iron-grey uppercase tracking-wide">Focus</span>
+                {ALL_FOCUS_FILTERS.map((key) => (
+                  <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={focusFilter.has(key)}
+                      onChange={() => toggleFocusFilter(key)}
+                      className="accent-gnome-green"
+                    />
+                    {FOCUS_LABELS[key]}
+                  </label>
+                ))}
+              </div>
+              {filtersActive && (
+                <button onClick={resetFilters} className="text-xs text-gnome-green hover:underline">
+                  Reset filters
+                </button>
+              )}
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[720px]">
                 <thead>
@@ -274,7 +348,13 @@ export default function AdminActivityPage() {
                     <th className="text-left py-2 px-2">Linked</th>
                     <th className="text-left py-2 px-2">Role</th>
                     <th className={thClass} onClick={() => toggleSort("registeredAt")}>Registered{sortArrow("registeredAt")}</th>
-                    <th className={thClass} onClick={() => toggleSort("daysSinceActive")}>Last Active{sortArrow("daysSinceActive")}</th>
+                    <th
+                      className={thClass}
+                      onClick={() => toggleSort("daysSinceActive")}
+                      title="Last time Wise Old Man detected a stat change — logging in without gaining XP won't update this"
+                    >
+                      Last XP Update{sortArrow("daysSinceActive")}
+                    </th>
                     <th className={`${thClass} text-right`} onClick={() => toggleSort("ehpGained")}>EHP Gained{sortArrow("ehpGained")}</th>
                     <th className={`${thClass} text-right`} onClick={() => toggleSort("ehbGained")}>EHB Gained{sortArrow("ehbGained")}</th>
                     <th className="text-left py-2 px-2">Focus</th>
@@ -292,7 +372,7 @@ export default function AdminActivityPage() {
                         {m.isNew && <span className="ml-1 text-gnome-green">new</span>}
                       </td>
                       <td className="py-2 px-2 text-xs text-iron-grey">
-                        {m.daysSinceActive === null ? "—" : `${m.daysSinceActive}d ago`}
+                        {m.daysSinceActive === null ? "—" : `${m.daysSinceActive}d since XP gain`}
                       </td>
                       <td className="py-2 px-2 text-right font-stats text-gnome-green">{m.ehpGained.toFixed(1)}</td>
                       <td className="py-2 px-2 text-right font-stats text-red-accent">{m.ehbGained.toFixed(1)}</td>
