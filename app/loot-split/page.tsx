@@ -49,6 +49,12 @@ export default function LootSplitPage() {
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [attendeeError, setAttendeeError] = useState<string | null>(null);
 
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [savedLootCount, setSavedLootCount] = useState(0);
+  const [loadingLoot, setLoadingLoot] = useState(false);
+  const [savingLoot, setSavingLoot] = useState(false);
+  const [lootStatus, setLootStatus] = useState<string | null>(null);
+
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [mode, setMode] = useState<"even" | "weighted">("even");
   const [weights, setWeights] = useState<Record<string, number>>({});
@@ -67,7 +73,35 @@ export default function LootSplitPage() {
       if (data) setEvents(data);
     }
     loadEvents().catch(() => {});
+
+    async function checkAuth() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        setLoggedIn(!!user);
+      } catch {
+        // Supabase not configured
+      }
+    }
+    checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!selectedEventId) {
+      setSavedLootCount(0);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/events/${selectedEventId}/loot`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setSavedLootCount(Array.isArray(data.items) ? data.items.length : 0);
+      })
+      .catch(() => {
+        if (!cancelled) setSavedLootCount(0);
+      });
+    return () => { cancelled = true; };
+  }, [selectedEventId]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -183,6 +217,55 @@ export default function LootSplitPage() {
       setLoadingAttendees(false);
     }
   }, [selectedEventId]);
+
+  const loadSavedLoot = useCallback(async () => {
+    if (!selectedEventId) return;
+    setLoadingLoot(true);
+    setLootStatus(null);
+    try {
+      const res = await fetch(`/api/events/${selectedEventId}/loot`);
+      const data = await res.json();
+      const items: { name: string; unitPrice: number; qty: number }[] = data.items ?? [];
+      setLoot(
+        items.map((item, i) => ({
+          key: `saved-${i}-${Date.now()}`,
+          name: item.name,
+          unitPrice: item.unitPrice,
+          qty: item.qty,
+        }))
+      );
+    } catch {
+      setLootStatus("Failed to load saved loot.");
+    } finally {
+      setLoadingLoot(false);
+    }
+  }, [selectedEventId]);
+
+  const saveLoot = useCallback(async () => {
+    if (!selectedEventId || loot.length === 0) return;
+    setSavingLoot(true);
+    setLootStatus(null);
+    try {
+      const res = await fetch(`/api/events/${selectedEventId}/loot`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: loot.map((r) => ({ name: r.name, unitPrice: r.unitPrice, qty: r.qty })),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setLootStatus("Loot saved to event.");
+        setSavedLootCount(loot.length);
+      } else {
+        setLootStatus(data.error ?? "Failed to save loot.");
+      }
+    } catch {
+      setLootStatus("Failed to save loot.");
+    } finally {
+      setSavingLoot(false);
+    }
+  }, [selectedEventId, loot]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
 
@@ -334,6 +417,26 @@ export default function LootSplitPage() {
           </Button>
         </div>
         {attendeeError && <p className="text-xs text-red-accent mt-2">{attendeeError}</p>}
+
+        {selectedEventId && (
+          <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-parchment-dark">
+            {savedLootCount > 0 && (
+              <Button type="button" size="sm" variant="secondary" disabled={loadingLoot} onClick={loadSavedLoot}>
+                {loadingLoot ? "Loading..." : `Load Saved Loot (${savedLootCount})`}
+              </Button>
+            )}
+            {loggedIn ? (
+              <Button type="button" size="sm" disabled={loot.length === 0 || savingLoot} onClick={saveLoot}>
+                {savingLoot ? "Saving..." : "Save Loot to Event"}
+              </Button>
+            ) : (
+              <a href="/login" className="text-xs text-gnome-green hover:underline">
+                Log in to save loot to this event
+              </a>
+            )}
+            {lootStatus && <p className="text-xs text-iron-grey">{lootStatus}</p>}
+          </div>
+        )}
       </Card>
 
       <Card hover={false} className="mb-6">
