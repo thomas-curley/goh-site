@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE } from "@/lib/constants";
-import { getGroupDetails, getGroupAchievements } from "@/lib/wom";
+import { getGroupDetails, getGroupAchievements, getGroupCompetitions, getCompetitionLeaders, type CompetitionLeader } from "@/lib/wom";
 import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
@@ -26,6 +26,21 @@ async function getUpcomingEvents() {
     .limit(3);
 
   return data ?? [];
+}
+
+async function getActiveCompetitions() {
+  const competitions = await getGroupCompetitions();
+  const now = new Date();
+  const active = competitions
+    .filter((c) => new Date(c.startsAt) <= now && new Date(c.endsAt) >= now)
+    .slice(0, 3);
+
+  const leaderEntries = await Promise.all(
+    active.map(async (c) => [c.id, await getCompetitionLeaders(c.id, 3)] as const)
+  );
+  const leadersByCompetition = new Map<number, CompetitionLeader[]>(leaderEntries);
+
+  return active.map((c) => ({ ...c, leaders: leadersByCompetition.get(c.id) ?? [] }));
 }
 
 async function getAnnouncements() {
@@ -53,10 +68,11 @@ async function getAnnouncements() {
 }
 
 export default async function HomePage() {
-  const [groupDetails, achievements, upcomingEvents, announcements] = await Promise.all([
+  const [groupDetails, achievements, upcomingEvents, activeCompetitions, announcements] = await Promise.all([
     getGroupDetails(),
     getGroupAchievements(50),
     getUpcomingEvents(),
+    getActiveCompetitions(),
     getAnnouncements(),
   ]);
 
@@ -189,6 +205,59 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Active Competitions */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <h2 className="font-display text-3xl text-gnome-green text-center mb-10">
+          Active Competitions
+        </h2>
+        {activeCompetitions.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {activeCompetitions.map((comp) => (
+                <Card key={comp.id}>
+                  <h3 className="font-display text-lg text-bark-brown mb-1 truncate">
+                    {comp.title}
+                  </h3>
+                  <p className="text-xs text-iron-grey uppercase tracking-wide mb-3">
+                    <span className="capitalize">{comp.metric.replace(/_/g, " ")}</span> · <span className="capitalize">{comp.type}</span>
+                  </p>
+                  {comp.leaders.length > 0 ? (
+                    <ul className="text-sm text-bark-brown space-y-1">
+                      {comp.leaders.map((leader, i) => (
+                        <li key={leader.displayName} className="flex items-center justify-between gap-2">
+                          <span className="font-mono truncate">
+                            <span className="text-iron-grey mr-1">{i + 1}.</span>
+                            {leader.displayName}
+                          </span>
+                          <span className="font-stats text-gnome-green shrink-0">+{formatNumber(leader.gained)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-iron-grey">No participants yet.</p>
+                  )}
+                </Card>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link href="/competitions">
+                <Button variant="ghost">View All Competitions</Button>
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="text-center text-iron-grey py-8">
+            <p className="font-display text-xl mb-2">No active competitions right now</p>
+            <p className="text-sm">
+              Check back soon, or browse{" "}
+              <Link href="/competitions" className="text-gnome-green hover:underline">
+                past competitions
+              </Link>.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Join Us CTA */}
