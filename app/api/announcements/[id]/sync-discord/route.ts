@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { postToChannel, editChannelMessage } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
+import { getAlertChannel } from "@/lib/alert-channels";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,13 +21,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const channelId = process.env.DISCORD_ANNOUNCEMENTS_CHANNEL_ID;
-  if (!channelId) {
-    return NextResponse.json({ error: "DISCORD_ANNOUNCEMENTS_CHANNEL_ID not set" }, { status: 503 });
-  }
 
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  const channelId = await getAlertChannel(supabase, "announcements");
+  if (!channelId) {
+    return NextResponse.json({ error: "No announcements alert channel configured (Admin > Alert Channels, or DISCORD_ANNOUNCEMENTS_CHANNEL_ID)" }, { status: 503 });
+  }
 
   try {
     const { data: row } = await supabase

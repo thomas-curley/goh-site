@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { createPoll, resolvePostDestination } from "@/lib/discord";
+import { getAlertChannel } from "@/lib/alert-channels";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Duration must be between ${MIN_DURATION_HOURS} and ${MAX_DURATION_HOURS} hours.` }, { status: 400 });
   }
 
-  const channelId = resolvePostDestination(body.destination, process.env.DISCORD_POLLS_CHANNEL_ID);
+  const channelId = resolvePostDestination(body.destination, await getAlertChannel(supabase, "polls"));
   if (!channelId) {
     return NextResponse.json({ error: "No destination channel configured or provided." }, { status: 400 });
   }
