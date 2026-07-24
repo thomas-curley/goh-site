@@ -1,5 +1,6 @@
-import { getGroupCompetitions } from "@/lib/wom";
+import { getGroupCompetitions, getCompetitionLeaders, type CompetitionLeader } from "@/lib/wom";
 import { Card } from "@/components/ui/Card";
+import { formatNumber } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -22,6 +23,13 @@ export default async function CompetitionsPage() {
   const past = competitions
     .filter((c) => new Date(c.endsAt) < now)
     .slice(0, 10);
+
+  // Leaders/winners for anything that's actually had participants -- not upcoming.
+  const withLeaders = [...active, ...past];
+  const leaderEntries = await Promise.all(
+    withLeaders.map(async (c) => [c.id, await getCompetitionLeaders(c.id, 3)] as const)
+  );
+  const leadersByCompetition = new Map<number, CompetitionLeader[]>(leaderEntries);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -49,7 +57,7 @@ export default async function CompetitionsPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {active.map((comp) => (
-              <CompetitionCard key={comp.id} comp={comp} status="active" />
+              <CompetitionCard key={comp.id} comp={comp} status="active" leaders={leadersByCompetition.get(comp.id)} />
             ))}
           </div>
         </section>
@@ -77,7 +85,7 @@ export default async function CompetitionsPage() {
         {past.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {past.map((comp) => (
-              <CompetitionCard key={comp.id} comp={comp} status="past" />
+              <CompetitionCard key={comp.id} comp={comp} status="past" leaders={leadersByCompetition.get(comp.id)} />
             ))}
           </div>
         ) : (
@@ -91,9 +99,11 @@ export default async function CompetitionsPage() {
 function CompetitionCard({
   comp,
   status,
+  leaders,
 }: {
   comp: { id: number; title: string; metric: string; type: string; startsAt: Date; endsAt: Date };
   status: "active" | "upcoming" | "past";
+  leaders?: CompetitionLeader[];
 }) {
   const statusColors = {
     active: "bg-gnome-green text-text-light",
@@ -133,6 +143,26 @@ function CompetitionCard({
             {start.toLocaleDateString()} — {end.toLocaleDateString()}
           </p>
         </div>
+
+        {leaders && leaders.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-parchment-dark">
+            <p className="text-xs text-iron-grey uppercase tracking-wide mb-1.5">
+              {status === "past" ? "🏆 Winner" : "Currently Leading"}
+            </p>
+            <ul className="text-sm text-bark-brown space-y-0.5">
+              {(status === "past" ? leaders.slice(0, 1) : leaders).map((leader, i) => (
+                <li key={leader.displayName} className="flex items-center justify-between gap-2">
+                  <span className="font-mono truncate">
+                    {status !== "past" && <span className="text-iron-grey mr-1">{i + 1}.</span>}
+                    {leader.displayName}
+                  </span>
+                  <span className="font-stats text-gnome-green shrink-0">+{formatNumber(leader.gained)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <span className="text-sm text-gnome-green font-semibold mt-3 inline-block">
           View on WOM &rarr;
         </span>

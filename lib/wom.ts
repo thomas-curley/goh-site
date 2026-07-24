@@ -89,6 +89,25 @@ export async function getGroupCompetitions() {
   }
 }
 
+export interface CompetitionLeader {
+  displayName: string;
+  gained: number;
+}
+
+/** Top N participants by progress gained, for a single competition -- who's currently leading (or won, once it's over). */
+export async function getCompetitionLeaders(id: number, limit: number = 3): Promise<CompetitionLeader[]> {
+  try {
+    const details = await womClient.competitions.getCompetitionDetails(id);
+    return [...details.participations]
+      .sort((a, b) => b.progress.gained - a.progress.gained)
+      .slice(0, limit)
+      .map((p) => ({ displayName: p.player.displayName, gained: p.progress.gained }));
+  } catch (error) {
+    console.error(`Failed to fetch competition ${id} leaders from WOM:`, error);
+    return [];
+  }
+}
+
 export interface GroupGainEntry {
   username: string;
   displayName: string;
