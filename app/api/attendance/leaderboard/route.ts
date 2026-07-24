@@ -67,10 +67,19 @@ export async function GET(request: NextRequest) {
     attendance = data ?? [];
   }
 
-  // Aggregate: count events attended per person
+  // Aggregate: count events attended per person. Group by normalized RSN
+  // rather than discord_id where possible -- the same person can end up
+  // with attendance rows under two different discord_ids (e.g. a real
+  // linked account plus a synthetic id from an unverified manual
+  // check-in), which discord_id-only grouping would double-count as two
+  // separate people. Falls back to discord_id when there's no RSN.
+  function normalizeRsn(s: string): string {
+    return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+  }
+
   const counts = new Map<string, { discord_id: string; name: string; rsn: string | null; count: number }>();
   for (const row of attendance) {
-    const key = row.discord_id;
+    const key = row.rsn && row.rsn.trim() ? `rsn:${normalizeRsn(row.rsn)}` : `id:${row.discord_id}`;
     const existing = counts.get(key);
     if (existing) {
       existing.count++;
