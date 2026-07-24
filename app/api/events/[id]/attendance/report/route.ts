@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { postToChannel } from "@/lib/discord";
+import { postToDestination } from "@/lib/discord";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -61,8 +61,8 @@ export async function POST(
   ].filter((line) => line !== null).join("\n");
 
   try {
-    const result = await postToChannel(channelId, message);
-    return NextResponse.json({ posted: true, message_id: result.id, count: names.length });
+    const result = await postToDestination(channelId, `Attendance Report — ${event.title}`, message);
+    return NextResponse.json({ posted: true, message_id: result.messageId, count: names.length });
   } catch (err) {
     console.error("Attendance report post error:", err);
     return NextResponse.json({ error: "Failed to post to Discord" }, { status: 500 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { postToChannel, editChannelMessage } from "@/lib/discord";
+import { postToDestination, editChannelMessage } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 import { getAlertChannel } from "@/lib/alert-channels";
@@ -33,7 +33,7 @@ export async function POST(
   try {
     const { data: row } = await supabase
       .from("announcements")
-      .select("title, content, author_name, banner_url, discord_message_id")
+      .select("title, content, author_name, banner_url, discord_message_id, discord_channel_id")
       .eq("id", id)
       .single();
 
@@ -63,8 +63,11 @@ export async function POST(
     const imagePayload = allImages.length > 0 ? allImages : undefined;
 
     if (row.discord_message_id) {
+      // Edit wherever this message actually lives -- if it was posted as a
+      // forum post, that's the created thread, not the configured channel.
+      const editChannelId = row.discord_channel_id ?? channelId;
       try {
-        await editChannelMessage(channelId, row.discord_message_id, message, imagePayload);
+        await editChannelMessage(editChannelId, row.discord_message_id, message, imagePayload);
       } catch (err) {
         console.error("Discord announcement edit error:", err);
         return NextResponse.json(
@@ -75,10 +78,13 @@ export async function POST(
       return NextResponse.json({ posted: true, edited: true, message_id: row.discord_message_id });
     }
 
-    const result = await postToChannel(channelId, message, imagePayload);
-    await supabase.from("announcements").update({ discord_message_id: result.id }).eq("id", id);
+    const posted = await postToDestination(channelId, row.title, message, imagePayload);
+    await supabase
+      .from("announcements")
+      .update({ discord_message_id: posted.messageId, discord_channel_id: posted.channelId })
+      .eq("id", id);
 
-    return NextResponse.json({ posted: true, edited: false, message_id: result.id });
+    return NextResponse.json({ posted: true, edited: false, message_id: posted.messageId });
   } catch (err) {
     console.error("Discord announcement sync error:", err);
     return NextResponse.json({ error: "Failed to sync to Discord" }, { status: 500 });

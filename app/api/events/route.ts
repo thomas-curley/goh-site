@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createDiscordEvent, postToChannel, createSignupThread, resolvePostDestination } from "@/lib/discord";
+import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination } from "@/lib/discord";
 import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
@@ -128,9 +128,9 @@ export async function POST(request: NextRequest) {
             const allImages: string[] = [];
             if (body.banner_url) allImages.push(body.banner_url);
             if (Array.isArray(body.extra_images)) allImages.push(...body.extra_images.filter(Boolean));
-            const discordMsg = await postToChannel(channelId, message, allImages.length > 0 ? allImages : undefined);
-            discordMessageId = discordMsg.id;
-            discordChannelId = channelId;
+            const posted = await postToDestination(channelId, eventRow.title, message, allImages.length > 0 ? allImages : undefined);
+            discordMessageId = posted.messageId;
+            discordChannelId = posted.channelId;
           }
         }
       } catch (discordError) {

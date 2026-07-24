@@ -14,6 +14,29 @@ function getHeaders() {
   };
 }
 
+const GUILD_FORUM = 15;
+const GUILD_MEDIA = 16;
+
+/**
+ * Look up a channel's type (e.g. to tell a forum channel apart from a plain
+ * text channel/thread). Swallows errors and returns null on failure — the
+ * caller falls through to its normal posting attempt either way, which
+ * surfaces a clear Discord API error on its own rather than failing
+ * confusingly inside this check.
+ */
+async function getChannelType(channelId: string): Promise<number | null> {
+  try {
+    const res = await fetch(`${DISCORD_API}/channels/${channelId}`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data.type === "number" ? data.type : null;
+  } catch {
+    return null;
+  }
+}
+
 interface DiscordScheduledEvent {
   name: string;
   description?: string;
@@ -151,14 +174,89 @@ export async function editChannelMessage(channelId: string, messageId: string, c
 }
 
 /**
- * Create a thread in a channel (for sign-ups).
- * Posts an initial message then creates a public thread from it.
+ * Create a brand-new post in a Discord Forum (or Media) channel — these
+ * channel types don't accept plain messages, only this "start a thread"
+ * request, which creates a titled post with its own starter message.
+ * Known gap: unlike postToChannel, there's no way to attach a native
+ * Discord poll to a forum post's starter message (not supported by
+ * Discord's API), so createPoll is deliberately not routed through this.
+ */
+export async function createForumPost(
+  channelId: string,
+  title: string,
+  content: string,
+  imageUrl?: string | string[]
+): Promise<{ threadId: string; messageId: string }> {
+  const message: Record<string, unknown> = { content };
+
+  if (imageUrl) {
+    const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
+    if (urls.length > 0) {
+      message.embeds = urls.slice(0, 10).map((url) => ({ image: { url } }));
+    }
+  }
+
+  const res = await fetch(`${DISCORD_API}/channels/${channelId}/threads`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      name: title.slice(0, 100),
+      message,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error creating forum post: ${res.status} ${error}`);
+  }
+
+  const thread = await res.json();
+  return { threadId: thread.id, messageId: thread.message.id };
+}
+
+/**
+ * Post to a destination channel, transparently creating a new forum post
+ * instead of a plain message if the destination turns out to be a Forum
+ * (or Media) channel. Every *creation* posting flow should go through this
+ * rather than postToChannel directly, and must persist the returned
+ * channelId (not the input one) for any future edits — once a forum post
+ * exists, the message actually lives in the new thread, not the forum
+ * channel itself.
+ */
+export async function postToDestination(
+  channelId: string,
+  title: string,
+  content: string,
+  imageUrl?: string | string[]
+): Promise<{ channelId: string; messageId: string }> {
+  const type = await getChannelType(channelId);
+  if (type === GUILD_FORUM || type === GUILD_MEDIA) {
+    const { threadId, messageId } = await createForumPost(channelId, title, content, imageUrl);
+    return { channelId: threadId, messageId };
+  }
+
+  const result = await postToChannel(channelId, content, imageUrl);
+  return { channelId, messageId: result.id };
+}
+
+/**
+ * Create a thread in a channel (for sign-ups). If the channel is a Forum
+ * (or Media) channel, creates a proper forum post instead of the usual
+ * message-then-threadify flow, since forum channels don't accept plain
+ * messages at all.
  */
 export async function createSignupThread(
   channelId: string,
   eventTitle: string,
   initialMessage: string
 ): Promise<{ threadId: string; messageId: string }> {
+  const threadName = `Sign-ups: ${eventTitle}`;
+
+  const type = await getChannelType(channelId);
+  if (type === GUILD_FORUM || type === GUILD_MEDIA) {
+    return createForumPost(channelId, threadName, initialMessage);
+  }
+
   // Post the initial message
   const msg = await postToChannel(channelId, initialMessage);
 
@@ -167,7 +265,7 @@ export async function createSignupThread(
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify({
-      name: `Sign-ups: ${eventTitle}`.slice(0, 100),
+      name: threadName.slice(0, 100),
       auto_archive_duration: 10080, // 7 days
     }),
   });

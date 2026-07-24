@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { postToChannel, editChannelMessage, resolvePostDestination } from "@/lib/discord";
+import { postToDestination, editChannelMessage, resolvePostDestination } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     const imagePayload = imageUrls.length > 0 ? imageUrls : undefined;
 
     let messageId: string;
+    let actualChannelId = channelId;
     let edited = false;
 
     if (existing?.discord_message_id && !destinationChanged) {
@@ -74,8 +75,9 @@ export async function POST(request: NextRequest) {
       messageId = existing.discord_message_id;
       edited = true;
     } else {
-      const result = await postToChannel(channelId, message, imagePayload);
-      messageId = result.id;
+      const posted = await postToDestination(channelId, title, message, imagePayload);
+      messageId = posted.messageId;
+      actualChannelId = posted.channelId;
     }
 
     const row = {
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
       images: imageUrls,
       ping_roles: Array.isArray(pingRoles) ? pingRoles : [],
       template_id: templateId || null,
-      destination_channel_id: channelId,
+      destination_channel_id: actualChannelId,
       discord_message_id: messageId,
       author_name: author || null,
       updated_at: new Date().toISOString(),

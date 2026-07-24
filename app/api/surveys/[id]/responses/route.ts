@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import { postToChannel } from "@/lib/discord";
+import { postToDestination } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
 import type { SurveyQuestion } from "@/lib/surveys";
 
@@ -66,8 +66,9 @@ export async function POST(
     const channelId = await getAlertChannel(supabase, "surveys");
     if (channelId) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gn0mehome.com";
-      await postToChannel(
+      await postToDestination(
         channelId,
+        survey.title,
         `📊 **New response** to "${survey.title}" from ${respondentName || "Anonymous"}\nView results: ${siteUrl}/admin/surveys`
       );
     }
