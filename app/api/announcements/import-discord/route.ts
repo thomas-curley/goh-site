@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getChannelMessages } from "@/lib/discord";
+import { getAlertChannel } from "@/lib/alert-channels";
 
-const ANNOUNCEMENTS_CHANNEL_ID = "1486887506367611063";
+// Original hardcoded default, kept as the last-resort fallback so this
+// doesn't break for anyone who hasn't set DISCORD_ANNOUNCEMENTS_CHANNEL_ID
+// or an Admin > Alert Channels override yet.
+const LEGACY_ANNOUNCEMENTS_CHANNEL_ID = "1486887506367611063";
 
 export async function POST() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,15 +16,17 @@ export async function POST() {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   }
 
+  const supabase = createClient(supabaseUrl, serviceKey);
+
   try {
+    const channelId = (await getAlertChannel(supabase, "announcements")) ?? LEGACY_ANNOUNCEMENTS_CHANNEL_ID;
+
     // Fetch recent messages from Discord announcements channel
-    const messages = await getChannelMessages(ANNOUNCEMENTS_CHANNEL_ID, 50);
+    const messages = await getChannelMessages(channelId, 50);
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ imported: 0, message: "No messages found in channel." });
     }
-
-    const supabase = createClient(supabaseUrl, serviceKey);
 
     // Get existing discord message IDs to avoid duplicates
     const { data: existing } = await supabase

@@ -47,6 +47,21 @@ export const PERMISSIONS = {
     label: "Create & Manage Polls",
     description: "Create Discord polls for clan votes and view results",
   },
+  manage_settings: {
+    key: "manage_settings",
+    label: "Manage Alert Channel Settings",
+    description: "Configure which Discord channel each feature posts notifications to",
+  },
+  manage_surveys: {
+    key: "manage_surveys",
+    label: "Manage Surveys",
+    description: "Create surveys and view responses",
+  },
+  manage_feedback: {
+    key: "manage_feedback",
+    label: "Manage Feedback",
+    description: "Review and triage submitted feedback",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",

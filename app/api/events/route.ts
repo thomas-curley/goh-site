@@ -4,6 +4,7 @@ import { createDiscordEvent, postToChannel, createSignupThread, resolvePostDesti
 import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
+import { getAlertChannel } from "@/lib/alert-channels";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -94,8 +95,9 @@ export async function POST(request: NextRequest) {
         discordEventId = discordEvent.id;
 
         // Post formatted message — to an admin-chosen destination if given,
-        // otherwise the default events channel.
-        const channelId = resolvePostDestination(body.destination, process.env.DISCORD_EVENTS_CHANNEL_ID);
+        // otherwise the configured (or env-default) events channel.
+        const eventsChannelDefault = supabase ? await getAlertChannel(supabase, "events") : (process.env.DISCORD_EVENTS_CHANNEL_ID ?? null);
+        const channelId = resolvePostDestination(body.destination, eventsChannelDefault);
         if (channelId && supabase) {
           const template = await resolveTemplate(supabase, "event_post", body.templateId);
           if (template) {
@@ -142,7 +144,7 @@ export async function POST(request: NextRequest) {
     let signupThreadMessageId: string | null = null;
     if (body.create_signup_thread) {
       try {
-        const signupsChannelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID;
+        const signupsChannelId = supabase ? await getAlertChannel(supabase, "signups") : (process.env.DISCORD_SIGNUPS_CHANNEL_ID ?? null);
         if (signupsChannelId && supabase) {
           const template = await resolveTemplate(supabase, "signup_thread", body.signupThreadTemplateId);
           if (template) {

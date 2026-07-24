@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseDiscordMessageLink, isDiscordSnowflake } from "@/lib/discord";
+import { getAlertChannel } from "@/lib/alert-channels";
 
 // Custom guild emoji copied from Discord looks like <:name:id> or <a:name:id>;
 // the reactions endpoint wants it as "name:id". Unicode emoji pass through as-is.
@@ -81,7 +82,7 @@ export async function POST(
         if (!messageId) messageId = event?.signup_thread_message_id ?? null;
         if (!channelId) channelId = event?.signup_thread_id ?? null;
       }
-      if (!channelId) channelId = process.env.DISCORD_SIGNUPS_CHANNEL_ID ?? null;
+      if (!channelId) channelId = await getAlertChannel(supabase, "signups");
 
       if (!channelId || !messageId) {
         return NextResponse.json(

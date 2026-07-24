@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkPermission } from "@/lib/check-permission";
-import { postToChannel, resolvePostDestination } from "@/lib/discord";
+import { postToChannel } from "@/lib/discord";
 import { STAFF_APPLICATION_QUESTIONS } from "@/lib/staff-application-questions";
+import { getAlertChannel } from "@/lib/alert-channels";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const channelId = resolvePostDestination(undefined, process.env.DISCORD_STAFF_CHANNEL_ID);
+    const channelId = await getAlertChannel(supabase, "staff_applications");
     if (channelId) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gn0mehome.com";
       const applicantLabel = profile.rsn ? `${profile.discord_username} (${profile.rsn})` : profile.discord_username;

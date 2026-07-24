@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
+import { getAlertChannel } from "@/lib/alert-channels";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -107,9 +108,9 @@ export async function PUT(
     if (sync_discord_post && data.discord_message_id) {
       // Sync to wherever this event was actually posted, not always the
       // default channel — events can be posted to a custom destination now.
-      const channelId = data.discord_channel_id ?? process.env.DISCORD_EVENTS_CHANNEL_ID;
+      const channelId = data.discord_channel_id ?? (await getAlertChannel(supabase, "events"));
       try {
-        if (!channelId) throw new Error("DISCORD_EVENTS_CHANNEL_ID not set");
+        if (!channelId) throw new Error("No events alert channel configured (Admin > Alert Channels, or DISCORD_EVENTS_CHANNEL_ID)");
         const template = await resolveTemplate(supabase, "event_post", templateId);
         if (!template) throw new Error("No event_post template configured");
         const message = renderTemplate(template.sections, {

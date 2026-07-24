@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: "/members", label: "Members" },
   { href: "/hiscores", label: "Hiscores" },
   { href: "/tools", label: "Tools" },
+  { href: "/feedback", label: "Feedback" },
   { href: "/about", label: "About" },
 ];
 
