@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import { postToChannel } from "@/lib/discord";
+import { postToDestination } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
 
 function getServiceClient() {
@@ -42,8 +42,9 @@ export async function POST(request: NextRequest) {
     if (channelId) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gn0mehome.com";
       const preview = message.length > 300 ? `${message.slice(0, 300)}…` : message;
-      await postToChannel(
+      await postToDestination(
         channelId,
+        "Feedback Submission",
         `📝 **New feedback**${category ? ` (${category})` : ""} from ${respondentName || "Anonymous"}\n> ${preview}\nView in admin: ${siteUrl}/admin/feedback`
       );
     }

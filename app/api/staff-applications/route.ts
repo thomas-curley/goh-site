@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkPermission } from "@/lib/check-permission";
-import { postToChannel } from "@/lib/discord";
+import { postToDestination } from "@/lib/discord";
 import { STAFF_APPLICATION_QUESTIONS } from "@/lib/staff-application-questions";
 import { getAlertChannel } from "@/lib/alert-channels";
 
@@ -86,8 +86,9 @@ export async function POST(request: NextRequest) {
     if (channelId) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gn0mehome.com";
       const applicantLabel = profile.rsn ? `${profile.discord_username} (${profile.rsn})` : profile.discord_username;
-      await postToChannel(
+      await postToDestination(
         channelId,
+        "Staff Application",
         `📋 **New staff application** from ${applicantLabel}\nReview it at ${siteUrl}/admin/staff-applications`
       );
     }
