@@ -27,6 +27,7 @@ interface RecapPost {
   description: string | null;
   highlights: string[];
   winners: { rsn: string; prize: string }[];
+  loot_items: string[];
   images: string[];
   ping_roles: string[];
   template_id: string | null;
@@ -34,6 +35,12 @@ interface RecapPost {
   discord_message_id: string | null;
   event_id: string | null;
   created_at: string;
+}
+
+interface TrackedLootItem {
+  name: string;
+  unitPrice: number;
+  qty: number;
 }
 
 export default function EventRecapPage() {
@@ -44,6 +51,9 @@ export default function EventRecapPage() {
   const [description, setDescription] = useState("");
   const [highlights, setHighlights] = useState<string[]>([""]);
   const [winners, setWinners] = useState<{ rsn: string; prize: string }[]>([]);
+  const [lootItems, setLootItems] = useState<string[]>([]);
+  const [trackedLoot, setTrackedLoot] = useState<TrackedLootItem[]>([]);
+  const [loadingTrackedLoot, setLoadingTrackedLoot] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [pingRoles, setPingRoles] = useState<string[]>([]);
   const [templateId, setTemplateId] = useState("");
@@ -88,6 +98,28 @@ export default function EventRecapPage() {
     }
   }, [selectedEvent, events]);
 
+  // When selecting an event, fetch any loot tracked for it via the Loot Split calculator
+  useEffect(() => {
+    if (!selectedEvent) {
+      setTrackedLoot([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingTrackedLoot(true);
+    fetch(`/api/events/${selectedEvent}/loot`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setTrackedLoot(Array.isArray(data.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (!cancelled) setTrackedLoot([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingTrackedLoot(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedEvent]);
+
   const selectedEventData = events.find((e) => e.id === selectedEvent);
   const dateStr = selectedEventData
     ? new Date(selectedEventData.start_time).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
@@ -125,6 +157,19 @@ export default function EventRecapPage() {
     setWinners(next);
   };
 
+  const addLootItem = () => setLootItems([...lootItems, ""]);
+  const removeLootItem = (i: number) => setLootItems(lootItems.filter((_, idx) => idx !== i));
+  const updateLootItem = (i: number, val: string) => {
+    const next = [...lootItems];
+    next[i] = val;
+    setLootItems(next);
+  };
+
+  const importTrackedLoot = () => {
+    const lines = trackedLoot.map((item) => `${item.name} ×${item.qty} — ${(item.unitPrice * item.qty).toLocaleString()} gp`);
+    setLootItems((prev) => [...prev.filter((l) => l.trim()), ...lines]);
+  };
+
   const handleEditRecap = (recap: RecapPost) => {
     setEditingRecapId(recap.id);
     setSelectedEvent(recap.event_id ?? "");
@@ -132,6 +177,7 @@ export default function EventRecapPage() {
     setDescription(recap.description ?? "");
     setHighlights(recap.highlights.length > 0 ? recap.highlights : [""]);
     setWinners(recap.winners ?? []);
+    setLootItems(recap.loot_items ?? []);
     setImages(recap.images ?? []);
     setPingRoles(recap.ping_roles ?? []);
     setTemplateId(recap.template_id ?? "");
@@ -167,6 +213,7 @@ export default function EventRecapPage() {
           description,
           highlights: highlights.filter((h) => h.trim()),
           winners: winners.filter((w) => w.rsn.trim()),
+          lootItems: lootItems.filter((l) => l.trim()),
           images,
           author,
           pingRoles,
@@ -185,6 +232,7 @@ export default function EventRecapPage() {
         setDescription("");
         setHighlights([""]);
         setWinners([]);
+        setLootItems([]);
         setImages([]);
         setPingRoles([]);
         setSelectedEvent("");
@@ -217,6 +265,7 @@ export default function EventRecapPage() {
     description,
     highlights: highlights.filter((h) => h.trim()),
     winners: winners.filter((w) => w.rsn.trim()),
+    lootItems: lootItems.filter((l) => l.trim()),
     author: "You",
     pingRoles,
     dateStr,
@@ -347,6 +396,64 @@ export default function EventRecapPage() {
             </Card>
           </div>
 
+          {/* Loot */}
+          <div>
+            <Card hover={false}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display text-lg text-bark-brown">Loot (optional)</h2>
+                <Button type="button" variant="ghost" size="sm" onClick={addLootItem}>+ Add</Button>
+              </div>
+
+              {selectedEvent && (
+                <div className="mb-4 p-3 rounded-md bg-parchment-dark/40 border border-parchment-dark">
+                  {loadingTrackedLoot ? (
+                    <p className="text-xs text-iron-grey">Checking for tracked loot...</p>
+                  ) : trackedLoot.length === 0 ? (
+                    <p className="text-xs text-iron-grey">
+                      No loot tracked for this event yet — save some from the{" "}
+                      <Link href="/loot-split" className="text-gnome-green hover:underline" target="_blank">
+                        Loot Split Calculator
+                      </Link>.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-iron-grey uppercase tracking-wide mb-2">Tracked Loot for this Event</p>
+                      <ul className="text-sm text-bark-brown space-y-0.5 mb-3">
+                        {trackedLoot.map((item, i) => (
+                          <li key={i}>
+                            {item.name} ×{item.qty} — {(item.unitPrice * item.qty).toLocaleString()} gp
+                          </li>
+                        ))}
+                      </ul>
+                      <Button type="button" size="sm" variant="secondary" onClick={importTrackedLoot}>
+                        Import into Recap
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {lootItems.length === 0 ? (
+                <p className="text-xs text-iron-grey">No loot lines — click &quot;+ Add&quot; or import tracked loot above.</p>
+              ) : (
+                <div className="space-y-2">
+                  {lootItems.map((l, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={l}
+                        onChange={(e) => updateLootItem(i, e.target.value)}
+                        className={`${inputClass} flex-1`}
+                        placeholder="Rune Scimitar ×2 — 30,000 gp"
+                      />
+                      <button type="button" onClick={() => removeLootItem(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+
           {/* Screenshots */}
           <div data-tour="recap-screenshots">
             <Card hover={false}>
@@ -379,7 +486,7 @@ export default function EventRecapPage() {
                 variant="ghost"
                 onClick={() => {
                   setEditingRecapId(null);
-                  setTitle(""); setDescription(""); setHighlights([""]); setWinners([]);
+                  setTitle(""); setDescription(""); setHighlights([""]); setWinners([]); setLootItems([]);
                   setImages([]); setPingRoles([]); setSelectedEvent(""); setDestination(""); setTemplateId("");
                 }}
               >

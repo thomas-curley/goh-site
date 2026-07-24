@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const {
-      title, description, highlights, winners, images, author, pingRoles,
+      title, description, highlights, winners, lootItems, images, author, pingRoles,
       destination, templateId, dateStr, eventId, recapId,
     } = await request.json();
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No event recap template configured" }, { status: 500 });
     }
 
-    const message = renderTemplate(template.sections, { title, description, highlights, winners, author, pingRoles, dateStr });
+    const message = renderTemplate(template.sections, { title, description, highlights, winners, lootItems, author, pingRoles, dateStr });
     const imageUrls = Array.isArray(images) ? images.filter(Boolean) : [];
     const imagePayload = imageUrls.length > 0 ? imageUrls : undefined;
 
@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       description: description || null,
       highlights: Array.isArray(highlights) ? highlights : [],
       winners: Array.isArray(winners) ? winners : [],
+      loot_items: Array.isArray(lootItems) ? lootItems : [],
       images: imageUrls,
       ping_roles: Array.isArray(pingRoles) ? pingRoles : [],
       template_id: templateId || null,
