@@ -6,6 +6,10 @@
     {
       "path": "/api/snapshots/capture",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/discord-import",
+      "schedule": "0 9 * * *"
     }
   ],
   "headers": [
