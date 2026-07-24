@@ -167,12 +167,12 @@ export default function AdminSurveysPage() {
                       value={q.prompt}
                       onChange={(e) => updateQuestion(i, { prompt: e.target.value })}
                       placeholder="Question prompt"
-                      className={`${inputClass} flex-1`}
+                      className={inputClass}
                     />
                     <select
                       value={q.type}
                       onChange={(e) => updateQuestion(i, { type: e.target.value as QuestionType, options: e.target.value === "multiple_choice" ? ["", ""] : [] })}
-                      className={`${inputClass} w-44 cursor-pointer`}
+                      className="px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green w-44 shrink-0 cursor-pointer"
                     >
                       {QUESTION_TYPES.map((t) => (
                         <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
