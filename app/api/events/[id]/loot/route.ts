@@ -60,7 +60,7 @@ export async function PUT(
   }
 
   const body = await request.json().catch(() => ({}));
-  const rawItems = Array.isArray(body.items) ? body.items : [];
+  const rawItems: unknown[] = Array.isArray(body.items) ? body.items : [];
 
   if (rawItems.length > MAX_ITEMS) {
     return NextResponse.json({ error: `Too many items (max ${MAX_ITEMS}).` }, { status: 400 });
