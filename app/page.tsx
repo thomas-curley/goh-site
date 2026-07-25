@@ -33,7 +33,7 @@ async function getActiveCompetitions() {
   const now = new Date();
   const active = competitions
     .filter((c) => new Date(c.startsAt) <= now && new Date(c.endsAt) >= now)
-    .slice(0, 3);
+    .slice(0, 1);
 
   const leaderEntries = await Promise.all(
     active.map(async (c) => [c.id, await getCompetitionLeaders(c.id, 3)] as const)
@@ -147,6 +147,36 @@ export default async function HomePage() {
             <p className="text-bark-brown mt-1">Recent Achievements</p>
           </Card>
         </div>
+
+        {/* Active Competition (thin row) */}
+        {activeCompetitions.length > 0 && (
+          <div className="mt-6">
+            <Card>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-xs text-iron-grey uppercase tracking-wide">Active Competition</p>
+                  <h3 className="font-display text-lg text-bark-brown">{activeCompetitions[0].title}</h3>
+                </div>
+                <Link href="/competitions" className="text-sm text-gnome-green hover:underline shrink-0">
+                  View All Competitions &rarr;
+                </Link>
+              </div>
+              {activeCompetitions[0].leaders.length > 0 ? (
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  {activeCompetitions[0].leaders.map((leader, i) => (
+                    <span key={leader.displayName} className="text-sm text-bark-brown">
+                      <span className="text-iron-grey">{i + 1}.</span>{" "}
+                      <span className="font-mono">{leader.displayName}</span>{" "}
+                      <span className="font-stats text-gnome-green">+{formatNumber(leader.gained)}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-iron-grey">No participants yet.</p>
+              )}
+            </Card>
+          </div>
+        )}
       </section>
 
       {/* Upcoming Events Preview */}
@@ -205,59 +235,6 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
-
-      {/* Active Competitions */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="font-display text-3xl text-gnome-green text-center mb-10">
-          Active Competitions
-        </h2>
-        {activeCompetitions.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {activeCompetitions.map((comp) => (
-                <Card key={comp.id}>
-                  <h3 className="font-display text-lg text-bark-brown mb-1 truncate">
-                    {comp.title}
-                  </h3>
-                  <p className="text-xs text-iron-grey uppercase tracking-wide mb-3">
-                    <span className="capitalize">{comp.metric.replace(/_/g, " ")}</span> · <span className="capitalize">{comp.type}</span>
-                  </p>
-                  {comp.leaders.length > 0 ? (
-                    <ul className="text-sm text-bark-brown space-y-1">
-                      {comp.leaders.map((leader, i) => (
-                        <li key={leader.displayName} className="flex items-center justify-between gap-2">
-                          <span className="font-mono truncate">
-                            <span className="text-iron-grey mr-1">{i + 1}.</span>
-                            {leader.displayName}
-                          </span>
-                          <span className="font-stats text-gnome-green shrink-0">+{formatNumber(leader.gained)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-iron-grey">No participants yet.</p>
-                  )}
-                </Card>
-              ))}
-            </div>
-            <div className="text-center mt-8">
-              <Link href="/competitions">
-                <Button variant="ghost">View All Competitions</Button>
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="text-center text-iron-grey py-8">
-            <p className="font-display text-xl mb-2">No active competitions right now</p>
-            <p className="text-sm">
-              Check back soon, or browse{" "}
-              <Link href="/competitions" className="text-gnome-green hover:underline">
-                past competitions
-              </Link>.
-            </p>
-          </div>
-        )}
       </section>
 
       {/* Join Us CTA */}
