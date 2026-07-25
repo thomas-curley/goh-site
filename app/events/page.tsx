@@ -1,5 +1,6 @@
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { createClient } from "@supabase/supabase-js";
+import { getGroupCompetitions } from "@/lib/wom";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -34,13 +35,14 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   drop_party: "#DAA520",
   hide_seek: "#4A7C23",
   social: "#3E2B1C",
+  competition: "#5D3A9E",
   other: "#6B6B6B",
 };
 
 export default async function EventsPage() {
-  const events = await getEvents();
+  const [events, competitions] = await Promise.all([getEvents(), getGroupCompetitions()]);
 
-  const calendarEvents = events.map((e) => ({
+  const eventEntries = events.map((e) => ({
     id: e.id,
     title: e.title,
     start: e.start_time,
@@ -62,6 +64,25 @@ export default async function EventsPage() {
     },
   }));
 
+  // Every WOM competition (active, upcoming, and past) so the calendar
+  // reflects a full month of clan activity, not just what's happening now.
+  const competitionEntries = competitions.map((c) => ({
+    id: `comp-${c.id}`,
+    title: `🏆 ${c.title}`,
+    start: new Date(c.startsAt).toISOString(),
+    end: new Date(c.endsAt).toISOString(),
+    color: EVENT_TYPE_COLORS.competition,
+    extendedProps: {
+      eventType: "competition",
+      isCompetition: true,
+      metric: c.metric,
+      competitionType: c.type,
+      womUrl: `https://wiseoldman.net/competitions/${c.id}`,
+    },
+  }));
+
+  const calendarEvents = [...eventEntries, ...competitionEntries];
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <h1 className="font-display text-4xl text-gnome-green mb-2">
@@ -69,27 +90,8 @@ export default async function EventsPage() {
       </h1>
       <p className="text-bark-brown-light mb-8">
         Upcoming clan events, competitions, and social gatherings. Events sync
-        with our Discord server.
+        with our Discord server; competitions are pulled from Wise Old Man.
       </p>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        {[
-          { label: "PvM", color: "#8B1A1A" },
-          { label: "Skilling", color: "#2D5016" },
-          { label: "Drop Party", color: "#DAA520" },
-          { label: "Hide & Seek", color: "#4A7C23" },
-          { label: "Social", color: "#3E2B1C" },
-        ].map((type) => (
-          <div key={type.label} className="flex items-center gap-2 text-sm">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: type.color }}
-            />
-            <span className="text-bark-brown-light">{type.label}</span>
-          </div>
-        ))}
-      </div>
 
       {calendarEvents.length > 0 ? (
         <EventCalendar events={calendarEvents} />
