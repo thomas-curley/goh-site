@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { postToDestination, editChannelMessage, resolvePostDestination } from "@/lib/discord";
+import { postToDestination, editChannelMessage, resolvePostDestination, closeForumThread } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     const {
       title, description, highlights, winners, lootItems, images, author, pingRoles,
-      destination, templateId, dateStr, eventId, recapId,
+      destination, templateId, dateStr, eventId, recapId, closeForumPost,
     } = await request.json();
 
     if (!title) {
@@ -104,7 +104,12 @@ export async function POST(request: NextRequest) {
       savedId = inserted?.id ?? null;
     }
 
-    return NextResponse.json({ posted: true, edited, message_id: messageId, recap_id: savedId });
+    let forumClosed: boolean | undefined;
+    if (closeForumPost === true) {
+      forumClosed = await closeForumThread(actualChannelId);
+    }
+
+    return NextResponse.json({ posted: true, edited, message_id: messageId, recap_id: savedId, forum_closed: forumClosed });
   } catch (err) {
     console.error("Event recap post error:", err);
     return NextResponse.json({ error: "Failed to post recap to Discord" }, { status: 500 });

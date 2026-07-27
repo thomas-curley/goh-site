@@ -48,6 +48,7 @@ export default function EventRecapPage() {
   const [events, setEvents] = useState<PastEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [destination, setDestination] = useState("");
+  const [closeForumPost, setCloseForumPost] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [highlights, setHighlights] = useState<string[]>([""]);
@@ -183,6 +184,7 @@ export default function EventRecapPage() {
     setPingRoles(recap.ping_roles ?? []);
     setTemplateId(recap.template_id ?? "");
     setDestination(recap.destination_channel_id);
+    setCloseForumPost(false);
     window.scrollTo(0, 0);
   };
 
@@ -223,12 +225,15 @@ export default function EventRecapPage() {
           templateId,
           dateStr,
           recapId: editingRecapId || undefined,
+          closeForumPost,
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        setStatus(data.edited ? "Recap updated on Discord!" : "Event recap posted to Discord!");
+        let message = data.edited ? "Recap updated on Discord!" : "Event recap posted to Discord!";
+        if (closeForumPost) message += data.forum_closed ? " Forum post closed." : " (Couldn't close the forum post — it may not be a forum thread.)";
+        setStatus(message);
         setTitle("");
         setDescription("");
         setHighlights([""]);
@@ -238,6 +243,7 @@ export default function EventRecapPage() {
         setPingRoles([]);
         setSelectedEvent("");
         setDestination("");
+        setCloseForumPost(false);
         setEditingRecapId(null);
         await loadPastRecaps();
       } else {
@@ -318,6 +324,15 @@ export default function EventRecapPage() {
                   itself) → <span className="font-semibold">Copy Message Link</span>, and paste it here.
                 </p>
               </div>
+              <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={closeForumPost}
+                  onChange={(e) => setCloseForumPost(e.target.checked)}
+                  className="accent-gnome-green"
+                />
+                Close the forum post after posting this recap
+              </label>
             </div>
           </Card>
 
@@ -496,6 +511,7 @@ export default function EventRecapPage() {
                   setEditingRecapId(null);
                   setTitle(""); setDescription(""); setHighlights([""]); setWinners([]); setLootItems([]);
                   setImages([]); setPingRoles([]); setSelectedEvent(""); setDestination(""); setTemplateId("");
+                  setCloseForumPost(false);
                 }}
               >
                 Cancel
