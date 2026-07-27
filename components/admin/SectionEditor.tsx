@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import type { PostSection, BlockType } from "@/lib/post-templates";
 
 interface SectionEditorProps {
@@ -170,7 +171,10 @@ export function ConfigFields({
           <input type="text" value={str("emoji")} onChange={(e) => onChange({ emoji: e.target.value })} maxLength={4} className={`${inputClass} w-20 text-center`} />
         </div>
         <div>
-          <label className={labelClass}>Template</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-semibold text-bark-brown">Template</label>
+            <EmojiPickerButton onInsert={(t) => onChange({ template: str("template") + (str("template") ? " " : "") + t })} />
+          </div>
           <input
             type="text"
             value={str("template")}
@@ -268,7 +272,10 @@ export function ConfigFields({
           </div>
         )}
         <div>
-          <label className={labelClass}>Item Template</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-semibold text-bark-brown">Item Template</label>
+            <EmojiPickerButton onInsert={(t) => onChange({ itemTemplate: str("itemTemplate") + (str("itemTemplate") ? " " : "") + t })} />
+          </div>
           <input
             type="text"
             value={str("itemTemplate")}
@@ -283,7 +290,10 @@ export function ConfigFields({
           <input type="text" value={str("headingEmoji")} onChange={(e) => onChange({ headingEmoji: e.target.value })} maxLength={4} className={`${inputClass} w-20 text-center`} />
         </div>
         <div>
-          <label className={labelClass}>Heading Template (optional)</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-semibold text-bark-brown">Heading Template (optional)</label>
+            <EmojiPickerButton onInsert={(t) => onChange({ headingTemplate: str("headingTemplate") + (str("headingTemplate") ? " " : "") + t })} />
+          </div>
           <input type="text" value={str("headingTemplate")} onChange={(e) => onChange({ headingTemplate: e.target.value })} className={`${inputClass} font-mono`} placeholder="{emoji} **Highlights**" />
         </div>
         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-parchment-dark">
@@ -292,7 +302,10 @@ export function ConfigFields({
             <input type="text" value={str("fallbackBindKey")} onChange={(e) => onChange({ fallbackBindKey: e.target.value })} className={`${inputClass} font-mono`} placeholder="requirements" />
           </div>
           <div>
-            <label className={labelClass}>Fallback Template</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-bark-brown">Fallback Template</label>
+              <EmojiPickerButton onInsert={(t) => onChange({ fallbackTemplate: str("fallbackTemplate") + (str("fallbackTemplate") ? " " : "") + t })} />
+            </div>
             <input type="text" value={str("fallbackTemplate")} onChange={(e) => onChange({ fallbackTemplate: e.target.value })} className={`${inputClass} font-mono`} placeholder="{emoji} Requirements: {value}" />
           </div>
         </div>
@@ -308,7 +321,10 @@ export function ConfigFields({
         <input type="text" value={str("emoji")} onChange={(e) => onChange({ emoji: e.target.value })} maxLength={4} className={`${inputClass} w-20 text-center`} />
       </div>
       <div>
-        <label className={labelClass}>Text</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs font-semibold text-bark-brown">Text</label>
+          <EmojiPickerButton onInsert={(t) => onChange({ template: str("template") + (str("template") ? " " : "") + t })} />
+        </div>
         <input
           type="text"
           value={str("template")}

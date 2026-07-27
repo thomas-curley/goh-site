@@ -10,6 +10,7 @@ import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { PageTour } from "@/components/admin/tour/PageTour";
 import { usePermission } from "@/lib/use-permission";
 import { ANNOUNCEMENT_TOUR } from "@/lib/tours";
@@ -251,11 +252,17 @@ export default function AdminAnnouncementsPage() {
         </h2>
         <form onSubmit={handleSave} className="space-y-4">
           <div data-tour="announcement-title">
-            <label className="block text-sm font-semibold text-bark-brown mb-1">Title</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-semibold text-bark-brown">Title</label>
+              <EmojiPickerButton onInsert={(t) => setTitle((prev) => prev + (prev ? " " : "") + t)} />
+            </div>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} placeholder="Weekly Update" />
           </div>
           <div data-tour="announcement-content">
-            <label className="block text-sm font-semibold text-bark-brown mb-1">Content</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-semibold text-bark-brown">Content</label>
+              <EmojiPickerButton onInsert={(t) => setContent((prev) => prev + (prev ? " " : "") + t)} />
+            </div>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} required rows={4} className={`${inputClass} resize-y`} placeholder="Write your announcement here..." />
             <div className="mt-2">
               <ReformatButton

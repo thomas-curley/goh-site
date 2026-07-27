@@ -6,6 +6,7 @@ import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 
 export interface EventForm {
   title: string;
@@ -128,12 +129,18 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
         <h2 className="font-display text-lg text-bark-brown mb-4">Event Details</h2>
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Event Title *</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-semibold text-bark-brown">Event Title *</label>
+              <EmojiPickerButton onInsert={(t) => update("title", form.title + (form.title ? " " : "") + t)} />
+            </div>
             <input type="text" value={form.title} onChange={(e) => update("title", e.target.value)} required className={inputClass} placeholder="Hueycotl Boss Event" />
           </div>
 
           <div>
-            <label className={labelClass}>Description / Flavor Text</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-semibold text-bark-brown">Description / Flavor Text</label>
+              <EmojiPickerButton onInsert={(t) => update("description", form.description + (form.description ? " " : "") + t)} />
+            </div>
             <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="Deep in the jungle ruins, an ancient serpent-spirit awaits..." />
             <div className="mt-2">
               <ReformatButton
@@ -255,7 +262,10 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
             )}
             {shows("guide_text") && (
               <div>
-                <label className={labelClass}>Event-Specific Guide / Mechanics</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-semibold text-bark-brown">Event-Specific Guide / Mechanics</label>
+                  <EmojiPickerButton onInsert={(t) => update("guide_text", form.guide_text + (form.guide_text ? " " : "") + t)} />
+                </div>
                 <textarea value={form.guide_text} onChange={(e) => update("guide_text", e.target.value)} rows={6} className={`${inputClass} resize-y text-sm`} placeholder={"Phases & Attacks:\n• Serpent Strike: A fast melee hit — step back or pray melee.\n• Venom Spit: Ranged green projectile — bring anti-venom.\n\nSafe Spots & Movement:\n• Use the outer ring of the arena to avoid tail sweeps."} />
               </div>
             )}
