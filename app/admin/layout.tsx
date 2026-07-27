@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { checkPermission } from "@/lib/check-permission";
 import type { PermissionKey } from "@/lib/permissions";
 import type { Metadata } from "next";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export const metadata: Metadata = {
   title: "Admin Panel",
@@ -50,7 +51,9 @@ export default async function AdminLayout({
         <div className="bg-gold/20 border-b border-gold px-4 py-2 text-center text-sm text-bark-brown">
           Admin panel — Supabase not configured. Auth enforcement disabled for development.
         </div>
-        <AdminShell navItems={ADMIN_NAV}>{children}</AdminShell>
+        <div className="mx-auto px-4 lg:px-8 py-6">
+          <AdminSidebar navItems={ADMIN_NAV}>{children}</AdminSidebar>
+        </div>
       </div>
     );
   }
@@ -95,61 +98,8 @@ export default async function AdminLayout({
           </span>
         )}
       </div>
-      <AdminShell navItems={visibleNav}>{children}</AdminShell>
-    </div>
-  );
-}
-
-function AdminShell({
-  children,
-  navItems,
-}: {
-  children: React.ReactNode;
-  navItems: { href: string; label: string; group?: string }[];
-}) {
-  const ungrouped = navItems.filter((item) => !item.group);
-  const groups: { name: string; items: typeof navItems }[] = [];
-  for (const item of navItems) {
-    if (!item.group) continue;
-    let group = groups.find((g) => g.name === item.group);
-    if (!group) {
-      group = { name: item.group, items: [] };
-      groups.push(group);
-    }
-    group.items.push(item);
-  }
-
-  const linkClass = "block px-3 py-2 rounded-md text-sm text-bark-brown hover:bg-parchment-dark hover:text-gnome-green transition-colors";
-
-  return (
-    <div className="mx-auto px-4 lg:px-8 py-6">
-      <div className="flex flex-col md:flex-row gap-8">
-        <aside className="md:w-48 shrink-0">
-          <h2 className="font-display text-xl text-gnome-green mb-4">
-            Admin Panel
-          </h2>
-          <nav className="space-y-1">
-            {ungrouped.map((item) => (
-              <Link key={item.href} href={item.href} className={linkClass}>
-                {item.label}
-              </Link>
-            ))}
-
-            {groups.map((group) => (
-              <div key={group.name} className="pt-3">
-                <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-iron-grey">
-                  {group.name}
-                </p>
-                {group.items.map((item) => (
-                  <Link key={item.href} href={item.href} className={linkClass}>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </nav>
-        </aside>
-        <main className="flex-1 min-w-0">{children}</main>
+      <div className="mx-auto px-4 lg:px-8 py-6">
+        <AdminSidebar navItems={visibleNav}>{children}</AdminSidebar>
       </div>
     </div>
   );
