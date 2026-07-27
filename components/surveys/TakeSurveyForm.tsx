@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import type { SurveyQuestion } from "@/lib/surveys";
+import type { AccessLevel, EligibilityResult, SurveyQuestion } from "@/lib/surveys";
 
 interface Survey {
   id: string;
@@ -11,15 +12,17 @@ interface Survey {
   description: string | null;
   questions: SurveyQuestion[];
   is_active: boolean;
+  access_level: AccessLevel;
 }
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
 export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
   const [survey, setSurvey] = useState<Survey | null>(null);
+  const [eligibility, setEligibility] = useState<EligibilityResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [respondentName, setRespondentName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -29,12 +32,24 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
     fetch(`/api/surveys/${surveyId}`)
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
-        if (ok) setSurvey(data.survey);
-        else setNotFound(true);
+        if (ok) {
+          setSurvey(data.survey);
+          setEligibility(data.eligibility ?? { eligible: true });
+        } else {
+          setNotFound(true);
+        }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [surveyId]);
+
+  const toggleMultiAnswer = (questionId: string, option: string, checked: boolean) => {
+    setAnswers((prev) => {
+      const current = Array.isArray(prev[questionId]) ? (prev[questionId] as string[]) : [];
+      const next = checked ? [...current, option] : current.filter((o) => o !== option);
+      return { ...prev, [questionId]: next };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +93,22 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
         <h1 className="font-display text-3xl text-gnome-green mb-4">{survey.title}</h1>
         <Card hover={false} className="text-center py-10">
           <p className="text-bark-brown-light">This survey is closed and no longer accepting responses.</p>
+        </Card>
+      </>
+    );
+  }
+
+  if (eligibility && !eligibility.eligible) {
+    return (
+      <>
+        <h1 className="font-display text-3xl text-gnome-green mb-4">{survey.title}</h1>
+        <Card hover={false} className="text-center py-10">
+          <p className="text-bark-brown-light mb-4">{eligibility.reason}</p>
+          {eligibility.reason?.includes("signed in") ? (
+            <Link href="/login" className="text-sm text-gnome-green hover:underline">Log in →</Link>
+          ) : eligibility.reason?.includes("Link and verify") ? (
+            <Link href="/account" className="text-sm text-gnome-green hover:underline">Go to your Account →</Link>
+          ) : null}
         </Card>
       </>
     );
@@ -132,7 +163,23 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
               </div>
             )}
 
-            {q.type === "multiple_choice" && (
+            {q.type === "multiple_choice" && q.allowMultiple && (
+              <div className="space-y-2">
+                {(q.options ?? []).map((opt) => (
+                  <label key={opt} className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(opt)}
+                      onChange={(e) => toggleMultiAnswer(q.id, opt, e.target.checked)}
+                      className="accent-gnome-green"
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {q.type === "multiple_choice" && !q.allowMultiple && (
               <div className="space-y-2">
                 {(q.options ?? []).map((opt) => (
                   <label key={opt} className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
@@ -162,16 +209,24 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
           </Card>
         ))}
 
-        <Card hover={false}>
-          <label className="block text-sm font-semibold text-bark-brown mb-1">Your RSN or Discord name (optional)</label>
-          <input
-            type="text"
-            value={respondentName}
-            onChange={(e) => setRespondentName(e.target.value)}
-            placeholder="Leave blank to stay anonymous"
-            className={inputClass}
-          />
-        </Card>
+        {survey.access_level === "anonymous" ? (
+          <Card hover={false}>
+            <label className="block text-sm font-semibold text-bark-brown mb-1">Your RSN or Discord name (optional)</label>
+            <input
+              type="text"
+              value={respondentName}
+              onChange={(e) => setRespondentName(e.target.value)}
+              placeholder="Leave blank to stay anonymous"
+              className={inputClass}
+            />
+          </Card>
+        ) : (
+          <Card hover={false}>
+            <p className="text-sm text-bark-brown">
+              Submitting as <span className="font-semibold">{eligibility?.verifiedName}</span>
+            </p>
+          </Card>
+        )}
 
         <Button type="submit" disabled={submitting}>
           {submitting ? "Submitting..." : "Submit"}

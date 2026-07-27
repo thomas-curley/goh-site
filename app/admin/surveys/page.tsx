@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { QUESTION_TYPE_LABELS, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
+import { ACCESS_LEVEL_LABELS, QUESTION_TYPE_LABELS, type AccessLevel, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
 
 interface Survey {
   id: string;
@@ -15,18 +15,20 @@ interface Survey {
   description: string | null;
   questions: SurveyQuestion[];
   is_active: boolean;
+  access_level: AccessLevel;
   created_by: string | null;
   created_at: string;
 }
 
 interface SurveyResponse {
   id: string;
-  answers: { question_id: string; value: string | number | null }[];
+  answers: { question_id: string; value: string | number | string[] | null }[];
   respondent_name: string | null;
   submitted_at: string;
 }
 
 const QUESTION_TYPES: QuestionType[] = ["rating", "multiple_choice", "text"];
+const ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
 function newQuestion(): SurveyQuestion {
@@ -37,6 +39,8 @@ export default function AdminSurveysPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<SurveyQuestion[]>([newQuestion()]);
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>("anonymous");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -74,27 +78,44 @@ export default function AdminSurveysPage() {
     updateQuestion(i, { options: (questions[i].options ?? []).filter((_, idx) => idx !== oi) });
   };
 
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setDescription("");
+    setQuestions([newQuestion()]);
+    setAccessLevel("anonymous");
+  };
+
+  const startEdit = (survey: Survey) => {
+    setEditingId(survey.id);
+    setTitle(survey.title);
+    setDescription(survey.description ?? "");
+    setQuestions(survey.questions.map((q) => ({ ...q, options: q.options ? [...q.options] : q.options })));
+    setAccessLevel(survey.access_level);
+    setStatus(null);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
     setStatus(null);
 
-    const res = await fetch("/api/surveys", {
-      method: "POST",
+    const res = await fetch(editingId ? `/api/surveys/${editingId}` : "/api/surveys", {
+      method: editingId ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, questions }),
+      body: JSON.stringify({ title, description, questions, accessLevel }),
     });
     const data = await res.json().catch(() => ({}));
 
     if (res.ok) {
-      setStatus(`Survey created. Share it at /surveys/${data.id}`);
-      setTitle("");
-      setDescription("");
-      setQuestions([newQuestion()]);
+      setStatus(editingId ? "Survey updated." : `Survey created. Share it at /surveys/${data.id}`);
+      resetForm();
       await loadSurveys();
     } else {
-      setError(data.error ?? "Failed to create survey.");
+      setError(data.error ?? "Failed to save survey.");
     }
     setSubmitting(false);
   };
@@ -133,7 +154,7 @@ export default function AdminSurveysPage() {
       </p>
 
       <Card hover={false} className="mb-8">
-        <h3 className="font-display text-lg text-bark-brown mb-4">New Survey</h3>
+        <h3 className="font-display text-lg text-bark-brown mb-4">{editingId ? "Edit Survey" : "New Survey"}</h3>
 
         {error && (
           <div className="mb-4 p-3 rounded-md bg-red-accent/10 border border-red-accent/30 text-sm text-red-accent">
@@ -155,6 +176,23 @@ export default function AdminSurveysPage() {
             <label className="block text-sm font-semibold text-bark-brown mb-1">Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className={inputClass} />
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-bark-brown mb-1">Access</label>
+            <select
+              value={accessLevel}
+              onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
+              className={`${inputClass} cursor-pointer`}
+            >
+              {ACCESS_LEVELS.map((level) => (
+                <option key={level} value={level}>{ACCESS_LEVEL_LABELS[level]}</option>
+              ))}
+            </select>
+            {accessLevel !== "anonymous" && (
+              <p className="text-xs text-iron-grey mt-1">
+                Respondents must link and verify an RSN{accessLevel === "clan_member" ? ", and it must be a current clan member" : ""}. Their identity is recorded with each response.
+              </p>
+            )}
+          </div>
 
           <div>
             <label className="block text-sm font-semibold text-bark-brown mb-2">Questions</label>
@@ -171,7 +209,7 @@ export default function AdminSurveysPage() {
                     />
                     <select
                       value={q.type}
-                      onChange={(e) => updateQuestion(i, { type: e.target.value as QuestionType, options: e.target.value === "multiple_choice" ? ["", ""] : [] })}
+                      onChange={(e) => updateQuestion(i, { type: e.target.value as QuestionType, options: e.target.value === "multiple_choice" ? ["", ""] : [], allowMultiple: false })}
                       className="px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green w-44 shrink-0 cursor-pointer"
                     >
                       {QUESTION_TYPES.map((t) => (
@@ -205,10 +243,18 @@ export default function AdminSurveysPage() {
                     </div>
                   )}
 
-                  <label className="flex items-center gap-2 text-xs text-bark-brown cursor-pointer">
-                    <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(i, { required: e.target.checked })} className="accent-gnome-green" />
-                    Required
-                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-xs text-bark-brown cursor-pointer">
+                      <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(i, { required: e.target.checked })} className="accent-gnome-green" />
+                      Required
+                    </label>
+                    {q.type === "multiple_choice" && (
+                      <label className="flex items-center gap-2 text-xs text-bark-brown cursor-pointer">
+                        <input type="checkbox" checked={q.allowMultiple === true} onChange={(e) => updateQuestion(i, { allowMultiple: e.target.checked })} className="accent-gnome-green" />
+                        Allow multiple selections
+                      </label>
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>
@@ -217,9 +263,16 @@ export default function AdminSurveysPage() {
             </button>
           </div>
 
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Survey"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving..." : editingId ? "Save Changes" : "Create Survey"}
+            </Button>
+            {editingId && (
+              <button type="button" onClick={resetForm} className="text-sm text-iron-grey hover:underline cursor-pointer">
+                Cancel edit
+              </button>
+            )}
+          </div>
         </form>
       </Card>
 
@@ -246,6 +299,11 @@ export default function AdminSurveysPage() {
                     <p className="font-semibold text-bark-brown truncate">
                       {survey.title}
                       {!survey.is_active && <span className="ml-2 text-xs text-iron-grey">(Closed)</span>}
+                      {survey.access_level !== "anonymous" && (
+                        <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-gnome-green/10 text-gnome-green align-middle">
+                          {ACCESS_LEVEL_LABELS[survey.access_level]}
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-iron-grey">
                       {new Date(survey.created_at).toLocaleDateString()}
@@ -261,6 +319,9 @@ export default function AdminSurveysPage() {
                       <Link href={`/surveys/${survey.id}`} target="_blank" className="text-xs text-gnome-green hover:underline">
                         Open survey link →
                       </Link>
+                      <Button size="sm" variant="ghost" onClick={() => startEdit(survey)}>
+                        Edit
+                      </Button>
                       <Button size="sm" variant="ghost" disabled={togglingId === survey.id} onClick={() => toggleActive(survey)}>
                         {togglingId === survey.id ? "..." : survey.is_active ? "Close Survey" : "Reopen Survey"}
                       </Button>
@@ -306,7 +367,7 @@ export default function AdminSurveysPage() {
 function QuestionResults({ question, responses }: { question: SurveyQuestion; responses: SurveyResponse[] }) {
   const values = responses
     .map((r) => r.answers.find((a) => a.question_id === question.id)?.value)
-    .filter((v): v is string | number => v !== null && v !== undefined);
+    .filter((v): v is string | number | string[] => v !== null && v !== undefined);
 
   if (question.type === "rating") {
     const nums = values.filter((v): v is number => typeof v === "number");
@@ -334,7 +395,7 @@ function QuestionResults({ question, responses }: { question: SurveyQuestion; re
   if (question.type === "multiple_choice") {
     const data = (question.options ?? []).map((opt) => ({
       option: opt,
-      count: values.filter((v) => v === opt).length,
+      count: values.filter((v) => (Array.isArray(v) ? v.includes(opt) : v === opt)).length,
     }));
     return (
       <div>

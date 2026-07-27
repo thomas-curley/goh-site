@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { postToDestination } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkSurveyEligibility } from "@/lib/surveys";
 import type { SurveyQuestion } from "@/lib/surveys";
 
 function getServiceClient() {
@@ -29,16 +31,26 @@ export async function POST(
   if (!survey) return NextResponse.json({ error: "Survey not found." }, { status: 404 });
   if (!survey.is_active) return NextResponse.json({ error: "This survey is closed." }, { status: 400 });
 
+  const authClient = await createSupabaseServerClient();
+  const { data: { user: authUser } } = await authClient.auth.getUser();
+  const eligibility = await checkSurveyEligibility(supabase, survey.access_level, authUser?.id ?? null);
+  if (!eligibility.eligible) {
+    return NextResponse.json({ error: eligibility.reason ?? "You are not eligible to take this survey." }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const questions: SurveyQuestion[] = survey.questions ?? [];
   const rawAnswers = body.answers && typeof body.answers === "object" ? body.answers : {};
 
   const answers = questions.map((q) => {
     const raw = rawAnswers[q.id];
-    let value: string | number | null = null;
+    let value: string | number | string[] | null = null;
     if (q.type === "rating") {
       const n = Number(raw);
       value = Number.isFinite(n) ? Math.min(5, Math.max(1, Math.round(n))) : null;
+    } else if (q.type === "multiple_choice" && q.allowMultiple) {
+      const selected = Array.isArray(raw) ? raw.filter((v): v is string => typeof v === "string" && !!q.options?.includes(v)) : [];
+      value = selected.length > 0 ? selected : null;
     } else if (q.type === "multiple_choice") {
       value = typeof raw === "string" && q.options?.includes(raw) ? raw : null;
     } else {
@@ -47,17 +59,25 @@ export async function POST(
     return { question_id: q.id, value };
   });
 
-  const missingRequired = questions.some((q, i) => q.required && !answers[i].value);
+  const missingRequired = questions.some((q, i) => {
+    const value = answers[i].value;
+    return q.required && (value === null || (Array.isArray(value) && value.length === 0));
+  });
   if (missingRequired) {
     return NextResponse.json({ error: "Please answer all required questions." }, { status: 400 });
   }
 
-  const respondentName = typeof body.respondentName === "string" ? body.respondentName.trim().slice(0, MAX_NAME_LENGTH) : "";
+  const gated = survey.access_level !== "anonymous";
+  const respondentName = gated
+    ? eligibility.verifiedName ?? null
+    : (typeof body.respondentName === "string" ? body.respondentName.trim().slice(0, MAX_NAME_LENGTH) : "") || null;
+  const discordId = gated ? eligibility.discordId ?? null : null;
 
   const { error } = await supabase.from("survey_responses").insert({
     survey_id: id,
     answers,
-    respondent_name: respondentName || null,
+    respondent_name: respondentName,
+    discord_id: discordId,
   });
 
   if (error) return NextResponse.json({ error: "Failed to submit response." }, { status: 500 });
