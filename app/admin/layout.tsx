@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { href: "/admin/events", label: "Create Event", permission: "manage_events" as const },
   { href: "/admin/events/list", label: "Event List", permission: "manage_events" as const },
   { href: "/admin/event-recap", label: "Event Recap", permission: "manage_events" as const },
+  { href: "/admin/attendance-export", label: "Attendance Export", permission: "manage_events" as const },
   { href: "/admin/announcements", label: "Announcements", permission: "manage_events" as const },
   { href: "/admin/polls", label: "Polls", permission: "manage_polls" as const },
   { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys" as const },
