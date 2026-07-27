@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import type { QuestionType } from "@/lib/surveys";
+import type { QuestionType, AccessLevel } from "@/lib/surveys";
+
+const VALID_ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
   const title = typeof body.title === "string" ? body.title.trim() : "";
   const description = typeof body.description === "string" ? body.description.trim() : "";
   const rawQuestions: unknown[] = Array.isArray(body.questions) ? body.questions : [];
+  const accessLevel: AccessLevel = VALID_ACCESS_LEVELS.includes(body.accessLevel) ? body.accessLevel : "anonymous";
 
   if (!title) {
     return NextResponse.json({ error: "Title is required." }, { status: 400 });
@@ -63,6 +66,7 @@ export async function POST(request: NextRequest) {
         type,
         prompt,
         options: type === "multiple_choice" ? options : undefined,
+        allowMultiple: type === "multiple_choice" ? q.allowMultiple === true : undefined,
         required: q.required === true,
       };
     });
@@ -80,6 +84,7 @@ export async function POST(request: NextRequest) {
       title,
       description: description || null,
       questions,
+      access_level: accessLevel,
       created_by: user?.discord_username ?? null,
     })
     .select("id")

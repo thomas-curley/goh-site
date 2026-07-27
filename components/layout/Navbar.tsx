@@ -35,7 +35,14 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/tools", label: "Tools" },
     ],
   },
-  { type: "link", href: "/feedback", label: "Feedback" },
+  {
+    type: "dropdown",
+    label: "Feedback",
+    items: [
+      { href: "/feedback", label: "Submit Feedback" },
+      { href: "/surveys", label: "Surveys" },
+    ],
+  },
   { type: "link", href: "/about", label: "About" },
 ];
 

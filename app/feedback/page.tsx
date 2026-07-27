@@ -1,15 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-
-interface Survey {
-  id: string;
-  title: string;
-  description: string | null;
-}
 
 const CATEGORIES = [
   { value: "", label: "General" },
@@ -28,17 +21,6 @@ export default function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [loadingSurveys, setLoadingSurveys] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/surveys?active=true")
-      .then((res) => res.json())
-      .then((data) => setSurveys(data.surveys ?? []))
-      .catch(() => setSurveys([]))
-      .finally(() => setLoadingSurveys(false));
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,25 +106,6 @@ export default function FeedbackPage() {
           </form>
         )}
       </Card>
-
-      {!loadingSurveys && surveys.length > 0 && (
-        <section>
-          <h2 className="font-display text-xl text-bark-brown mb-4">Active Surveys</h2>
-          <div className="space-y-3">
-            {surveys.map((survey) => (
-              <Link key={survey.id} href={`/surveys/${survey.id}`}>
-                <Card className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-bark-brown">{survey.title}</h3>
-                    {survey.description && <p className="text-xs text-bark-brown-light">{survey.description}</p>}
-                  </div>
-                  <span className="text-sm text-gnome-green shrink-0 ml-4">Take Survey &rarr;</span>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
