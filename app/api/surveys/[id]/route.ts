@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkSurveyEligibility, type AccessLevel, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
 
 const VALID_ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
-const VALID_TYPES: QuestionType[] = ["rating", "multiple_choice", "text"];
+const VALID_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
 const MAX_QUESTIONS = 20;
 
 function getServiceClient() {
@@ -83,6 +83,7 @@ export async function PATCH(
           prompt,
           options: type === "multiple_choice" ? options : undefined,
           allowMultiple: type === "multiple_choice" ? q.allowMultiple === true : undefined,
+          scale: type === "likert" ? (q.scale === 3 ? 3 : 5) : undefined,
           required: q.required === true,
         };
       });

@@ -12,7 +12,7 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-const VALID_TYPES: QuestionType[] = ["rating", "multiple_choice", "text"];
+const VALID_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
 const MAX_QUESTIONS = 20;
 
 // GET - list surveys. Public callers get only active ones (?active=true);
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         prompt,
         options: type === "multiple_choice" ? options : undefined,
         allowMultiple: type === "multiple_choice" ? q.allowMultiple === true : undefined,
+        scale: type === "likert" ? (q.scale === 3 ? 3 : 5) : undefined,
         required: q.required === true,
       };
     });

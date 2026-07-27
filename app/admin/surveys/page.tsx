@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ACCESS_LEVEL_LABELS, QUESTION_TYPE_LABELS, type AccessLevel, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
+import { ACCESS_LEVEL_LABELS, LIKERT_LABELS, QUESTION_TYPE_LABELS, type AccessLevel, type LikertScale, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
 
 interface Survey {
   id: string;
@@ -27,7 +27,8 @@ interface SurveyResponse {
   submitted_at: string;
 }
 
-const QUESTION_TYPES: QuestionType[] = ["rating", "multiple_choice", "text"];
+const QUESTION_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
+const LIKERT_SCALES: LikertScale[] = [3, 5];
 const ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
@@ -209,7 +210,7 @@ export default function AdminSurveysPage() {
                     />
                     <select
                       value={q.type}
-                      onChange={(e) => updateQuestion(i, { type: e.target.value as QuestionType, options: e.target.value === "multiple_choice" ? ["", ""] : [], allowMultiple: false })}
+                      onChange={(e) => updateQuestion(i, { type: e.target.value as QuestionType, options: e.target.value === "multiple_choice" ? ["", ""] : [], allowMultiple: false, scale: 5 })}
                       className="px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green w-44 shrink-0 cursor-pointer"
                     >
                       {QUESTION_TYPES.map((t) => (
@@ -220,6 +221,28 @@ export default function AdminSurveysPage() {
                       <button type="button" onClick={() => removeQuestion(i)} className="text-red-accent text-xs cursor-pointer shrink-0 px-2">✕</button>
                     )}
                   </div>
+
+                  {q.type === "likert" && (
+                    <div className="mb-2 ml-2">
+                      <label className="block text-xs font-semibold text-bark-brown mb-1">Scale</label>
+                      <div className="flex gap-2">
+                        {LIKERT_SCALES.map((scale) => (
+                          <button
+                            key={scale}
+                            type="button"
+                            onClick={() => updateQuestion(i, { scale })}
+                            className={`px-3 py-1.5 rounded-md border-2 text-xs font-semibold transition-colors cursor-pointer ${
+                              (q.scale ?? 5) === scale
+                                ? "bg-gnome-green/15 border-gnome-green text-gnome-green"
+                                : "border-bark-brown-light text-bark-brown-light hover:border-gnome-green"
+                            }`}
+                          >
+                            {scale}-point ({LIKERT_LABELS[scale].join(" / ")})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {q.type === "multiple_choice" && (
                     <div className="space-y-1.5 mb-2 ml-2">
@@ -385,6 +408,31 @@ function QuestionResults({ question, responses }: { question: SurveyQuestion; re
               <YAxis tick={{ fontSize: 10, fill: "#555" }} allowDecimals={false} />
               <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
               <Bar dataKey="count" fill="#2D5016" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    );
+  }
+
+  if (question.type === "likert") {
+    const scale = question.scale ?? 5;
+    const labels = LIKERT_LABELS[scale];
+    const nums = values.filter((v): v is number => typeof v === "number");
+    const avg = nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+    const data = labels.map((label, idx) => ({ label, count: nums.filter((v) => v === idx + 1).length }));
+    return (
+      <div>
+        <p className="text-sm font-semibold text-bark-brown mb-1">{question.prompt}</p>
+        <p className="text-xs text-iron-grey mb-2">Average: {avg.toFixed(1)} / {scale} ({nums.length} answered)</p>
+        {nums.length > 0 && (
+          <ResponsiveContainer width="100%" height={Math.max(120, data.length * 34)}>
+            <BarChart data={data} layout="vertical" margin={{ left: 24 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#555" }} />
+              <YAxis type="category" dataKey="label" width={140} tick={{ fontSize: 11, fill: "#555" }} />
+              <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
+              <Bar dataKey="count" fill="#2D5016" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
