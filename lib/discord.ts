@@ -37,6 +37,60 @@ async function getChannelType(channelId: string): Promise<number | null> {
   }
 }
 
+export interface GuildEmoji {
+  id: string;
+  name: string;
+  animated: boolean;
+}
+
+let guildEmojiCache: { data: GuildEmoji[]; fetchedAt: number } | null = null;
+const GUILD_EMOJI_CACHE_TTL_MS = 10 * 60 * 1000;
+
+/** The server's custom emotes, cached briefly since the list rarely changes. */
+export async function getGuildEmojis(): Promise<GuildEmoji[]> {
+  if (guildEmojiCache && Date.now() - guildEmojiCache.fetchedAt < GUILD_EMOJI_CACHE_TTL_MS) {
+    return guildEmojiCache.data;
+  }
+
+  const guildId = process.env.DISCORD_GUILD_ID;
+  if (!guildId) return guildEmojiCache?.data ?? [];
+
+  try {
+    const res = await fetch(`${DISCORD_API}/guilds/${guildId}/emojis`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) return guildEmojiCache?.data ?? [];
+    const data: GuildEmoji[] = await res.json();
+    guildEmojiCache = { data, fetchedAt: Date.now() };
+    return data;
+  } catch {
+    return guildEmojiCache?.data ?? [];
+  }
+}
+
+/**
+ * Resolves :name: shorthand for custom server emotes into Discord's actual
+ * <:name:id> (or <a:name:id> for animated) message syntax. Discord's own
+ * client does this automatically as you type, but that conversion never
+ * happens for messages sent through the bot API -- without this, an emote
+ * typed as :GnomePog: just posts as the literal text ":GnomePog:". Content
+ * with no :word:-shaped token skips the emoji-list fetch entirely; a name
+ * that doesn't match any real server emote is left untouched rather than
+ * erroring (it might just be literal text with colons in it).
+ */
+async function resolveEmoteShorthand(content: string): Promise<string> {
+  if (!/:[a-zA-Z0-9_]+:/.test(content)) return content;
+
+  const emojis = await getGuildEmojis();
+  if (emojis.length === 0) return content;
+
+  const byName = new Map(emojis.map((e) => [e.name, e]));
+  return content.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
+    const emoji = byName.get(name);
+    return emoji ? `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>` : match;
+  });
+}
+
 interface DiscordScheduledEvent {
   name: string;
   description?: string;
@@ -119,7 +173,7 @@ export async function getChannelMessages(channelId: string, limit: number = 50) 
  * Supports single image URL string or array of URLs (up to 10 embeds).
  */
 export async function postToChannel(channelId: string, content: string, imageUrl?: string | string[]) {
-  const body: Record<string, unknown> = { content };
+  const body: Record<string, unknown> = { content: await resolveEmoteShorthand(content) };
 
   if (imageUrl) {
     const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
@@ -150,7 +204,7 @@ export async function postToChannel(channelId: string, content: string, imageUrl
  * key, so editing a post to remove its banner actually removes it.
  */
 export async function editChannelMessage(channelId: string, messageId: string, content: string, imageUrl?: string | string[]) {
-  const body: Record<string, unknown> = { content };
+  const body: Record<string, unknown> = { content: await resolveEmoteShorthand(content) };
 
   if (imageUrl) {
     const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
@@ -187,7 +241,7 @@ export async function createForumPost(
   content: string,
   imageUrl?: string | string[]
 ): Promise<{ threadId: string; messageId: string }> {
-  const message: Record<string, unknown> = { content };
+  const message: Record<string, unknown> = { content: await resolveEmoteShorthand(content) };
 
   if (imageUrl) {
     const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
@@ -334,13 +388,16 @@ export async function createPoll(
   durationHours: number,
   allowMultiselect: boolean
 ): Promise<{ messageId: string; options: PollOption[] }> {
+  const resolvedQuestion = await resolveEmoteShorthand(question);
+  const resolvedAnswers = await Promise.all(answerTexts.map((text) => resolveEmoteShorthand(text)));
+
   const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify({
       poll: {
-        question: { text: question },
-        answers: answerTexts.map((text) => ({ poll_media: { text } })),
+        question: { text: resolvedQuestion },
+        answers: resolvedAnswers.map((text) => ({ poll_media: { text } })),
         duration: durationHours,
         allow_multiselect: allowMultiselect,
         layout_type: 1,
@@ -356,9 +413,12 @@ export async function createPoll(
   const message = await res.json();
   const answers: { answer_id: number; poll_media: { text: string } }[] = message.poll?.answers ?? [];
 
-  const options: PollOption[] = answerTexts.map((text) => {
-    const match = answers.find((a) => a.poll_media?.text === text);
-    return { answerId: match?.answer_id ?? -1, text };
+  // Match against Discord's response using the resolved text (what was
+  // actually sent), but return the original admin-authored text so the UI
+  // never has to show raw <:name:id> syntax back.
+  const options: PollOption[] = answerTexts.map((originalText, i) => {
+    const match = answers.find((a) => a.poll_media?.text === resolvedAnswers[i]);
+    return { answerId: match?.answer_id ?? -1, text: originalText };
   });
 
   return { messageId: message.id, options };

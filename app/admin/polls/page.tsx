@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -168,7 +169,10 @@ export default function AdminPollsPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className={labelClass}>Question *</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-semibold text-bark-brown">Question *</label>
+              <EmojiPickerButton onInsert={(t) => setQuestion((prev) => prev + (prev ? " " : "") + t)} />
+            </div>
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -193,6 +197,7 @@ export default function AdminPollsPage() {
                     className={inputClass}
                     placeholder={`Option ${i + 1}`}
                   />
+                  <EmojiPickerButton onInsert={(t) => updateAnswer(i, a + (a ? " " : "") + t)} />
                   {answers.length > 2 && (
                     <button
                       type="button"

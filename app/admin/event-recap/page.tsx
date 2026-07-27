@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { PageTour } from "@/components/admin/tour/PageTour";
 import { renderTemplate } from "@/lib/post-templates";
 import type { SectionInstance } from "@/lib/post-templates";
@@ -325,11 +326,17 @@ export default function EventRecapPage() {
             <h2 className="font-display text-lg text-bark-brown mb-4">Recap Details</h2>
             <div className="space-y-4">
               <div data-tour="recap-title">
-                <label className={labelClass}>Title *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-semibold text-bark-brown">Title *</label>
+                  <EmojiPickerButton onInsert={(t) => setTitle((prev) => prev + (prev ? " " : "") + t)} />
+                </div>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} placeholder="Hueycotl Boss Event Recap" />
               </div>
               <div data-tour="recap-description">
-                <label className={labelClass}>Description</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-semibold text-bark-brown">Description</label>
+                  <EmojiPickerButton onInsert={(t) => setDescription((prev) => prev + (prev ? " " : "") + t)} />
+                </div>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="What a night! The clan gathered to take on Hueycotl and it was an absolute blast..." />
               </div>
             </div>
@@ -352,6 +359,7 @@ export default function EventRecapPage() {
                       className={`${inputClass} flex-1`}
                       placeholder="Pizza Queen tanked the boss for 15 minutes straight"
                     />
+                    <EmojiPickerButton onInsert={(t) => updateHighlight(i, h + (h ? " " : "") + t)} />
                     {highlights.length > 1 && (
                       <button type="button" onClick={() => removeHighlight(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
                     )}
