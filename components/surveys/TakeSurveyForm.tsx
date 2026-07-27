@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import type { AccessLevel, EligibilityResult, SurveyQuestion } from "@/lib/surveys";
+import { LIKERT_LABELS, type AccessLevel, type EligibilityResult, type SurveyQuestion } from "@/lib/surveys";
 
 interface Survey {
   id: string;
@@ -160,6 +160,33 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
                     {n}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {q.type === "likert" && (
+              <div className="flex justify-between gap-1 sm:gap-2">
+                {LIKERT_LABELS[q.scale ?? 5].map((label, idx) => {
+                  const n = idx + 1;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: String(n) }))}
+                      className="flex flex-col items-center gap-1.5 flex-1 cursor-pointer group"
+                    >
+                      <span className="text-[11px] text-bark-brown-light text-center leading-tight group-hover:text-gnome-green transition-colors">
+                        {label}
+                      </span>
+                      <span
+                        className={`w-6 h-6 rounded-full border-2 transition-colors ${
+                          answers[q.id] === String(n)
+                            ? "bg-gnome-green border-gnome-green"
+                            : "bg-transparent border-bark-brown-light group-hover:border-gnome-green"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
 

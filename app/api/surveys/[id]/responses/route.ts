@@ -48,6 +48,10 @@ export async function POST(
     if (q.type === "rating") {
       const n = Number(raw);
       value = Number.isFinite(n) ? Math.min(5, Math.max(1, Math.round(n))) : null;
+    } else if (q.type === "likert") {
+      const n = Number(raw);
+      const scale = q.scale === 3 ? 3 : 5;
+      value = Number.isFinite(n) ? Math.min(scale, Math.max(1, Math.round(n))) : null;
     } else if (q.type === "multiple_choice" && q.allowMultiple) {
       const selected = Array.isArray(raw) ? raw.filter((v): v is string => typeof v === "string" && !!q.options?.includes(v)) : [];
       value = selected.length > 0 ? selected : null;
