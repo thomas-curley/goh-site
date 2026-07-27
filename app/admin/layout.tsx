@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { checkPermission } from "@/lib/check-permission";
+import type { PermissionKey } from "@/lib/permissions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,25 +9,31 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const ADMIN_NAV = [
-  { href: "/admin", label: "Dashboard", permission: "view_admin" as const },
-  { href: "/admin/activity", label: "Player Activity", permission: "view_admin" as const },
-  { href: "/admin/tutorials", label: "Tutorials", permission: "view_admin" as const },
-  { href: "/admin/events", label: "Create Event", permission: "manage_events" as const },
-  { href: "/admin/events/list", label: "Event List", permission: "manage_events" as const },
-  { href: "/admin/event-recap", label: "Event Recap", permission: "manage_events" as const },
-  { href: "/admin/attendance-export", label: "Attendance Export", permission: "manage_events" as const },
-  { href: "/admin/announcements", label: "Announcements", permission: "manage_events" as const },
-  { href: "/admin/polls", label: "Polls", permission: "manage_polls" as const },
-  { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys" as const },
-  { href: "/admin/feedback", label: "Feedback", permission: "manage_feedback" as const },
-  { href: "/admin/templates", label: "Post Templates", permission: "manage_templates" as const },
-  { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links" as const },
-  { href: "/admin/staff-applications", label: "Staff Applications", permission: "manage_staff_applications" as const },
-  { href: "/admin/commands", label: "Bot Commands", permission: "manage_commands" as const },
-  { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions" as const },
-  { href: "/admin/alert-channels", label: "Alert Channels", permission: "manage_settings" as const },
-  { href: "/admin/guides", label: "Guides", permission: "manage_guides" as const },
+const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group?: string }[] = [
+  { href: "/admin", label: "Dashboard", permission: "view_admin" },
+  { href: "/admin/activity", label: "Player Activity", permission: "view_admin" },
+  { href: "/admin/tutorials", label: "Tutorials", permission: "view_admin" },
+
+  { href: "/admin/events", label: "Create Event", permission: "manage_events", group: "Events" },
+  { href: "/admin/events/list", label: "Event List", permission: "manage_events", group: "Events" },
+  { href: "/admin/event-recap", label: "Event Recap", permission: "manage_events", group: "Events" },
+  { href: "/admin/attendance-export", label: "Attendance Export", permission: "manage_events", group: "Events" },
+  { href: "/admin/announcements", label: "Announcements", permission: "manage_events", group: "Events" },
+  { href: "/admin/ingame-events", label: "In-Game Events", permission: "manage_events", group: "Events" },
+
+  { href: "/admin/polls", label: "Polls", permission: "manage_polls", group: "Engagement" },
+  { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys", group: "Engagement" },
+  { href: "/admin/feedback", label: "Feedback", permission: "manage_feedback", group: "Engagement" },
+
+  { href: "/admin/templates", label: "Post Templates", permission: "manage_templates", group: "Content" },
+  { href: "/admin/guides", label: "Guides", permission: "manage_guides", group: "Content" },
+
+  { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links", group: "Members" },
+  { href: "/admin/staff-applications", label: "Staff Applications", permission: "manage_staff_applications", group: "Members" },
+
+  { href: "/admin/commands", label: "Bot Commands", permission: "manage_commands", group: "System" },
+  { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions", group: "System" },
+  { href: "/admin/alert-channels", label: "Alert Channels", permission: "manage_settings", group: "System" },
 ];
 
 export default async function AdminLayout({
@@ -98,8 +105,22 @@ function AdminShell({
   navItems,
 }: {
   children: React.ReactNode;
-  navItems: { href: string; label: string }[];
+  navItems: { href: string; label: string; group?: string }[];
 }) {
+  const ungrouped = navItems.filter((item) => !item.group);
+  const groups: { name: string; items: typeof navItems }[] = [];
+  for (const item of navItems) {
+    if (!item.group) continue;
+    let group = groups.find((g) => g.name === item.group);
+    if (!group) {
+      group = { name: item.group, items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+
+  const linkClass = "block px-3 py-2 rounded-md text-sm text-bark-brown hover:bg-parchment-dark hover:text-gnome-green transition-colors";
+
   return (
     <div className="mx-auto px-4 lg:px-8 py-6">
       <div className="flex flex-col md:flex-row gap-8">
@@ -108,14 +129,23 @@ function AdminShell({
             Admin Panel
           </h2>
           <nav className="space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="block px-3 py-2 rounded-md text-sm text-bark-brown hover:bg-parchment-dark hover:text-gnome-green transition-colors"
-              >
+            {ungrouped.map((item) => (
+              <Link key={item.href} href={item.href} className={linkClass}>
                 {item.label}
               </Link>
+            ))}
+
+            {groups.map((group) => (
+              <div key={group.name} className="pt-3">
+                <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-iron-grey">
+                  {group.name}
+                </p>
+                {group.items.map((item) => (
+                  <Link key={item.href} href={item.href} className={linkClass}>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             ))}
           </nav>
         </aside>

@@ -294,6 +294,27 @@ export async function postToDestination(
 }
 
 /**
+ * Archive + lock a forum post (thread) so it stops accepting new replies —
+ * used when a recap closes out the event the post was about. Silently
+ * no-ops rather than throwing if the target isn't actually a thread (a
+ * plain channel ID was pasted, or it's already closed), since callers treat
+ * this as a best-effort cleanup step, not something that should block the
+ * recap post itself from succeeding.
+ */
+export async function closeForumThread(threadId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${DISCORD_API}/channels/${threadId}`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ archived: true, locked: true }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Create a thread in a channel (for sign-ups). If the channel is a Forum
  * (or Media) channel, creates a proper forum post instead of the usual
  * message-then-threadify flow, since forum channels don't accept plain
