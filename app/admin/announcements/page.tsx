@@ -240,7 +240,7 @@ export default function AdminAnnouncementsPage() {
               <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
               <path strokeWidth={2} d="M15 4v16" fill={showPreview ? "currentColor" : "none"} />
             </svg>
-            {showPreview ? "Hide Preview" : "Show Preview"}
+            {showPreview ? "Hide Discord Preview" : "Show Discord Preview"}
           </button>
           <Link href="/admin/announcements?tour=announcement" className="text-sm text-gnome-green hover:underline">
             Take the Tour →
@@ -286,12 +286,17 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
-      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8" : "max-w-3xl mb-8"}>
+      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8" : "mb-8"}>
       {/* Create / Edit Form */}
       <Card hover={false}>
-        <h2 className="font-display text-lg text-bark-brown mb-4">
-          {editingId ? "Edit Announcement" : "New Announcement"}
-        </h2>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <h2 className="font-display text-lg text-bark-brown">
+            {editingId ? "Edit Announcement" : "New Announcement"}
+          </h2>
+          <div className="w-56 shrink-0" data-tour="announcement-template">
+            <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} label="Choose Template" />
+          </div>
+        </div>
         <form onSubmit={handleSave} className="space-y-4">
           <div data-tour="announcement-title">
             <div className="flex items-center justify-between mb-1">
@@ -359,11 +364,6 @@ export default function AdminAnnouncementsPage() {
           {!editingId && (
             <ImageUploader images={extraImages} onChange={setExtraImages} maxImages={4} label="Additional Images (posted to Discord)" />
           )}
-
-          {/* Template */}
-          <div data-tour="announcement-template">
-            <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} />
-          </div>
 
           {/* Role Pings */}
           <div data-tour="announcement-role-pings">

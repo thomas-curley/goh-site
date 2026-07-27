@@ -294,7 +294,7 @@ export default function EventRecapPage() {
               <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
               <path strokeWidth={2} d="M15 4v16" fill={showPreview ? "currentColor" : "none"} />
             </svg>
-            {showPreview ? "Hide Preview" : "Show Preview"}
+            {showPreview ? "Hide Discord Preview" : "Show Discord Preview"}
           </button>
           <Link href="/admin/event-recap?tour=recap" className="text-sm text-gnome-green hover:underline">
             Take the Tour →
@@ -302,7 +302,7 @@ export default function EventRecapPage() {
         </div>
       </div>
 
-      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-8" : "max-w-3xl"}>
+      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-8" : ""}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Link to event */}
           <Card hover={false}>
@@ -352,7 +352,12 @@ export default function EventRecapPage() {
 
           {/* Title & Description */}
           <Card hover={false}>
-            <h2 className="font-display text-lg text-bark-brown mb-4">Recap Details</h2>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <h2 className="font-display text-lg text-bark-brown">Recap Details</h2>
+              <div className="w-56 shrink-0" data-tour="recap-template">
+                <TemplateSelector contentType="event_recap" value={templateId} onChange={setTemplateId} label="Choose Template" />
+              </div>
+            </div>
             <div className="space-y-4">
               <div data-tour="recap-title">
                 <div className="flex items-center justify-between mb-1">
@@ -495,13 +500,6 @@ export default function EventRecapPage() {
           <div data-tour="recap-screenshots">
             <Card hover={false}>
               <ImageUploader images={images} onChange={setImages} maxImages={5} label="Event Screenshots" />
-            </Card>
-          </div>
-
-          {/* Template */}
-          <div data-tour="recap-template">
-            <Card hover={false}>
-              <TemplateSelector contentType="event_recap" value={templateId} onChange={setTemplateId} />
             </Card>
           </div>
 
