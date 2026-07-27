@@ -65,6 +65,7 @@ export default function EventRecapPage() {
   const [loading, setLoading] = useState(true);
   const [editingRecapId, setEditingRecapId] = useState<string | null>(null);
   const [pastRecaps, setPastRecaps] = useState<RecapPost[]>([]);
+  const [showPreview, setShowPreview] = useState(true);
 
   const { allowed: canSyncDiscord, loading: permLoading } = usePermission("sync_discord_posts");
 
@@ -283,12 +284,25 @@ export default function EventRecapPage() {
       <PageTour tour={EVENT_RECAP_TOUR} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-3xl text-gnome-green">Post Event Recap</h1>
-        <Link href="/admin/event-recap?tour=recap" className="text-sm text-gnome-green hover:underline">
-          Take the Tour →
-        </Link>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="flex items-center gap-1.5 text-sm text-bark-brown-light hover:text-gnome-green transition-colors cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
+              <path strokeWidth={2} d="M15 4v16" fill={showPreview ? "currentColor" : "none"} />
+            </svg>
+            {showPreview ? "Hide Preview" : "Show Preview"}
+          </button>
+          <Link href="/admin/event-recap?tour=recap" className="text-sm text-gnome-green hover:underline">
+            Take the Tour →
+          </Link>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-8" : "max-w-3xl"}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Link to event */}
           <Card hover={false}>
@@ -526,21 +540,23 @@ export default function EventRecapPage() {
         </form>
 
         {/* Live Preview */}
-        <div className="xl:sticky xl:top-20 xl:self-start">
-          <h2 className="font-display text-lg text-bark-brown mb-4">Discord Preview</h2>
-          <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[80vh] rounded-lg border border-[#1e1f22] p-4 shadow-lg">
-            <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
-              {previewLines || <span className="text-[#72767d]">Fill in the form to see a preview...</span>}
-            </pre>
-            {images.length > 0 && (
-              <div className="flex gap-2 mt-3 overflow-x-auto">
-                {images.map((url, i) => (
-                  <img key={i} src={url} alt={`Preview ${i + 1}`} className="rounded max-h-32 w-auto shrink-0" />
-                ))}
-              </div>
-            )}
+        {showPreview && (
+          <div className="xl:sticky xl:top-20 xl:self-start">
+            <h2 className="font-display text-lg text-bark-brown mb-4">Discord Preview</h2>
+            <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[80vh] rounded-lg border border-[#1e1f22] p-4 shadow-lg">
+              <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
+                {previewLines || <span className="text-[#72767d]">Fill in the form to see a preview...</span>}
+              </pre>
+              {images.length > 0 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto">
+                  {images.map((url, i) => (
+                    <img key={i} src={url} alt={`Preview ${i + 1}`} className="rounded max-h-32 w-auto shrink-0" />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Past Recaps */}

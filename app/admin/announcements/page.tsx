@@ -14,6 +14,8 @@ import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { PageTour } from "@/components/admin/tour/PageTour";
 import { usePermission } from "@/lib/use-permission";
 import { ANNOUNCEMENT_TOUR } from "@/lib/tours";
+import { renderTemplate } from "@/lib/post-templates";
+import type { SectionInstance } from "@/lib/post-templates";
 
 interface Announcement {
   id: string;
@@ -56,10 +58,28 @@ export default function AdminAnnouncementsPage() {
   const [editingDiscordMessageId, setEditingDiscordMessageId] = useState<string | null>(null);
   const [syncDiscord, setSyncDiscord] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
+  const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
+  const [showPreview, setShowPreview] = useState(true);
 
   const { allowed: canSyncDiscord, loading: permLoading } = usePermission("sync_discord_posts");
 
   const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    if (!templateId) {
+      setTemplateSections([]);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("post_templates")
+        .select("sections")
+        .eq("id", templateId)
+        .single();
+      setTemplateSections(data?.sections ?? []);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateId]);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -109,7 +129,7 @@ export default function AdminAnnouncementsPage() {
           const res = await fetch(`/api/announcements/${editingId}/sync-discord`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({}),
+            body: JSON.stringify({ images: extraImages, pingRoles, templateId }),
           });
           const data = await res.json();
           setStatus(res.ok ? "Announcement updated and Discord message synced!" : `Announcement updated, but Discord sync failed: ${data.error}`);
@@ -197,14 +217,35 @@ export default function AdminAnnouncementsPage() {
     );
   }
 
+  const previewLines = renderTemplate(templateSections, {
+    title,
+    content,
+    author: "You",
+    pingRoles,
+  });
+  const previewImages = [bannerUrl, ...extraImages].filter(Boolean);
+
   return (
     <div>
       <PageTour tour={ANNOUNCEMENT_TOUR} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-3xl text-gnome-green">Announcements</h1>
-        <Link href="/admin/announcements?tour=announcement" className="text-sm text-gnome-green hover:underline">
-          Take the Tour →
-        </Link>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="flex items-center gap-1.5 text-sm text-bark-brown-light hover:text-gnome-green transition-colors cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
+              <path strokeWidth={2} d="M15 4v16" fill={showPreview ? "currentColor" : "none"} />
+            </svg>
+            {showPreview ? "Hide Preview" : "Show Preview"}
+          </button>
+          <Link href="/admin/announcements?tour=announcement" className="text-sm text-gnome-green hover:underline">
+            Take the Tour →
+          </Link>
+        </div>
       </div>
 
       {/* Import from Discord */}
@@ -245,8 +286,9 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
+      <div className={showPreview ? "grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8" : "max-w-3xl mb-8"}>
       {/* Create / Edit Form */}
-      <Card hover={false} className="mb-8">
+      <Card hover={false}>
         <h2 className="font-display text-lg text-bark-brown mb-4">
           {editingId ? "Edit Announcement" : "New Announcement"}
         </h2>
@@ -319,18 +361,14 @@ export default function AdminAnnouncementsPage() {
           )}
 
           {/* Template */}
-          {!editingId && (
-            <div data-tour="announcement-template">
-              <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} />
-            </div>
-          )}
+          <div data-tour="announcement-template">
+            <TemplateSelector contentType="announcement" value={templateId} onChange={setTemplateId} />
+          </div>
 
           {/* Role Pings */}
-          {!editingId && (
-            <div data-tour="announcement-role-pings">
-              <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
-            </div>
-          )}
+          <div data-tour="announcement-role-pings">
+            <RolePingSelector selectedRoles={pingRoles} onChange={setPingRoles} />
+          </div>
 
           {/* Post to Discord checkbox (only for new announcements) */}
           {!editingId && (
@@ -375,6 +413,26 @@ export default function AdminAnnouncementsPage() {
           </div>
         </form>
       </Card>
+
+      {/* Live Preview */}
+      {showPreview && (
+        <div className="xl:sticky xl:top-20 xl:self-start">
+          <h2 className="font-display text-lg text-bark-brown mb-4">Discord Preview</h2>
+          <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[80vh] rounded-lg border border-[#1e1f22] p-4 shadow-lg">
+            <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
+              {previewLines || <span className="text-[#72767d]">Fill in the form to see a preview...</span>}
+            </pre>
+            {previewImages.length > 0 && (
+              <div className="flex gap-2 mt-3 overflow-x-auto">
+                {previewImages.map((url, i) => (
+                  <img key={i} src={url} alt={`Preview ${i + 1}`} className="rounded max-h-32 w-auto shrink-0" />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      </div>
 
       {/* Existing Announcements */}
       <h2 className="font-display text-lg text-bark-brown mb-4">
