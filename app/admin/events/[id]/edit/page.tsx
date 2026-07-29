@@ -71,8 +71,8 @@ export default function EditEventPage() {
       video_url: data.video_url ?? "",
       prize_pool: data.prize_pool ?? "",
       banner_url: data.banner_url ?? "",
-      extra_images: [],
-      ping_roles: [],
+      extra_images: Array.isArray(data.extra_images) ? data.extra_images : [],
+      ping_roles: Array.isArray(data.ping_roles) ? data.ping_roles : [],
       post_to_discord: false,
       create_signup_thread: false,
     });

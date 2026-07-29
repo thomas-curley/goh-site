@@ -4,6 +4,7 @@ import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage } from "@/li
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 import { getAlertChannel } from "@/lib/alert-channels";
+import { CLAN_TIMEZONE } from "@/lib/constants";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -53,7 +54,9 @@ export async function PUT(
     // None of these are `events` columns — they either drive the Discord-sync
     // steps below or are leftover create-only form flags (EventForm is
     // shared between the create and edit pages) — never let them reach the
-    // .update() spread or Postgrest errors on an unknown column.
+    // .update() spread or Postgrest errors on an unknown column. ping_roles
+    // and extra_images ARE real columns (unlike the others here) but still
+    // need pulling out to validate/default them before they're re-spread in.
     const {
       sync_discord_post,
       sync_signup_thread,
@@ -71,6 +74,8 @@ export async function PUT(
       .from("events")
       .update({
         ...eventFields,
+        ping_roles: Array.isArray(ping_roles) ? ping_roles : [],
+        extra_images: Array.isArray(extra_images) ? extra_images : [],
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -102,8 +107,8 @@ export async function PUT(
 
     const sync: { eventPostSynced?: boolean; signupThreadSynced?: boolean; errors: string[] } = { errors: [] };
     const startDate = new Date(data.start_time);
-    const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-    const timeStr = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+    const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: CLAN_TIMEZONE });
+    const timeStr = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short", timeZone: CLAN_TIMEZONE });
 
     if (sync_discord_post && data.discord_message_id) {
       // Sync to wherever this event was actually posted, not always the

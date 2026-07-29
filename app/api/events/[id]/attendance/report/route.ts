@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { postToDestination } from "@/lib/discord";
+import { CLAN_TIMEZONE } from "@/lib/constants";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,6 +47,7 @@ export async function POST(
     weekday: "long",
     month: "long",
     day: "numeric",
+    timeZone: CLAN_TIMEZONE,
   });
 
   const message = [

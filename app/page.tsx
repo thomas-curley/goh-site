@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE } from "@/lib/constants";
+import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE, CLAN_TIMEZONE } from "@/lib/constants";
 import { getGroupDetails, getGroupAchievements, getGroupCompetitions, getCompetitionLeaders, type CompetitionLeader } from "@/lib/wom";
 import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
@@ -202,11 +202,14 @@ export default async function HomePage() {
                           weekday: "short",
                           month: "short",
                           day: "numeric",
+                          timeZone: CLAN_TIMEZONE,
                         })}
                         {" · "}
                         {startDate.toLocaleTimeString("en-US", {
                           hour: "numeric",
                           minute: "2-digit",
+                          timeZoneName: "short",
+                          timeZone: CLAN_TIMEZONE,
                         })}
                       </p>
                       <h3 className="font-display text-lg text-bark-brown mb-1">
