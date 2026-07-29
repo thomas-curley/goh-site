@@ -3,6 +3,10 @@ export const WOM_BASE_URL = "https://api.wiseoldman.net/v2";
 export const WOM_GROUP_URL = `https://wiseoldman.net/groups/${WOM_GROUP_ID}`;
 export const CLAN_NAME = "Gn0me Home";
 export const CLAN_CHAT = "Gn0me Home";
+// Used to format event dates/times in server-rendered text (Discord posts, the
+// homepage) so they show the clan's actual local time rather than whatever
+// timezone the server process happens to run in (UTC on Vercel).
+export const CLAN_TIMEZONE = "America/New_York";
 export const DISCORD_INVITE = "https://discord.gg/F392pAMCvA";
 
 export const RANKS = [

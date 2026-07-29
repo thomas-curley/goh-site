@@ -5,6 +5,7 @@ import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 import { getAlertChannel } from "@/lib/alert-channels";
+import { CLAN_TIMEZONE } from "@/lib/constants";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -68,6 +69,8 @@ export async function POST(request: NextRequest) {
       guide_text: body.guide_text || null,
       video_url: body.video_url || null,
       prize_pool: body.prize_pool || null,
+      ping_roles: Array.isArray(body.ping_roles) ? body.ping_roles : [],
+      extra_images: Array.isArray(body.extra_images) ? body.extra_images : [],
     };
 
     // Post to Discord if requested
@@ -102,8 +105,8 @@ export async function POST(request: NextRequest) {
           const template = await resolveTemplate(supabase, "event_post", body.templateId);
           if (template) {
             const startDate = new Date(eventRow.start_time);
-            const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-            const timeStr = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+            const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: CLAN_TIMEZONE });
+            const timeStr = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short", timeZone: CLAN_TIMEZONE });
 
             const message = renderTemplate(template.sections, {
               title: eventRow.title,
@@ -149,7 +152,7 @@ export async function POST(request: NextRequest) {
           const template = await resolveTemplate(supabase, "signup_thread", body.signupThreadTemplateId);
           if (template) {
             const startDate = new Date(eventRow.start_time);
-            const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+            const dateStr = startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: CLAN_TIMEZONE });
 
             const threadMessage = renderTemplate(template.sections, {
               title: eventRow.title,

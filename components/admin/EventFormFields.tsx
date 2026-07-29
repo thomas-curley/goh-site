@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/Card";
-import { EVENT_TYPES } from "@/lib/constants";
+import { EVENT_TYPES, CLAN_TIMEZONE } from "@/lib/constants";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
@@ -76,8 +76,8 @@ export function eventTemplateData(form: EventForm): Record<string, unknown> {
     title: form.title,
     description: form.description,
     host_rsn: form.host_rsn,
-    dateStr: startDate ? startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "",
-    timeStr: startDate ? startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" }) : "",
+    dateStr: startDate ? startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: CLAN_TIMEZONE }) : "",
+    timeStr: startDate ? startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short", timeZone: CLAN_TIMEZONE }) : "",
     world: form.world,
     meet_location: form.meet_location,
     spots: form.spots,

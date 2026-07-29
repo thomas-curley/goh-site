@@ -63,6 +63,8 @@ export default function AdminEventsPage() {
         body: JSON.stringify({
           ...form,
           world: form.world ? parseInt(form.world) : null,
+          start_time: form.start_time ? new Date(form.start_time).toISOString() : undefined,
+          end_time: form.end_time ? new Date(form.end_time).toISOString() : null,
           templateId,
           signupThreadTemplateId,
           destination,
