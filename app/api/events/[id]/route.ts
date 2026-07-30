@@ -83,6 +83,21 @@ export async function PUT(
       .single();
 
     if (error) {
+      // Postgres unique_violation on (discord_event_id, start_time) -- this
+      // event's Discord series already has another site row at the exact
+      // timestamp being saved (most often a stray duplicate created when the
+      // daily import cron re-pulled a Discord event whose time had drifted
+      // out of sync with this row). The raw Postgres message is useless to
+      // an admin, so translate it into something actionable.
+      if (error.code === "23505" && error.message.includes("events_discord_event_id_start_time_key")) {
+        return NextResponse.json(
+          {
+            error:
+              "Another occurrence of this event already exists at that exact date & time. This usually means a duplicate got created — check the Event List for another entry with the same title around this date and delete it before saving this time.",
+          },
+          { status: 409 }
+        );
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
