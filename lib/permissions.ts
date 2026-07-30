@@ -62,6 +62,11 @@ export const PERMISSIONS = {
     label: "Manage Feedback",
     description: "Review and triage submitted feedback",
   },
+  manage_competitions: {
+    key: "manage_competitions",
+    label: "Manage WOM Competitions",
+    description: "Create and delete Wise Old Man competitions",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
