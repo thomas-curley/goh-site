@@ -25,6 +25,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
   { href: "/admin/polls", label: "Polls", permission: "manage_polls", group: "Engagement" },
   { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys", group: "Engagement" },
   { href: "/admin/feedback", label: "Feedback", permission: "manage_feedback", group: "Engagement" },
+  { href: "/admin/wom-competitions", label: "WOM Competitions", permission: "manage_competitions", group: "Engagement" },
 
   { href: "/admin/templates", label: "Post Templates", permission: "manage_templates", group: "Content" },
   { href: "/admin/guides", label: "Guides", permission: "manage_guides", group: "Content" },

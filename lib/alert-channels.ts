@@ -14,6 +14,7 @@ export const ALERT_CHANNEL_FEATURES: AlertChannelFeature[] = [
   { key: "polls", label: "Polls", envVar: "DISCORD_POLLS_CHANNEL_ID" },
   { key: "surveys", label: "Survey Responses" },
   { key: "feedback", label: "Feedback Submissions" },
+  { key: "competitions", label: "WOM Competitions" },
 ];
 
 /**

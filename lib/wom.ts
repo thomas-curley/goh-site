@@ -1,5 +1,5 @@
 import { WOMClient } from "@wise-old-man/utils";
-import { WOM_GROUP_ID } from "./constants";
+import { WOM_GROUP_ID, WOM_BASE_URL } from "./constants";
 
 const womClient = new WOMClient({
   apiKey: process.env.WOM_API_KEY,
@@ -127,4 +127,85 @@ export async function getGroupGains(metric: "ehp" | "ehb", startDate: Date, endD
     console.error(`Failed to fetch group gains for ${metric}:`, error);
     return [];
   }
+}
+
+export interface CreateCompetitionResult {
+  competition: { id: number };
+  verificationCode: string;
+}
+
+/**
+ * Creates a new WOM competition. Unlike the read-only helpers above, this
+ * lets errors propagate instead of swallowing them -- a bad/missing group
+ * verification code, invalid RSNs, etc. are real problems the admin needs
+ * to see, not something to silently return an empty result for.
+ *
+ * Calls the REST API directly rather than going through `womClient` --
+ * @wise-old-man/utils's `CreateCompetitionPayload` type requires either
+ * `participants` or `teams` to always be present, but the actual API also
+ * accepts a bare `groupId` (no participants/teams key at all) to auto-fill
+ * every group member, per their docs. Passing an empty `participants: []`
+ * alongside `groupId` to satisfy the client's type is untested and risks
+ * silently creating a competition with zero participants, so this sends
+ * exactly the shape their docs describe instead.
+ */
+export async function createWomCompetition(payload: {
+  title: string;
+  metric: string;
+  startsAt: string;
+  endsAt: string;
+  groupId?: number;
+  groupVerificationCode?: string;
+  participants?: string[];
+  teams?: { name: string; participants: string[] }[];
+}): Promise<CreateCompetitionResult> {
+  const res = await fetch(`${WOM_BASE_URL}/competitions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.WOM_API_KEY ?? "",
+      "User-Agent": "Gn0meHome-Website",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.message ?? `WOM competition creation failed (${res.status})`);
+  }
+  return data as CreateCompetitionResult;
+}
+
+/** Deletes a WOM competition. Requires that competition's own verification code, or its host group's. */
+export async function deleteWomCompetition(womId: number, verificationCode: string) {
+  return womClient.competitions.deleteCompetition(womId, verificationCode);
+}
+
+/**
+ * Edits a WOM competition's title/metric/dates, and/or wholesale-replaces
+ * its participants or teams list. Unlike `createWomCompetition`, the
+ * client's `EditCompetitionPayload` type has no problematic union (no
+ * groupId case to work around), so this goes through `womClient` directly.
+ */
+export async function editWomCompetition(
+  womId: number,
+  payload: { title?: string; metric?: string; startsAt?: Date; endsAt?: Date; participants?: string[]; teams?: { name: string; participants: string[] }[] },
+  verificationCode: string
+) {
+  return womClient.competitions.editCompetition(womId, payload as never, verificationCode);
+}
+
+/** Adds participants to an existing competition (works even if it's group-linked). */
+export async function addWomParticipants(womId: number, participants: string[], verificationCode: string) {
+  return womClient.competitions.addParticipants(womId, participants, verificationCode);
+}
+
+/** Removes participants from an existing competition. */
+export async function removeWomParticipants(womId: number, participants: string[], verificationCode: string) {
+  return womClient.competitions.removeParticipants(womId, participants, verificationCode);
+}
+
+/** Forces WOM to refresh (re-scan hiscores for) any outdated participants -- does not change who's participating. */
+export async function updateAllWomParticipants(womId: number, verificationCode: string) {
+  return womClient.competitions.updateAll(womId, verificationCode);
 }
