@@ -67,6 +67,11 @@ export const PERMISSIONS = {
     label: "Manage WOM Competitions",
     description: "Create and delete Wise Old Man competitions",
   },
+  manage_availability: {
+    key: "manage_availability",
+    label: "Manage Availability Polls",
+    description: "Create scheduling polls and review submitted availability",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",

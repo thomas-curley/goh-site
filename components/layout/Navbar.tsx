@@ -41,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
     items: [
       { href: "/feedback", label: "Submit Feedback" },
       { href: "/surveys", label: "Surveys" },
+      { href: "/availability", label: "Availability" },
     ],
   },
   { type: "link", href: "/about", label: "About" },
