@@ -3,14 +3,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
-import { slotsForPoll, buildGrid, listTimeZones, detectTimeZone } from "@/lib/availability";
+import { slotsForAvailabilityPoll, buildGrid, listTimeZones, detectTimeZone } from "@/lib/availability";
 import { CLAN_TIMEZONE } from "@/lib/constants";
 
 interface AvailabilityPoll {
   id: string;
   title: string;
   description: string | null;
-  days: string[];
+  mode: "dates" | "weekly";
+  days: string[] | null;
+  weekdays: string[] | null;
   start_minute: number;
   end_minute: number;
   slot_minutes: number;
@@ -36,11 +38,18 @@ export default function AvailabilityResultsPage() {
   const [viewTimeZone, setViewTimeZone] = useState(CLAN_TIMEZONE);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const timeZones = useMemo(() => listTimeZones(), []);
-
   useEffect(() => {
     setViewTimeZone(detectTimeZone(CLAN_TIMEZONE));
   }, []);
+
+  // The curated list covers one city per zone, but always include whatever
+  // the browser actually detected (even if it's not one of the curated
+  // entries) so the <select>'s value never ends up pointing at a missing
+  // option.
+  const timeZones = useMemo(() => {
+    const base = listTimeZones();
+    return base.includes(viewTimeZone) ? base : [viewTimeZone, ...base];
+  }, [viewTimeZone]);
 
   useEffect(() => {
     (async () => {
@@ -62,25 +71,29 @@ export default function AvailabilityResultsPage() {
   }, [pollId]);
 
   const slots = useMemo(
-    () => (poll ? slotsForPoll(poll.days, poll.start_minute, poll.end_minute, poll.slot_minutes, CLAN_TIMEZONE) : []),
+    () => (poll ? slotsForAvailabilityPoll(poll, CLAN_TIMEZONE) : []),
     [poll]
   );
+  // Slot ids are the stable identity used for storage/aggregation/click;
+  // for a "weekly" poll they're abstract (`monday:1080`), so display
+  // formatting always goes through this id -> representative-instant map.
+  const isoById = useMemo(() => new Map(slots.map((s) => [s.id, s.iso])), [slots]);
 
-  const grid = useMemo(() => buildGrid(slots, viewTimeZone), [slots, viewTimeZone]);
+  const grid = useMemo(() => buildGrid(slots, viewTimeZone, { weekdayOnly: poll?.mode === "weekly" }), [slots, viewTimeZone, poll?.mode]);
 
   const { countBySlot, namesBySlot, maxCount } = useMemo(() => {
     const counts = new Map<string, number>();
     const names = new Map<string, string[]>();
     for (const slot of slots) {
-      counts.set(slot, 0);
-      names.set(slot, []);
+      counts.set(slot.id, 0);
+      names.set(slot.id, []);
     }
     for (const response of responses) {
       const label = response.respondent_name || "Anonymous";
-      for (const iso of response.slots) {
-        if (!counts.has(iso)) continue; // ignore anything outside the poll's current grid (e.g. after an edit)
-        counts.set(iso, (counts.get(iso) ?? 0) + 1);
-        names.get(iso)?.push(label);
+      for (const id of response.slots) {
+        if (!counts.has(id)) continue; // ignore anything outside the poll's current grid (e.g. after an edit)
+        counts.set(id, (counts.get(id) ?? 0) + 1);
+        names.get(id)?.push(label);
       }
     }
     const max = Math.max(0, ...Array.from(counts.values()));
@@ -94,9 +107,14 @@ export default function AvailabilityResultsPage() {
       .slice(0, 5);
   }, [countBySlot]);
 
-  const formatSlotLabel = (iso: string) => {
+  const formatSlotLabel = (id: string) => {
+    const iso = isoById.get(id);
+    if (!iso) return id;
     const d = new Date(iso);
-    return `${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: viewTimeZone })}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: viewTimeZone })}`;
+    const dateLabel = poll?.mode === "weekly"
+      ? d.toLocaleDateString("en-US", { weekday: "long", timeZone: viewTimeZone })
+      : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: viewTimeZone });
+    return `${dateLabel}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: viewTimeZone })}`;
   };
 
   if (loading) {
@@ -117,6 +135,7 @@ export default function AvailabilityResultsPage() {
       {poll.description && <p className="text-bark-brown-light mb-2">{poll.description}</p>}
       <p className="text-sm text-iron-grey mb-6">
         {responses.length} response{responses.length === 1 ? "" : "s"}
+        {poll.mode === "weekly" && <span className="ml-2 text-xs">(Recurring weekly poll)</span>}
         {!poll.is_active && <span className="ml-2 text-xs">(Closed)</span>}
       </p>
 
@@ -137,11 +156,11 @@ export default function AvailabilityResultsPage() {
         <Card hover={false} className="mb-6">
           <h3 className="font-display text-lg text-bark-brown mb-3">Top Time Slots</h3>
           <ol className="space-y-2">
-            {topSlots.map(([iso, count], i) => (
-              <li key={iso} className="flex items-center justify-between gap-3 text-sm">
+            {topSlots.map(([id, count], i) => (
+              <li key={id} className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-bark-brown">
                   <span className="font-semibold text-gnome-green mr-2">#{i + 1}</span>
-                  {formatSlotLabel(iso)}
+                  {formatSlotLabel(id)}
                 </span>
                 <span className="text-iron-grey shrink-0">
                   {count}/{responses.length} available
@@ -171,18 +190,18 @@ export default function AvailabilityResultsPage() {
                 <tr key={time.minuteOfDay}>
                   <td className="p-1 text-iron-grey whitespace-nowrap pr-2 text-right">{time.label}</td>
                   {grid.days.map((day) => {
-                    const iso = grid.cellAt(day.key, time.minuteOfDay);
-                    const count = iso ? countBySlot.get(iso) ?? 0 : 0;
+                    const id = grid.cellAt(day.key, time.minuteOfDay);
+                    const count = id ? countBySlot.get(id) ?? 0 : 0;
                     const intensity = maxCount > 0 ? count / maxCount : 0;
                     return (
                       <td key={day.key} className="p-0.5">
-                        {iso ? (
+                        {id ? (
                           <button
                             type="button"
-                            onClick={() => setSelectedSlot(iso)}
+                            onClick={() => setSelectedSlot(id)}
                             title={`${count} available`}
                             className={`w-9 h-7 rounded border cursor-pointer transition-transform hover:scale-110 ${
-                              selectedSlot === iso ? "border-gnome-green border-2" : "border-parchment-dark"
+                              selectedSlot === id ? "border-gnome-green border-2" : "border-parchment-dark"
                             }`}
                             style={{
                               backgroundColor:

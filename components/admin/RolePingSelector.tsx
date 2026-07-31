@@ -55,6 +55,10 @@ export function RolePingSelector({ selectedRoles, onChange }: RolePingSelectorPr
 
   const getRoleName = (id: string) => allOptions.find((r) => r.id === id)?.name ?? id;
   const getRoleColor = (id: string) => allOptions.find((r) => r.id === id)?.color ?? null;
+  // "@everyone"/"@here" (and some real Discord roles, if hoisted with a
+  // leading "@" for sort order) already include their own "@" -- don't add
+  // a second one on top when displaying them.
+  const withAt = (name: string) => (name.startsWith("@") ? name : `@${name}`);
 
   if (loading) {
     return <p className="text-xs text-iron-grey">Loading roles...</p>;
@@ -79,12 +83,12 @@ export function RolePingSelector({ selectedRoles, onChange }: RolePingSelectorPr
                 borderColor: `${getRoleColor(id)}50`,
               } : undefined}
             >
-              @{getRoleName(id)}
+              {withAt(getRoleName(id))}
               <button
                 type="button"
                 onClick={() => removeRole(id)}
                 className="hover:opacity-70 cursor-pointer"
-                aria-label={`Remove @${getRoleName(id)}`}
+                aria-label={`Remove ${withAt(getRoleName(id))}`}
               >
                 ✕
               </button>
@@ -107,7 +111,7 @@ export function RolePingSelector({ selectedRoles, onChange }: RolePingSelectorPr
           >
             <option value="" disabled>Select a role to ping...</option>
             {available.map((role) => (
-              <option key={role.id} value={role.id}>@{role.name}</option>
+              <option key={role.id} value={role.id}>{withAt(role.name)}</option>
             ))}
           </select>
         </div>

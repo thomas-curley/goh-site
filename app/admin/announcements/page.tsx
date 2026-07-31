@@ -57,6 +57,7 @@ export default function AdminAnnouncementsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDiscordMessageId, setEditingDiscordMessageId] = useState<string | null>(null);
   const [syncDiscord, setSyncDiscord] = useState(true);
+  const [signAsAuthor, setSignAsAuthor] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
   const [showPreview, setShowPreview] = useState(true);
@@ -129,7 +130,7 @@ export default function AdminAnnouncementsPage() {
           const res = await fetch(`/api/announcements/${editingId}/sync-discord`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ images: extraImages, pingRoles, templateId }),
+            body: JSON.stringify({ images: extraImages, pingRoles, templateId, signAsAuthor }),
           });
           const data = await res.json();
           setStatus(res.ok ? "Announcement updated and Discord message synced!" : `Announcement updated, but Discord sync failed: ${data.error}`);
@@ -155,12 +156,13 @@ export default function AdminAnnouncementsPage() {
       // Post to Discord if checked
       if (postToDiscord) {
         try {
-          await fetch(`/api/announcements/${inserted.id}/sync-discord`, {
+          const res = await fetch(`/api/announcements/${inserted.id}/sync-discord`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ images: extraImages, pingRoles, templateId }),
+            body: JSON.stringify({ images: extraImages, pingRoles, templateId, signAsAuthor }),
           });
-          setStatus("Announcement published and posted to Discord!");
+          const data = await res.json().catch(() => ({}));
+          setStatus(res.ok ? "Announcement published and posted to Discord!" : `Announcement published, but Discord post failed: ${data.error ?? "unknown error"}`);
         } catch {
           setStatus("Announcement published! (Discord post failed)");
         }
@@ -180,6 +182,7 @@ export default function AdminAnnouncementsPage() {
     setEditingId(null);
     setEditingDiscordMessageId(null);
     setSyncDiscord(true);
+    setSignAsAuthor(false);
     setSaving(false);
     await load();
   };
@@ -220,7 +223,7 @@ export default function AdminAnnouncementsPage() {
   const previewLines = renderTemplate(templateSections, {
     title,
     content,
-    author: "You",
+    author: signAsAuthor ? "You" : undefined,
     pingRoles,
   });
   const previewImages = [bannerUrl, ...extraImages].filter(Boolean);
@@ -341,6 +344,10 @@ export default function AdminAnnouncementsPage() {
               </button>
             </div>
           </div>
+          <label className="flex items-center gap-2 text-sm text-bark-brown-light cursor-pointer">
+            <input type="checkbox" checked={signAsAuthor} onChange={(e) => setSignAsAuthor(e.target.checked)} className="accent-gnome-green" />
+            Sign the Discord post with my name
+          </label>
           {/* Banner Generator */}
           <div data-tour="announcement-banner">
             <BannerGenerator

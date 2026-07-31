@@ -5,12 +5,15 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ACCESS_LEVEL_LABELS, type AccessLevel } from "@/lib/clan-access";
+import { WEEKDAYS, WEEKDAY_LABELS } from "@/lib/availability";
 
 interface AvailabilityPoll {
   id: string;
   title: string;
   description: string | null;
-  days: string[];
+  mode: "dates" | "weekly";
+  days: string[] | null;
+  weekdays: string[] | null;
   start_minute: number;
   end_minute: number;
   slot_minutes: number;
@@ -43,7 +46,9 @@ export default function AdminAvailabilityPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("anonymous");
+  const [mode, setMode] = useState<"dates" | "weekly">("dates");
   const [days, setDays] = useState<string[]>([todayStr()]);
+  const [weekdays, setWeekdays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("22:00");
   const [slotMinutes, setSlotMinutes] = useState(30);
@@ -70,12 +75,16 @@ export default function AdminAvailabilityPage() {
   const updateDay = (i: number, value: string) => setDays((prev) => prev.map((d, idx) => (idx === i ? value : d)));
   const addDay = () => setDays((prev) => [...prev, todayStr()]);
   const removeDay = (i: number) => setDays((prev) => prev.filter((_, idx) => idx !== i));
+  const toggleWeekday = (day: string) =>
+    setWeekdays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setAccessLevel("anonymous");
+    setMode("dates");
     setDays([todayStr()]);
+    setWeekdays([]);
     setStartTime("18:00");
     setEndTime("22:00");
     setSlotMinutes(30);
@@ -94,11 +103,16 @@ export default function AdminAvailabilityPage() {
       setSubmitting(false);
       return;
     }
+    if (mode === "weekly" && weekdays.length === 0) {
+      setError("Pick at least one day of the week.");
+      setSubmitting(false);
+      return;
+    }
 
     const res = await fetch("/api/availability", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, accessLevel, days, startMinute, endMinute, slotMinutes }),
+      body: JSON.stringify({ title, description, accessLevel, mode, days, weekdays, startMinute, endMinute, slotMinutes }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -172,18 +186,55 @@ export default function AdminAvailabilityPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-bark-brown mb-2">Candidate Days</label>
-            <div className="space-y-1.5">
-              {days.map((day, i) => (
-                <div key={i} className="flex gap-2">
-                  <input type="date" value={day} onChange={(e) => updateDay(i, e.target.value)} className={inputClass} />
-                  {days.length > 1 && (
-                    <button type="button" onClick={() => removeDay(i)} className="text-red-accent text-xs cursor-pointer shrink-0 px-2">✕</button>
-                  )}
-                </div>
-              ))}
+            <label className="block text-sm font-semibold text-bark-brown mb-2">When</label>
+            <div className="flex gap-4 mb-3">
+              <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+                <input type="radio" checked={mode === "dates"} onChange={() => setMode("dates")} className="accent-gnome-green" />
+                Specific dates
+              </label>
+              <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+                <input type="radio" checked={mode === "weekly"} onChange={() => setMode("weekly")} className="accent-gnome-green" />
+                Days of the week (recurring)
+              </label>
             </div>
-            <button type="button" onClick={addDay} className="text-xs text-gnome-green hover:underline mt-2 cursor-pointer">+ Add day</button>
+
+            {mode === "dates" ? (
+              <>
+                <div className="space-y-1.5">
+                  {days.map((day, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input type="date" value={day} onChange={(e) => updateDay(i, e.target.value)} className={inputClass} />
+                      {days.length > 1 && (
+                        <button type="button" onClick={() => removeDay(i)} className="text-red-accent text-xs cursor-pointer shrink-0 px-2">✕</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={addDay} className="text-xs text-gnome-green hover:underline mt-2 cursor-pointer">+ Add day</button>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAYS.map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleWeekday(day)}
+                      className={`px-3 py-1.5 rounded-md border-2 text-sm font-semibold transition-colors cursor-pointer ${
+                        weekdays.includes(day)
+                          ? "bg-gnome-green/15 border-gnome-green text-gnome-green"
+                          : "border-bark-brown-light text-bark-brown-light hover:border-gnome-green"
+                      }`}
+                    >
+                      {WEEKDAY_LABELS[day]}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-iron-grey mt-2">
+                  Not tied to a specific week -- stays open and gauges a standing weekly pattern (e.g. which weeknight usually works) rather than one event's date.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -240,7 +291,11 @@ export default function AdminAvailabilityPage() {
                     )}
                   </p>
                   <p className="text-xs text-iron-grey">
-                    {poll.days.length} day{poll.days.length === 1 ? "" : "s"} · {minutesToTimeInput(poll.start_minute)}–{minutesToTimeInput(poll.end_minute)} ET
+                    {poll.mode === "weekly"
+                      ? (poll.weekdays ?? []).map((d) => WEEKDAY_LABELS[d]?.slice(0, 3) ?? d).join("/")
+                      : `${(poll.days ?? []).length} day${(poll.days ?? []).length === 1 ? "" : "s"}`}
+                    {" · "}{minutesToTimeInput(poll.start_minute)}–{minutesToTimeInput(poll.end_minute)} ET
+                    {poll.mode === "weekly" && <span> · recurring</span>}
                     {poll.created_by && <span> · by {poll.created_by}</span>}
                   </p>
                   <div className="flex flex-wrap gap-3 mt-1">

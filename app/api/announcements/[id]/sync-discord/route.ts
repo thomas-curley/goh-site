@@ -41,7 +41,7 @@ export async function POST(
       return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
     }
 
-    const { images, pingRoles, templateId } = await request.json().catch(() => ({}));
+    const { images, pingRoles, templateId, signAsAuthor } = await request.json().catch(() => ({}));
 
     const template = await resolveTemplate(supabase, "announcement", templateId);
     if (!template) {
@@ -51,7 +51,10 @@ export async function POST(
     const message = renderTemplate(template.sections, {
       title: row.title,
       content: row.content,
-      author: row.author_name,
+      // Author Signoff is a requireKeys:["author"] line -- leaving author
+      // unset skips it entirely, matching how admins usually already sign
+      // off themselves within the announcement body.
+      author: signAsAuthor ? row.author_name : undefined,
       pingRoles,
     });
 

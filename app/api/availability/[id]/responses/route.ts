@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkClanEligibility } from "@/lib/clan-access";
-import { slotsForPoll } from "@/lib/availability";
+import { slotsForAvailabilityPoll } from "@/lib/availability";
 import { CLAN_TIMEZONE } from "@/lib/constants";
 
 function getServiceClient() {
@@ -40,8 +40,8 @@ export async function POST(
   const timezone = typeof body.timezone === "string" && body.timezone.trim() ? body.timezone.trim() : CLAN_TIMEZONE;
 
   // Only accept slots that are actually part of this poll's grid -- never
-  // trust arbitrary client-supplied timestamps.
-  const validSlots = new Set(slotsForPoll(poll.days, poll.start_minute, poll.end_minute, poll.slot_minutes, CLAN_TIMEZONE));
+  // trust arbitrary client-supplied identifiers.
+  const validSlots = new Set(slotsForAvailabilityPoll(poll, CLAN_TIMEZONE).map((e) => e.id));
   const slots: string[] = Array.isArray(body.slots)
     ? Array.from(new Set(body.slots.filter((s: unknown) => typeof s === "string" && validSlots.has(s))))
     : [];

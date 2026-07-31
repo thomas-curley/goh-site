@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { ACCESS_LEVEL_LABELS, type AccessLevel } from "@/lib/clan-access";
+import { WEEKDAY_LABELS } from "@/lib/availability";
 
 interface AvailabilityPoll {
   id: string;
@@ -11,7 +12,9 @@ interface AvailabilityPoll {
   description: string | null;
   is_active: boolean;
   access_level: AccessLevel;
-  days: string[];
+  mode: "dates" | "weekly";
+  days: string[] | null;
+  weekdays: string[] | null;
 }
 
 export default function AvailabilityIndexPage() {
@@ -84,7 +87,11 @@ function PollRow({ poll }: { poll: AvailabilityPoll }) {
             )}
           </h3>
           {poll.description && <p className="text-xs text-bark-brown-light truncate">{poll.description}</p>}
-          <p className="text-xs text-iron-grey">{poll.days.length} day{poll.days.length === 1 ? "" : "s"} of options</p>
+          <p className="text-xs text-iron-grey">
+            {poll.mode === "weekly"
+              ? `Recurring · ${(poll.weekdays ?? []).map((d) => WEEKDAY_LABELS[d]?.slice(0, 3) ?? d).join("/")}`
+              : `${(poll.days ?? []).length} day${(poll.days ?? []).length === 1 ? "" : "s"} of options`}
+          </p>
         </div>
         {poll.is_active && <span className="text-sm text-gnome-green shrink-0">Fill In &rarr;</span>}
       </Card>

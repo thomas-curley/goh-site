@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
+import { WEEKDAYS } from "@/lib/availability";
 import type { AccessLevel } from "@/lib/clan-access";
 
 const VALID_ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
@@ -43,8 +44,12 @@ export async function POST(request: NextRequest) {
 
   const title = typeof body.title === "string" ? body.title.trim().slice(0, MAX_TITLE_LENGTH) : "";
   const description = typeof body.description === "string" ? body.description.trim() : "";
+  const mode: "dates" | "weekly" = body.mode === "weekly" ? "weekly" : "dates";
   const days: string[] = Array.isArray(body.days)
     ? Array.from(new Set(body.days.filter((d: unknown) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)))).sort() as string[]
+    : [];
+  const weekdays: string[] = Array.isArray(body.weekdays)
+    ? Array.from(new Set(body.weekdays.filter((w: unknown) => typeof w === "string" && WEEKDAYS.includes(w))))
     : [];
   const startMinute = Number(body.startMinute);
   const endMinute = Number(body.endMinute);
@@ -52,8 +57,11 @@ export async function POST(request: NextRequest) {
   const accessLevel: AccessLevel = VALID_ACCESS_LEVELS.includes(body.accessLevel) ? body.accessLevel : "anonymous";
 
   if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
-  if (days.length === 0 || days.length > MAX_DAYS) {
+  if (mode === "dates" && (days.length === 0 || days.length > MAX_DAYS)) {
     return NextResponse.json({ error: `Pick between 1 and ${MAX_DAYS} days.` }, { status: 400 });
+  }
+  if (mode === "weekly" && weekdays.length === 0) {
+    return NextResponse.json({ error: "Pick at least one day of the week." }, { status: 400 });
   }
   if (
     !Number.isInteger(startMinute) || !Number.isInteger(endMinute) ||
@@ -67,7 +75,9 @@ export async function POST(request: NextRequest) {
     .insert({
       title,
       description: description || null,
-      days,
+      mode,
+      days: mode === "dates" ? days : null,
+      weekdays: mode === "weekly" ? weekdays : null,
       start_minute: startMinute,
       end_minute: endMinute,
       slot_minutes: slotMinutes,
