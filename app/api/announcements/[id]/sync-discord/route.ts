@@ -90,6 +90,6 @@ export async function POST(
     return NextResponse.json({ posted: true, edited: false, message_id: posted.messageId });
   } catch (err) {
     console.error("Discord announcement sync error:", err);
-    return NextResponse.json({ error: "Failed to sync to Discord" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to sync to Discord" }, { status: 500 });
   }
 }
