@@ -424,7 +424,17 @@ export default function AdminAnnouncementsPage() {
       {/* Live Preview */}
       {showPreview && (
         <div className="xl:sticky xl:top-20 xl:self-start">
-          <h2 className="font-display text-lg text-bark-brown mb-4">Discord Preview</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg text-bark-brown">Discord Preview</h2>
+            <span className={`text-xs font-semibold ${previewLines.length > 2000 ? "text-red-accent" : "text-iron-grey"}`}>
+              {previewLines.length}/2000
+            </span>
+          </div>
+          {previewLines.length > 2000 && (
+            <p className="text-xs text-red-accent mb-3">
+              Too long for a single Discord message — shorten the content before publishing.
+            </p>
+          )}
           <div className="bg-[#313338] text-[#dbdee1] font-sans text-sm leading-relaxed overflow-auto max-h-[80vh] rounded-lg border border-[#1e1f22] p-4 shadow-lg">
             <pre className="whitespace-pre-wrap break-words font-sans text-[13px]">
               {previewLines || <span className="text-[#72767d]">Fill in the form to see a preview...</span>}

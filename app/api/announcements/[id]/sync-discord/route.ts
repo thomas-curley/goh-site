@@ -12,6 +12,12 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
+// Discord hard-caps a single message's content at 2000 characters -- past
+// that it rejects the whole request with a 400 whose real cause is buried
+// in a JSON error blob. Checking up front gives a clear, actionable error
+// instead.
+const DISCORD_MESSAGE_MAX_LENGTH = 2000;
+
 // POST - post (or, if already posted, edit in place) the Discord message for
 // this announcement. Self-contained: fetches the row itself rather than
 // trusting client-supplied duplicate data, and persists the resulting
@@ -57,6 +63,13 @@ export async function POST(
       author: signAsAuthor ? row.author_name : undefined,
       pingRoles,
     });
+
+    if (message.length > DISCORD_MESSAGE_MAX_LENGTH) {
+      return NextResponse.json(
+        { error: `This announcement is ${message.length} characters once formatted for Discord, but Discord caps a single message at ${DISCORD_MESSAGE_MAX_LENGTH}. Please shorten the content.` },
+        { status: 400 }
+      );
+    }
 
     // Additional images aren't persisted on the row — only what's supplied
     // fresh in this request (plus the saved banner) can be included.
