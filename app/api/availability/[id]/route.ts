@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkClanEligibility, type AccessLevel } from "@/lib/clan-access";
+import { WEEKDAYS } from "@/lib/availability";
 
 const VALID_ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const MAX_DAYS = 31;
@@ -48,6 +49,9 @@ export async function PATCH(
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
+  const { data: existing } = await supabase.from("availability_polls").select("mode").eq("id", id).maybeSingle();
+  if (!existing) return NextResponse.json({ error: "Poll not found." }, { status: 404 });
+
   const body = await request.json().catch(() => ({}));
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
@@ -63,12 +67,22 @@ export async function PATCH(
   if (typeof body.description === "string") {
     update.description = body.description.trim() || null;
   }
-  if (Array.isArray(body.days)) {
+  // Mode itself isn't editable after creation (switching would orphan
+  // existing responses, whose slot ids are shaped differently per mode) --
+  // only the day list for whichever mode this poll already is.
+  if (existing.mode === "dates" && Array.isArray(body.days)) {
     const days = Array.from(new Set(body.days.filter((d: unknown) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)))).sort();
     if (days.length === 0 || days.length > MAX_DAYS) {
       return NextResponse.json({ error: `Pick between 1 and ${MAX_DAYS} days.` }, { status: 400 });
     }
     update.days = days;
+  }
+  if (existing.mode === "weekly" && Array.isArray(body.weekdays)) {
+    const weekdays = Array.from(new Set(body.weekdays.filter((w: unknown) => typeof w === "string" && WEEKDAYS.includes(w))));
+    if (weekdays.length === 0) {
+      return NextResponse.json({ error: "Pick at least one day of the week." }, { status: 400 });
+    }
+    update.weekdays = weekdays;
   }
   if (body.startMinute !== undefined || body.endMinute !== undefined) {
     const startMinute = Number(body.startMinute);

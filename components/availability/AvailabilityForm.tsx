@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { slotsForPoll, buildGrid, listTimeZones, detectTimeZone } from "@/lib/availability";
+import { slotsForAvailabilityPoll, buildGrid, listTimeZones, detectTimeZone } from "@/lib/availability";
 import { CLAN_TIMEZONE } from "@/lib/constants";
 import type { AccessLevel, EligibilityResult } from "@/lib/clan-access";
 
@@ -12,7 +12,9 @@ interface AvailabilityPoll {
   id: string;
   title: string;
   description: string | null;
-  days: string[];
+  mode: "dates" | "weekly";
+  days: string[] | null;
+  weekdays: string[] | null;
   start_minute: number;
   end_minute: number;
   slot_minutes: number;
@@ -78,37 +80,37 @@ export function AvailabilityForm({ pollId }: { pollId: string }) {
   }, []);
 
   const slots = useMemo(
-    () => (poll ? slotsForPoll(poll.days, poll.start_minute, poll.end_minute, poll.slot_minutes, CLAN_TIMEZONE) : []),
+    () => (poll ? slotsForAvailabilityPoll(poll, CLAN_TIMEZONE) : []),
     [poll]
   );
-  const grid = useMemo(() => buildGrid(slots, viewTimeZone), [slots, viewTimeZone]);
+  const grid = useMemo(() => buildGrid(slots, viewTimeZone, { weekdayOnly: poll?.mode === "weekly" }), [slots, viewTimeZone, poll?.mode]);
 
-  const applyPaint = useCallback((iso: string, mode: "add" | "remove") => {
+  const applyPaint = useCallback((id: string, mode: "add" | "remove") => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (mode === "add") next.add(iso);
-      else next.delete(iso);
+      if (mode === "add") next.add(id);
+      else next.delete(id);
       return next;
     });
   }, []);
 
-  const startPaint = (iso: string) => {
-    const mode = selected.has(iso) ? "remove" : "add";
+  const startPaint = (id: string) => {
+    const mode = selected.has(id) ? "remove" : "add";
     paintModeRef.current = mode;
     paintingRef.current = true;
-    applyPaint(iso, mode);
+    applyPaint(id, mode);
   };
 
-  const continuePaint = (iso: string) => {
-    if (paintingRef.current) applyPaint(iso, paintModeRef.current);
+  const continuePaint = (id: string) => {
+    if (paintingRef.current) applyPaint(id, paintModeRef.current);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!paintingRef.current) return;
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement | null;
-    const iso = el?.dataset.slot;
-    if (iso) continuePaint(iso);
+    const id = el?.dataset.slot;
+    if (id) continuePaint(id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,16 +230,16 @@ export function AvailabilityForm({ pollId }: { pollId: string }) {
                 <tr key={time.minuteOfDay}>
                   <td className="p-1 text-iron-grey whitespace-nowrap pr-2 text-right">{time.label}</td>
                   {grid.days.map((day) => {
-                    const iso = grid.cellAt(day.key, time.minuteOfDay);
-                    if (!iso) return <td key={day.key} className="p-0.5"><div className="w-10 h-8" /></td>;
-                    const isSelected = selected.has(iso);
+                    const id = grid.cellAt(day.key, time.minuteOfDay);
+                    if (!id) return <td key={day.key} className="p-0.5"><div className="w-10 h-8" /></td>;
+                    const isSelected = selected.has(id);
                     return (
                       <td key={day.key} className="p-0.5">
                         <div
-                          data-slot={iso}
-                          onMouseDown={() => startPaint(iso)}
-                          onMouseEnter={() => continuePaint(iso)}
-                          onTouchStart={() => startPaint(iso)}
+                          data-slot={id}
+                          onMouseDown={() => startPaint(id)}
+                          onMouseEnter={() => continuePaint(id)}
+                          onTouchStart={() => startPaint(id)}
                           className={`w-10 h-8 rounded border-2 cursor-pointer transition-colors ${
                             isSelected ? "bg-gnome-green border-gnome-green" : "bg-transparent border-bark-brown-light hover:border-gnome-green"
                           }`}
