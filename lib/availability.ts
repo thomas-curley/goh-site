@@ -109,24 +109,33 @@ export function buildGrid(slots: string[], timeZone: string): AvailabilityGrid {
   };
 }
 
-/** Common IANA zones as a fallback for browsers without Intl.supportedValuesOf. */
-export const FALLBACK_TIMEZONES = [
-  "Pacific/Honolulu", "America/Anchorage", "America/Los_Angeles", "America/Denver",
-  "America/Chicago", "America/New_York", "America/Sao_Paulo", "UTC",
-  "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow",
-  "Asia/Dubai", "Asia/Kolkata", "Asia/Shanghai", "Asia/Tokyo",
-  "Australia/Sydney", "Pacific/Auckland",
+/**
+ * One representative city per distinct UTC offset, instead of the full
+ * ~400-entry IANA zone database (which has many zones -- e.g.
+ * America/New_York, America/Detroit, America/Indiana/Indianapolis --
+ * that share the same practical offset and just exist for historical/
+ * regional record-keeping). Ordered west to east. Deliberately keeps a
+ * few zones that LOOK similar to a neighbor but aren't (e.g. Phoenix
+ * never observes DST, unlike the rest of Mountain time; Newfoundland/
+ * Kathmandu/Chatham sit on non-hour offsets) since those are genuinely
+ * different timezones, not duplicates.
+ */
+export const COMMON_TIMEZONES = [
+  "Pacific/Midway", "Pacific/Honolulu", "America/Anchorage",
+  "America/Los_Angeles", "America/Phoenix", "America/Denver",
+  "America/Chicago", "America/New_York", "America/Halifax",
+  "America/St_Johns", "America/Sao_Paulo", "Atlantic/Azores",
+  "UTC", "Europe/London", "Europe/Paris", "Europe/Athens",
+  "Europe/Moscow", "Asia/Dubai", "Asia/Kabul", "Asia/Karachi",
+  "Asia/Kolkata", "Asia/Kathmandu", "Asia/Dhaka", "Asia/Yangon",
+  "Asia/Bangkok", "Asia/Shanghai", "Asia/Tokyo", "Australia/Darwin",
+  "Australia/Sydney", "Pacific/Guadalcanal", "Pacific/Auckland",
+  "Pacific/Chatham", "Pacific/Tongatapu", "Pacific/Kiritimati",
 ];
 
-/** Full IANA zone list where supported, else the curated fallback above. */
+/** The curated one-city-per-zone list above -- see COMMON_TIMEZONES. */
 export function listTimeZones(): string[] {
-  const supportedValuesOf = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf;
-  try {
-    if (supportedValuesOf) return supportedValuesOf("timeZone");
-  } catch {
-    // fall through to the static list
-  }
-  return FALLBACK_TIMEZONES;
+  return COMMON_TIMEZONES;
 }
 
 /** Best-effort guess at the viewer's own timezone, falling back to a given default. */

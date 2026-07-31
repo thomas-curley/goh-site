@@ -36,11 +36,18 @@ export default function AvailabilityResultsPage() {
   const [viewTimeZone, setViewTimeZone] = useState(CLAN_TIMEZONE);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const timeZones = useMemo(() => listTimeZones(), []);
-
   useEffect(() => {
     setViewTimeZone(detectTimeZone(CLAN_TIMEZONE));
   }, []);
+
+  // The curated list covers one city per zone, but always include whatever
+  // the browser actually detected (even if it's not one of the curated
+  // entries) so the <select>'s value never ends up pointing at a missing
+  // option.
+  const timeZones = useMemo(() => {
+    const base = listTimeZones();
+    return base.includes(viewTimeZone) ? base : [viewTimeZone, ...base];
+  }, [viewTimeZone]);
 
   useEffect(() => {
     (async () => {
