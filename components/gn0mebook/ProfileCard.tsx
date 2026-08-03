@@ -4,8 +4,7 @@ import { RankBadge } from "@/components/ui/RankBadge";
 import type { MemberProfile } from "@/lib/gn0mebook";
 
 export function ProfileCard({ profile }: { profile: MemberProfile }) {
-  const avatarUrl = profile.avatar_url
-    || (profile.discord_avatar ? `https://cdn.discordapp.com/avatars/${profile.discord_id}/${profile.discord_avatar}.png` : null);
+  const avatarUrl = profile.avatar_url || profile.discord_avatar;
 
   return (
     <Link href={`/gn0mebook/${profile.id}`}>
