@@ -33,6 +33,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
 
   { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links", group: "Members" },
   { href: "/admin/staff-applications", label: "Staff Applications", permission: "manage_staff_applications", group: "Members" },
+  { href: "/admin/gn0mebook", label: "Gn0meBook", permission: "manage_member_profiles", group: "Members" },
 
   { href: "/admin/commands", label: "Bot Commands", permission: "manage_commands", group: "System" },
   { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions", group: "System" },

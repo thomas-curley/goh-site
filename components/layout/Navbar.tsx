@@ -21,6 +21,7 @@ const NAV_ITEMS: NavItem[] = [
     type: "dropdown",
     label: "Members",
     items: [
+      { href: "/gn0mebook", label: "Gn0meBook" },
       { href: "/members", label: "Member List" },
       { href: "/leaderboard", label: "Leaderboard" },
       { href: "/competitions", label: "Competitions" },
@@ -225,6 +226,13 @@ export function Navbar() {
                     className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                   >
                     My Account / Link RSN
+                  </Link>
+                  <Link
+                    href="/gn0mebook/edit"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
+                  >
+                    My Gn0meBook Profile
                   </Link>
                   <Link
                     href="/admin"
