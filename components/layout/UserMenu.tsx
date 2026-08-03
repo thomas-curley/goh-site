@@ -94,6 +94,13 @@ export function UserMenu() {
             My Account / Link RSN
           </Link>
           <Link
+            href="/gn0mebook/edit"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"
+          >
+            My Gn0meBook Profile
+          </Link>
+          <Link
             href="/admin"
             onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"

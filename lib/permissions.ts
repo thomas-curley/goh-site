@@ -72,6 +72,11 @@ export const PERMISSIONS = {
     label: "Manage Availability Polls",
     description: "Create scheduling polls and review submitted availability",
   },
+  manage_member_profiles: {
+    key: "manage_member_profiles",
+    label: "Moderate Gn0meBook Profiles",
+    description: "Hide member profile pages that need to come down",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
