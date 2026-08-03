@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const {
-      title, description, highlights, winners, lootItems, images, author, pingRoles,
+      title, description, highlights, winners, lootItems, images, author, signAsAuthor, pingRoles,
       destination, templateId, dateStr, eventId, recapId, closeForumPost,
     } = await request.json();
 
@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No event recap template configured" }, { status: 500 });
     }
 
-    const message = renderTemplate(template.sections, { title, description, highlights, winners, lootItems, author, pingRoles, dateStr });
+    // Author Signoff is a requireKeys:["author"] line -- leaving author
+    // unset skips it entirely, matching how hosts usually already sign off
+    // themselves within the recap body. author_name is still always
+    // persisted on the row below regardless, for record-keeping.
+    const message = renderTemplate(template.sections, { title, description, highlights, winners, lootItems, author: signAsAuthor ? author : undefined, pingRoles, dateStr });
     const imageUrls = Array.isArray(images) ? images.filter(Boolean) : [];
     const imagePayload = imageUrls.length > 0 ? imageUrls : undefined;
 

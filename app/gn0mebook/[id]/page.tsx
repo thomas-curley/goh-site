@@ -37,8 +37,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
     ? await checkClanEligibility(serviceClient, profile.visibility, user?.id ?? null, "this profile")
     : { eligible: true };
 
-  const avatarUrl = profile.avatar_url
-    || (profile.discord_avatar ? `https://cdn.discordapp.com/avatars/${profile.discord_id}/${profile.discord_avatar}.png` : null);
+  const avatarUrl = profile.avatar_url || profile.discord_avatar;
   const name = profile.rsn || profile.discord_username;
 
   return (
