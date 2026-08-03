@@ -66,6 +66,7 @@ export default function EventRecapPage() {
   const [editingRecapId, setEditingRecapId] = useState<string | null>(null);
   const [pastRecaps, setPastRecaps] = useState<RecapPost[]>([]);
   const [showPreview, setShowPreview] = useState(true);
+  const [signAsAuthor, setSignAsAuthor] = useState(false);
 
   const { allowed: canSyncDiscord, loading: permLoading } = usePermission("sync_discord_posts");
 
@@ -186,6 +187,7 @@ export default function EventRecapPage() {
     setTemplateId(recap.template_id ?? "");
     setDestination(recap.destination_channel_id);
     setCloseForumPost(false);
+    setSignAsAuthor(false);
     window.scrollTo(0, 0);
   };
 
@@ -220,6 +222,7 @@ export default function EventRecapPage() {
           lootItems: lootItems.filter((l) => l.trim()),
           images,
           author,
+          signAsAuthor,
           pingRoles,
           eventId: selectedEvent || undefined,
           destination,
@@ -245,6 +248,7 @@ export default function EventRecapPage() {
         setSelectedEvent("");
         setDestination("");
         setCloseForumPost(false);
+        setSignAsAuthor(false);
         setEditingRecapId(null);
         await loadPastRecaps();
       } else {
@@ -274,7 +278,7 @@ export default function EventRecapPage() {
     highlights: highlights.filter((h) => h.trim()),
     winners: winners.filter((w) => w.rsn.trim()),
     lootItems: lootItems.filter((l) => l.trim()),
-    author: "You",
+    author: signAsAuthor ? "You" : undefined,
     pingRoles,
     dateStr,
   });
@@ -510,6 +514,11 @@ export default function EventRecapPage() {
             </Card>
           </div>
 
+          <label className="flex items-center gap-2 text-sm text-bark-brown-light cursor-pointer">
+            <input type="checkbox" checked={signAsAuthor} onChange={(e) => setSignAsAuthor(e.target.checked)} className="accent-gnome-green" />
+            Sign the Discord post with my name
+          </label>
+
           {/* Submit */}
           <div className="flex items-center gap-4">
             <Button type="submit" disabled={submitting || !destination.trim()} size="lg" data-tour="recap-submit">
@@ -524,6 +533,7 @@ export default function EventRecapPage() {
                   setTitle(""); setDescription(""); setHighlights([""]); setWinners([]); setLootItems([]);
                   setImages([]); setPingRoles([]); setSelectedEvent(""); setDestination(""); setTemplateId("");
                   setCloseForumPost(false);
+                  setSignAsAuthor(false);
                 }}
               >
                 Cancel
