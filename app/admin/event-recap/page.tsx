@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
@@ -9,6 +9,7 @@ import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
+import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 import { PageTour } from "@/components/admin/tour/PageTour";
 import { renderTemplate } from "@/lib/post-templates";
 import type { SectionInstance } from "@/lib/post-templates";
@@ -51,7 +52,9 @@ export default function EventRecapPage() {
   const [closeForumPost, setCloseForumPost] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const [highlights, setHighlights] = useState<string[]>([""]);
+  const highlightRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [winners, setWinners] = useState<{ rsn: string; prize: string }[]>([]);
   const [lootItems, setLootItems] = useState<string[]>([]);
   const [trackedLoot, setTrackedLoot] = useState<TrackedLootItem[]>([]);
@@ -373,9 +376,12 @@ export default function EventRecapPage() {
               <div data-tour="recap-description">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-bark-brown">Description</label>
-                  <EmojiPickerButton onInsert={(t) => setDescription((prev) => prev + (prev ? " " : "") + t)} />
+                  <div className="flex items-center gap-1">
+                    <TextFormatToolbar value={description} onChange={setDescription} targetRef={descriptionRef} />
+                    <EmojiPickerButton onInsert={(t) => setDescription((prev) => prev + (prev ? " " : "") + t)} />
+                  </div>
                 </div>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="What a night! The clan gathered to take on Hueycotl and it was an absolute blast..." />
+                <textarea ref={descriptionRef} value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="What a night! The clan gathered to take on Hueycotl and it was an absolute blast..." />
               </div>
             </div>
           </Card>
@@ -391,12 +397,14 @@ export default function EventRecapPage() {
                 {highlights.map((h, i) => (
                   <div key={i} className="flex gap-2">
                     <input
+                      ref={(el) => { highlightRefs.current[i] = el; }}
                       type="text"
                       value={h}
                       onChange={(e) => updateHighlight(i, e.target.value)}
                       className={`${inputClass} flex-1`}
                       placeholder="Pizza Queen tanked the boss for 15 minutes straight"
                     />
+                    <TextFormatToolbar value={h} onChange={(v) => updateHighlight(i, v)} targetRef={{ current: highlightRefs.current[i] }} />
                     <EmojiPickerButton onInsert={(t) => updateHighlight(i, h + (h ? " " : "") + t)} />
                     {highlights.length > 1 && (
                       <button type="button" onClick={() => removeHighlight(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>

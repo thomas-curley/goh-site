@@ -21,6 +21,7 @@ async function getUpcomingEvents() {
   const { data } = await supabase
     .from("events")
     .select("id, title, event_type, start_time, host_rsn, world, location, meet_location")
+    .eq("show_on_calendar", true)
     .gte("start_time", new Date().toISOString())
     .order("start_time", { ascending: true })
     .limit(3);

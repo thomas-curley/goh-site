@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
@@ -11,6 +11,7 @@ import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
+import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 import { PageTour } from "@/components/admin/tour/PageTour";
 import { usePermission } from "@/lib/use-permission";
 import { ANNOUNCEMENT_TOUR } from "@/lib/tours";
@@ -46,6 +47,7 @@ export default function AdminAnnouncementsPage() {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const [category, setCategory] = useState("announcement");
   const [pinned, setPinned] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
@@ -311,9 +313,12 @@ export default function AdminAnnouncementsPage() {
           <div data-tour="announcement-content">
             <div className="flex items-center justify-between mb-1">
               <label className="block text-sm font-semibold text-bark-brown">Content</label>
-              <EmojiPickerButton onInsert={(t) => setContent((prev) => prev + (prev ? " " : "") + t)} />
+              <div className="flex items-center gap-1">
+                <TextFormatToolbar value={content} onChange={setContent} targetRef={contentRef} />
+                <EmojiPickerButton onInsert={(t) => setContent((prev) => prev + (prev ? " " : "") + t)} />
+              </div>
             </div>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} required rows={4} className={`${inputClass} resize-y`} placeholder="Write your announcement here..." />
+            <textarea ref={contentRef} value={content} onChange={(e) => setContent(e.target.value)} required rows={4} className={`${inputClass} resize-y`} placeholder="Write your announcement here..." />
             <div className="mt-2">
               <ReformatButton
                 content={content}
