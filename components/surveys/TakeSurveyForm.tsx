@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LIKERT_LABELS, type AccessLevel, type EligibilityResult, type SurveyQuestion } from "@/lib/surveys";
+import { HONEYPOT_FIELD } from "@/lib/spam-guard";
 
 interface Survey {
   id: string;
@@ -27,6 +28,8 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const [renderedAt] = useState(() => Date.now());
 
   useEffect(() => {
     fetch(`/api/surveys/${surveyId}`)
@@ -59,7 +62,7 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
     const res = await fetch(`/api/surveys/${surveyId}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers, respondentName }),
+      body: JSON.stringify({ answers, respondentName, renderedAt, [HONEYPOT_FIELD]: honeypot }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -138,6 +141,16 @@ export function TakeSurveyForm({ surveyId }: { surveyId: string }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        <input
+          type="text"
+          name={HONEYPOT_FIELD}
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+        />
         {survey.questions.map((q) => (
           <Card key={q.id} hover={false}>
             <label className="block text-sm font-semibold text-bark-brown mb-2">

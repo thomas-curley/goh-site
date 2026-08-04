@@ -6,6 +6,8 @@ import { getAlertChannel } from "@/lib/alert-channels";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkSurveyEligibility } from "@/lib/surveys";
 import type { SurveyQuestion } from "@/lib/surveys";
+import { getRequestIp, isIpBanned } from "@/lib/ip-ban";
+import { checkSubmissionRateLimit, isHoneypotTripped, submittedTooFast } from "@/lib/spam-guard";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,6 +33,29 @@ export async function POST(
   if (!survey) return NextResponse.json({ error: "Survey not found." }, { status: 404 });
   if (!survey.is_active) return NextResponse.json({ error: "This survey is closed." }, { status: 400 });
 
+  const requestIp = getRequestIp(request);
+  if (await isIpBanned(supabase, requestIp)) {
+    return NextResponse.json(
+      { error: "You've been blocked from submitting to this survey. Contact a staff member if you think this is a mistake." },
+      { status: 403 }
+    );
+  }
+  if (!checkSubmissionRateLimit(requestIp).allowed) {
+    return NextResponse.json({ error: "Too many submissions from this connection. Try again in a few minutes." }, { status: 429 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+
+  // Silently "succeed" for an obvious bot (filled the hidden honeypot
+  // field) rather than telling it what tripped -- a real rejection just
+  // teaches a scripted bot to stop sending that field.
+  if (isHoneypotTripped(body)) {
+    return NextResponse.json({ submitted: true });
+  }
+  if (submittedTooFast(body.renderedAt)) {
+    return NextResponse.json({ error: "That was fast! Please wait a moment and try again." }, { status: 429 });
+  }
+
   const authClient = await createSupabaseServerClient();
   const { data: { user: authUser } } = await authClient.auth.getUser();
   const eligibility = await checkSurveyEligibility(supabase, survey.access_level, authUser?.id ?? null);
@@ -38,7 +63,6 @@ export async function POST(
     return NextResponse.json({ error: eligibility.reason ?? "You are not eligible to take this survey." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({}));
   const questions: SurveyQuestion[] = survey.questions ?? [];
   const rawAnswers = body.answers && typeof body.answers === "object" ? body.answers : {};
 
@@ -82,6 +106,7 @@ export async function POST(
     answers,
     respondent_name: respondentName,
     discord_id: discordId,
+    ip_address: requestIp,
   });
 
   if (error) return NextResponse.json({ error: "Failed to submit response." }, { status: 500 });

@@ -11,6 +11,7 @@ interface FeedbackSubmission {
   respondent_name: string | null;
   status: "new" | "reviewed" | "archived";
   created_at: string;
+  ip_address: string | null;
 }
 
 type Tab = "new" | "reviewed" | "archived" | "all";
@@ -28,6 +29,7 @@ export default function AdminFeedbackPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [banningIp, setBanningIp] = useState<string | null>(null);
 
   const load = useCallback(async (activeTab: Tab) => {
     setLoading(true);
@@ -54,6 +56,19 @@ export default function AdminFeedbackPage() {
       setActionStatus("Failed to update. Try again.");
     }
     setBusyId(null);
+  };
+
+  const handleBanIp = async (ip: string) => {
+    if (!confirm(`Ban ${ip}? This blocks it from submitting feedback or surveys, not just this one.`)) return;
+    setBanningIp(ip);
+    const res = await fetch("/api/admin/banned-ips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ipAddress: ip, reason: "Banned from feedback inbox" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) alert(data.error ?? "Failed to ban that IP.");
+    setBanningIp(null);
   };
 
   return (
@@ -93,8 +108,21 @@ export default function AdminFeedbackPage() {
                     {s.respondent_name || "Anonymous"}
                     {s.category && <span className="ml-2 text-xs text-iron-grey capitalize">· {s.category}</span>}
                   </p>
-                  <p className="text-xs text-iron-grey">{new Date(s.created_at).toLocaleString()}</p>
+                  <p className="text-xs text-iron-grey">
+                    {new Date(s.created_at).toLocaleString()}
+                    {s.ip_address && <span className="font-mono ml-2">{s.ip_address}</span>}
+                  </p>
                 </div>
+                {s.ip_address && (
+                  <button
+                    type="button"
+                    onClick={() => handleBanIp(s.ip_address!)}
+                    disabled={banningIp === s.ip_address}
+                    className="text-xs text-red-accent hover:underline cursor-pointer shrink-0"
+                  >
+                    {banningIp === s.ip_address ? "..." : "Ban IP"}
+                  </button>
+                )}
               </div>
               <p className="text-sm text-bark-brown whitespace-pre-wrap mb-3">{s.message}</p>
               <div className="flex flex-wrap gap-2">

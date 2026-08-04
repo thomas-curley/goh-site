@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { postToDestination } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
+import { getRequestIp, isIpBanned } from "@/lib/ip-ban";
+import { checkSubmissionRateLimit, isHoneypotTripped, submittedTooFast } from "@/lib/spam-guard";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,7 +22,26 @@ export async function POST(request: NextRequest) {
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
+  const requestIp = getRequestIp(request);
+  if (await isIpBanned(supabase, requestIp)) {
+    return NextResponse.json(
+      { error: "You've been blocked from submitting feedback. Contact a staff member if you think this is a mistake." },
+      { status: 403 }
+    );
+  }
+  if (!checkSubmissionRateLimit(requestIp).allowed) {
+    return NextResponse.json({ error: "Too many submissions from this connection. Try again in a few minutes." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => ({}));
+
+  if (isHoneypotTripped(body)) {
+    return NextResponse.json({ submitted: true });
+  }
+  if (submittedTooFast(body.renderedAt)) {
+    return NextResponse.json({ error: "That was fast! Please wait a moment and try again." }, { status: 429 });
+  }
+
   const message = typeof body.message === "string" ? body.message.trim().slice(0, MAX_MESSAGE_LENGTH) : "";
   const category = CATEGORIES.includes(body.category) ? body.category : null;
   const respondentName = typeof body.respondentName === "string" ? body.respondentName.trim().slice(0, MAX_NAME_LENGTH) : "";
@@ -33,6 +54,7 @@ export async function POST(request: NextRequest) {
     message,
     category,
     respondent_name: respondentName || null,
+    ip_address: requestIp,
   });
 
   if (error) return NextResponse.json({ error: "Failed to submit feedback." }, { status: 500 });

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { HONEYPOT_FIELD } from "@/lib/spam-guard";
 
 const CATEGORIES = [
   { value: "", label: "General" },
@@ -21,6 +22,8 @@ export default function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const [renderedAt] = useState(() => Date.now());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +33,7 @@ export default function FeedbackPage() {
     const res = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category: category || undefined, message, respondentName }),
+      body: JSON.stringify({ category: category || undefined, message, respondentName, renderedAt, [HONEYPOT_FIELD]: honeypot }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -62,6 +65,16 @@ export default function FeedbackPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              name={HONEYPOT_FIELD}
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+            />
             {error && (
               <div className="p-3 rounded-md bg-red-accent/10 border border-red-accent/30 text-sm text-red-accent">
                 {error}
