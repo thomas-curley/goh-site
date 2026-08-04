@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { slotsForAvailabilityPoll, buildGrid, listTimeZones, detectTimeZone } from "@/lib/availability";
 import { CLAN_TIMEZONE } from "@/lib/constants";
 import type { AccessLevel, EligibilityResult } from "@/lib/clan-access";
+import { HONEYPOT_FIELD } from "@/lib/spam-guard";
 
 interface AvailabilityPoll {
   id: string;
@@ -36,6 +37,8 @@ export function AvailabilityForm({ pollId }: { pollId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const [renderedAt] = useState(() => Date.now());
 
   const paintingRef = useRef(false);
   const paintModeRef = useRef<"add" | "remove">("add");
@@ -121,7 +124,7 @@ export function AvailabilityForm({ pollId }: { pollId: string }) {
     const res = await fetch(`/api/availability/${pollId}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slots: Array.from(selected), timezone: viewTimeZone, respondentName }),
+      body: JSON.stringify({ slots: Array.from(selected), timezone: viewTimeZone, respondentName, renderedAt, [HONEYPOT_FIELD]: honeypot }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -200,6 +203,16 @@ export function AvailabilityForm({ pollId }: { pollId: string }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        <input
+          type="text"
+          name={HONEYPOT_FIELD}
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+        />
         <Card hover={false}>
           <label className="block text-sm font-semibold text-bark-brown mb-1">Your timezone</label>
           <select

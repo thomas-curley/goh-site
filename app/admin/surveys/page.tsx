@@ -25,6 +25,7 @@ interface SurveyResponse {
   answers: { question_id: string; value: string | number | string[] | null }[];
   respondent_name: string | null;
   submitted_at: string;
+  ip_address: string | null;
 }
 
 const QUESTION_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
@@ -52,6 +53,7 @@ export default function AdminSurveysPage() {
   const [responsesBySurvey, setResponsesBySurvey] = useState<Record<string, SurveyResponse[]>>({});
   const [loadingResponses, setLoadingResponses] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [banningIp, setBanningIp] = useState<string | null>(null);
 
   const loadSurveys = useCallback(async () => {
     setLoading(true);
@@ -145,6 +147,19 @@ export default function AdminSurveysPage() {
     });
     await loadSurveys();
     setTogglingId(null);
+  };
+
+  const handleBanIp = async (ip: string) => {
+    if (!confirm(`Ban ${ip}? This blocks it from submitting to any survey, not just this one.`)) return;
+    setBanningIp(ip);
+    const res = await fetch("/api/admin/banned-ips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ipAddress: ip, reason: "Banned from survey results" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) alert(data.error ?? "Failed to ban that IP.");
+    setBanningIp(null);
   };
 
   return (
@@ -365,10 +380,23 @@ export default function AdminSurveysPage() {
                         {responses.length > 0 && (
                           <div>
                             <p className="text-xs text-iron-grey uppercase tracking-wide mb-2">Respondents</p>
-                            <ul className="text-sm text-bark-brown space-y-0.5">
+                            <ul className="text-sm text-bark-brown space-y-1">
                               {responses.map((r) => (
-                                <li key={r.id}>
-                                  {r.respondent_name || "Anonymous"} · {new Date(r.submitted_at).toLocaleDateString()}
+                                <li key={r.id} className="flex items-center justify-between gap-2">
+                                  <span>
+                                    {r.respondent_name || "Anonymous"} · {new Date(r.submitted_at).toLocaleDateString()}
+                                    {r.ip_address && <span className="text-iron-grey font-mono text-xs ml-2">{r.ip_address}</span>}
+                                  </span>
+                                  {r.ip_address && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleBanIp(r.ip_address!)}
+                                      disabled={banningIp === r.ip_address}
+                                      className="text-xs text-red-accent hover:underline cursor-pointer shrink-0"
+                                    >
+                                      {banningIp === r.ip_address ? "..." : "Ban IP"}
+                                    </button>
+                                  )}
                                 </li>
                               ))}
                             </ul>

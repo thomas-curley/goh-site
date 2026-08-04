@@ -5,6 +5,8 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkClanEligibility } from "@/lib/clan-access";
 import { slotsForAvailabilityPoll } from "@/lib/availability";
 import { CLAN_TIMEZONE } from "@/lib/constants";
+import { getRequestIp } from "@/lib/ip-ban";
+import { checkSubmissionRateLimit, isHoneypotTripped, submittedTooFast } from "@/lib/spam-guard";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,6 +31,20 @@ export async function POST(
   if (!poll) return NextResponse.json({ error: "Poll not found." }, { status: 404 });
   if (!poll.is_active) return NextResponse.json({ error: "This poll is closed." }, { status: 400 });
 
+  const requestIp = getRequestIp(request);
+  if (!checkSubmissionRateLimit(requestIp).allowed) {
+    return NextResponse.json({ error: "Too many submissions from this connection. Try again in a few minutes." }, { status: 429 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+
+  if (isHoneypotTripped(body)) {
+    return NextResponse.json({ submitted: true });
+  }
+  if (submittedTooFast(body.renderedAt)) {
+    return NextResponse.json({ error: "That was fast! Please wait a moment and try again." }, { status: 429 });
+  }
+
   const authClient = await createSupabaseServerClient();
   const { data: { user: authUser } } = await authClient.auth.getUser();
   const eligibility = await checkClanEligibility(supabase, poll.access_level, authUser?.id ?? null, "this availability poll");
@@ -36,7 +52,6 @@ export async function POST(
     return NextResponse.json({ error: eligibility.reason ?? "You are not eligible to respond to this poll." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({}));
   const timezone = typeof body.timezone === "string" && body.timezone.trim() ? body.timezone.trim() : CLAN_TIMEZONE;
 
   // Only accept slots that are actually part of this poll's grid -- never

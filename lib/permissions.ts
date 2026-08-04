@@ -77,6 +77,11 @@ export const PERMISSIONS = {
     label: "Moderate Gn0meBook Profiles",
     description: "Hide member profile pages that need to come down",
   },
+  manage_banned_ips: {
+    key: "manage_banned_ips",
+    label: "Manage Banned IPs",
+    description: "Block IP addresses from submitting to public forms like surveys",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
