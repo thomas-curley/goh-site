@@ -75,6 +75,7 @@ export default function EditEventPage() {
       ping_roles: Array.isArray(data.ping_roles) ? data.ping_roles : [],
       post_to_discord: false,
       create_signup_thread: false,
+      show_on_calendar: data.show_on_calendar ?? true,
     });
     setDiscordMessageId(data.discord_message_id ?? null);
     setSignupThreadMessageId(data.signup_thread_message_id ?? null);

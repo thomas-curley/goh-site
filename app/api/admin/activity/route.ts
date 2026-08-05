@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getGroupMembers, getGroupGains } from "@/lib/wom";
+import { getGroupMembers, getGroupGains, normalizeRsn } from "@/lib/wom";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,11 +29,6 @@ function resolveRange(searchParams: URLSearchParams): { start: Date; end: Date }
     start.setMonth(start.getMonth() - 1);
   }
   return { start, end };
-}
-
-/** WOM usernames/RSNs vary in spacing/casing (e.g. "gn0me_vlad" vs "Gn0me Vlad") — normalize before matching. */
-function normalizeRsn(s: string): string {
-  return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export type Focus = "skiller" | "bosser" | "balanced" | "inactive";

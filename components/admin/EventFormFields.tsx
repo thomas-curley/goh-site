@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { EVENT_TYPES, CLAN_TIMEZONE } from "@/lib/constants";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
@@ -7,6 +8,7 @@ import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
+import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 
 export interface EventForm {
   title: string;
@@ -31,6 +33,7 @@ export interface EventForm {
   ping_roles: string[];
   post_to_discord: boolean;
   create_signup_thread: boolean;
+  show_on_calendar: boolean;
 }
 
 export const EMPTY_FORM: EventForm = {
@@ -56,6 +59,7 @@ export const EMPTY_FORM: EventForm = {
   ping_roles: [],
   post_to_discord: true,
   create_signup_thread: false,
+  show_on_calendar: true,
 };
 
 export const SIGNUP_TYPES = [
@@ -118,6 +122,9 @@ interface EventFormFieldsProps {
  */
 export function EventFormFields({ form, update, setForm, visibleFields = null }: EventFormFieldsProps) {
   const shows = (key: string) => !visibleFields || visibleFields.has(key);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const requirementsListRef = useRef<HTMLTextAreaElement>(null);
+  const guideTextRef = useRef<HTMLTextAreaElement>(null);
 
   const anyLogisticsRow2 = shows("spots") || shows("signup_type") || shows("voice_channel");
   const anyRequirements = shows("requirements") || shows("requirements_list") || shows("guide_text") || shows("video_url");
@@ -139,9 +146,12 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-semibold text-bark-brown">Description / Flavor Text</label>
-              <EmojiPickerButton onInsert={(t) => update("description", form.description + (form.description ? " " : "") + t)} />
+              <div className="flex items-center gap-1">
+                <TextFormatToolbar value={form.description} onChange={(v) => update("description", v)} targetRef={descriptionRef} />
+                <EmojiPickerButton onInsert={(t) => update("description", form.description + (form.description ? " " : "") + t)} />
+              </div>
             </div>
-            <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="Deep in the jungle ruins, an ancient serpent-spirit awaits..." />
+            <textarea ref={descriptionRef} value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} className={`${inputClass} resize-y`} placeholder="Deep in the jungle ruins, an ancient serpent-spirit awaits..." />
             <div className="mt-2">
               <ReformatButton
                 content={form.description}
@@ -172,7 +182,7 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
       {/* Schedule */}
       <Card hover={false}>
         <h2 className="font-display text-lg text-bark-brown mb-4">Schedule</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className={labelClass}>Start Time *</label>
             <input type="datetime-local" value={form.start_time} onChange={(e) => update("start_time", e.target.value)} required className={inputClass} />
@@ -182,6 +192,18 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
             <input type="datetime-local" value={form.end_time} onChange={(e) => update("end_time", e.target.value)} className={inputClass} />
           </div>
         </div>
+        <label className="flex items-start gap-2 text-sm cursor-pointer">
+          <input type="checkbox" checked={form.show_on_calendar} onChange={(e) => update("show_on_calendar", e.target.checked)} className="mt-0.5 accent-gnome-green" />
+          <span>
+            <span className="text-bark-brown font-semibold">Show on Calendar</span>
+            <br />
+            <span className="text-xs text-bark-brown-light">
+              Uncheck for a one-off activity that already has a recurring calendar entry (e.g. tonight&apos;s Social Tuesday).
+              It&apos;ll still post to Discord as normal — it just won&apos;t create a duplicate entry on the site calendar
+              or a duplicate Discord Scheduled Event.
+            </span>
+          </span>
+        </label>
       </Card>
 
       {/* Logistics */}
@@ -256,17 +278,23 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
             )}
             {shows("requirements_list") && (
               <div>
-                <label className={labelClass}>Detailed Requirements (one per line)</label>
-                <textarea value={form.requirements_list} onChange={(e) => update("requirements_list", e.target.value)} rows={5} className={`${inputClass} resize-y font-mono text-sm`} placeholder={"70+ Combat\nStrong Magic or Ranged setup\nDecent Prayer level\nAnti-poison or Venom protection\nFood, Prayer pots, and Teleports"} />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-semibold text-bark-brown">Detailed Requirements (one per line)</label>
+                  <TextFormatToolbar value={form.requirements_list} onChange={(v) => update("requirements_list", v)} targetRef={requirementsListRef} />
+                </div>
+                <textarea ref={requirementsListRef} value={form.requirements_list} onChange={(e) => update("requirements_list", e.target.value)} rows={5} className={`${inputClass} resize-y font-mono text-sm`} placeholder={"70+ Combat\nStrong Magic or Ranged setup\nDecent Prayer level\nAnti-poison or Venom protection\nFood, Prayer pots, and Teleports"} />
               </div>
             )}
             {shows("guide_text") && (
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-bark-brown">Event-Specific Guide / Mechanics</label>
-                  <EmojiPickerButton onInsert={(t) => update("guide_text", form.guide_text + (form.guide_text ? " " : "") + t)} />
+                  <div className="flex items-center gap-1">
+                    <TextFormatToolbar value={form.guide_text} onChange={(v) => update("guide_text", v)} targetRef={guideTextRef} />
+                    <EmojiPickerButton onInsert={(t) => update("guide_text", form.guide_text + (form.guide_text ? " " : "") + t)} />
+                  </div>
                 </div>
-                <textarea value={form.guide_text} onChange={(e) => update("guide_text", e.target.value)} rows={6} className={`${inputClass} resize-y text-sm`} placeholder={"Phases & Attacks:\n• Serpent Strike: A fast melee hit — step back or pray melee.\n• Venom Spit: Ranged green projectile — bring anti-venom.\n\nSafe Spots & Movement:\n• Use the outer ring of the arena to avoid tail sweeps."} />
+                <textarea ref={guideTextRef} value={form.guide_text} onChange={(e) => update("guide_text", e.target.value)} rows={6} className={`${inputClass} resize-y text-sm`} placeholder={"Phases & Attacks:\n• Serpent Strike: A fast melee hit — step back or pray melee.\n• Venom Spit: Ranged green projectile — bring anti-venom.\n\nSafe Spots & Movement:\n• Use the outer ring of the arena to avoid tail sweeps."} />
               </div>
             )}
             {shows("video_url") && (

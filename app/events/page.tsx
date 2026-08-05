@@ -22,6 +22,7 @@ async function getEvents() {
   const { data, error } = await supabase
     .from("events")
     .select("*")
+    .eq("show_on_calendar", true)
     .order("start_time", { ascending: true });
 
   if (error || !data) return [];

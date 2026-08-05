@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
       prize_pool: body.prize_pool || null,
       ping_roles: Array.isArray(body.ping_roles) ? body.ping_roles : [],
       extra_images: Array.isArray(body.extra_images) ? body.extra_images : [],
+      show_on_calendar: body.show_on_calendar !== false,
     };
 
     // Post to Discord if requested
@@ -80,22 +81,28 @@ export async function POST(request: NextRequest) {
 
     if (body.post_to_discord) {
       try {
-        // Create Discord Scheduled Event
-        const endTime = eventRow.end_time ?? new Date(new Date(eventRow.start_time).getTime() + 2 * 60 * 60 * 1000).toISOString();
+        // Skip creating a Discord Scheduled Event for a text-only post that
+        // isn't meant to show on the calendar (e.g. a one-off activity under
+        // an already-recurring event) -- avoids a duplicate "event" showing
+        // up in Discord's own Events tab, mirroring show_on_calendar's effect
+        // on the site's calendar.
+        if (eventRow.show_on_calendar) {
+          const endTime = eventRow.end_time ?? new Date(new Date(eventRow.start_time).getTime() + 2 * 60 * 60 * 1000).toISOString();
 
-        const discordEvent = await createDiscordEvent({
-          name: eventRow.title,
-          description: formatDiscordEventDescription(eventRow),
-          scheduled_start_time: eventRow.start_time,
-          scheduled_end_time: endTime,
-          entity_type: 3,
-          entity_metadata: {
-            location: [eventRow.location, eventRow.meet_location].filter(Boolean).join(" — Meet: ") || "In-game",
-          },
-          privacy_level: 2,
-        });
+          const discordEvent = await createDiscordEvent({
+            name: eventRow.title,
+            description: formatDiscordEventDescription(eventRow),
+            scheduled_start_time: eventRow.start_time,
+            scheduled_end_time: endTime,
+            entity_type: 3,
+            entity_metadata: {
+              location: [eventRow.location, eventRow.meet_location].filter(Boolean).join(" — Meet: ") || "In-game",
+            },
+            privacy_level: 2,
+          });
 
-        discordEventId = discordEvent.id;
+          discordEventId = discordEvent.id;
+        }
 
         // Post formatted message — to an admin-chosen destination if given,
         // otherwise the configured (or env-default) events channel.
