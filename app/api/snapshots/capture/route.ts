@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { normalizeRsn } from "@/lib/wom";
 
 /**
  * Captures a daily clan snapshot. Triggered two ways:
@@ -29,6 +30,37 @@ async function runCapture() {
     const totalExp = memberships.reduce((sum: number, m: { player: { exp: number } }) => sum + (m.player.exp ?? 0), 0);
     const totalEhp = memberships.reduce((sum: number, m: { player: { ehp: number } }) => sum + (m.player.ehp ?? 0), 0);
     const totalEhb = memberships.reduce((sum: number, m: { player: { ehb: number } }) => sum + (m.player.ehb ?? 0), 0);
+
+    // Re-sync clan_rank for every linked+verified profile against WOM's
+    // current group role. clan_rank previously only got written once, at
+    // RSN-link time -- an in-game promotion/demotion that WOM later picked
+    // up never reached the site until the member re-linked their RSN.
+    let ranksSynced = 0;
+    const { data: linkedProfiles } = await supabase
+      .from("user_profiles")
+      .select("id, rsn, clan_rank")
+      .eq("rsn_verified", true)
+      .not("rsn", "is", null);
+
+    if (linkedProfiles && linkedProfiles.length > 0) {
+      const roleByRsn = new Map<string, string>(
+        memberships
+          .filter((m: { player: { displayName: string }; role: string }) => m.player?.displayName && m.role)
+          .map((m: { player: { displayName: string }; role: string }) => [normalizeRsn(m.player.displayName), m.role])
+      );
+
+      for (const profile of linkedProfiles) {
+        if (!profile.rsn) continue;
+        const currentRole = roleByRsn.get(normalizeRsn(profile.rsn));
+        if (currentRole && currentRole !== profile.clan_rank) {
+          await supabase
+            .from("user_profiles")
+            .update({ clan_rank: currentRole, updated_at: new Date().toISOString() })
+            .eq("id", profile.id);
+          ranksSynced++;
+        }
+      }
+    }
 
     // Count registered users and linked RSNs
     const { count: registeredUsers } = await supabase
@@ -76,6 +108,7 @@ async function runCapture() {
       total_exp: totalExp,
       registered_users: registeredUsers,
       linked_rsns: linkedRsns,
+      ranks_synced: ranksSynced,
     });
   } catch (err) {
     console.error("Snapshot capture error:", err);

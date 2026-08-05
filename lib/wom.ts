@@ -20,6 +20,11 @@ export interface ClanMember {
   lastChangedAt: string | null;
 }
 
+/** WOM usernames/RSNs vary in spacing/casing (e.g. "gn0me_vlad" vs "Gn0me Vlad") — normalize before matching. */
+export function normalizeRsn(s: string): string {
+  return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export async function getGroupMembers(): Promise<ClanMember[]> {
   try {
     const result = await womClient.groups.getGroupDetails(WOM_GROUP_ID);
