@@ -14,8 +14,12 @@ export const revalidate = 300;
 
 export default async function Gn0meBookPage() {
   const profiles = await getPublishedProfiles();
-  const staff = profiles.filter((p) => getRankByName(p.clan_rank ?? "")?.key === "council_member");
-  const members = profiles.filter((p) => getRankByName(p.clan_rank ?? "")?.key !== "council_member");
+  const founders = profiles.filter((p) => getRankByName(p.clan_rank ?? "")?.key === "council_member");
+  const staff = profiles.filter((p) => ["yew", "pine", "oak"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
+  const members = profiles.filter((p) => {
+    const key = getRankByName(p.clan_rank ?? "")?.key;
+    return key !== "council_member" && !["yew", "pine", "oak"].includes(key ?? "");
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -34,9 +38,18 @@ export default async function Gn0meBookPage() {
         </Card>
       ) : (
         <>
+          {founders.length > 0 && (
+            <section className="mb-12">
+              <h2 className="font-display text-2xl text-gnome-green mb-4">Founders</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {founders.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
+              </div>
+            </section>
+          )}
+
           {staff.length > 0 && (
             <section className="mb-12">
-              <h2 className="font-display text-2xl text-gnome-green mb-4">Clan Staff</h2>
+              <h2 className="font-display text-2xl text-gnome-green mb-4">Staff</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {staff.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
               </div>
