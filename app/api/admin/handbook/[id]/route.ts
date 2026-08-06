@@ -44,7 +44,7 @@ export async function PATCH(
   if (body.pull_quote !== undefined) update.pull_quote = typeof body.pull_quote === "string" ? body.pull_quote.trim() || null : null;
   if (body.content !== undefined) update.content = typeof body.content === "string" ? body.content : "";
   if (body.visibility !== undefined) {
-    if (!["anonymous", "verified_player", "clan_member"].includes(body.visibility)) {
+    if (!["anonymous", "verified_player", "clan_member", "staff"].includes(body.visibility)) {
       return NextResponse.json({ error: "Invalid visibility." }, { status: 400 });
     }
     update.visibility = body.visibility;
