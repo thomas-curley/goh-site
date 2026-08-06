@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Members",
     items: [
       { href: "/gn0mebook", label: "Gn0meBook" },
+      { href: "/staff-handbook", label: "Staff Handbook" },
       { href: "/members", label: "Member List" },
       { href: "/leaderboard", label: "Leaderboard" },
       { href: "/competitions", label: "Competitions" },

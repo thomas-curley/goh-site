@@ -30,6 +30,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
 
   { href: "/admin/templates", label: "Post Templates", permission: "manage_templates", group: "Content" },
   { href: "/admin/guides", label: "Guides", permission: "manage_guides", group: "Content" },
+  { href: "/admin/handbook", label: "Staff Handbook", permission: "manage_handbook", group: "Content" },
 
   { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links", group: "Members" },
   { href: "/admin/staff-applications", label: "Staff Applications", permission: "manage_staff_applications", group: "Members" },

@@ -82,6 +82,11 @@ export const PERMISSIONS = {
     label: "Manage Banned IPs",
     description: "Block IP addresses from submitting to public forms like surveys",
   },
+  manage_handbook: {
+    key: "manage_handbook",
+    label: "Manage Staff Handbook",
+    description: "Create and edit Staff Handbook pages",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
