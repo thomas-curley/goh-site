@@ -15,6 +15,7 @@ export interface HandbookSection {
   parent_slug: string | null;
   order_index: number;
   pull_quote: string | null;
+  banner_image_url: string | null;
   content: string;
   visibility: AccessLevel;
   is_published: boolean;

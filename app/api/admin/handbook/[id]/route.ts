@@ -42,6 +42,7 @@ export async function PATCH(
   if (body.parent_slug !== undefined) update.parent_slug = body.parent_slug || null;
   if (body.order_index !== undefined) update.order_index = Number.isFinite(body.order_index) ? body.order_index : 0;
   if (body.pull_quote !== undefined) update.pull_quote = typeof body.pull_quote === "string" ? body.pull_quote.trim() || null : null;
+  if (body.banner_image_url !== undefined) update.banner_image_url = typeof body.banner_image_url === "string" ? body.banner_image_url.trim() || null : null;
   if (body.content !== undefined) update.content = typeof body.content === "string" ? body.content : "";
   if (body.visibility !== undefined) {
     if (!["anonymous", "verified_player", "clan_member", "staff"].includes(body.visibility)) {

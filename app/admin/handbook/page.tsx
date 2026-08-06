@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { ACCESS_LEVEL_LABELS, type AccessLevel } from "@/lib/clan-access";
 
 interface HandbookSection {
@@ -13,6 +14,7 @@ interface HandbookSection {
   parent_slug: string | null;
   order_index: number;
   pull_quote: string | null;
+  banner_image_url: string | null;
   content: string;
   visibility: AccessLevel;
   is_published: boolean;
@@ -29,6 +31,7 @@ const EMPTY_FORM = {
   parent_slug: "",
   order_index: 0,
   pull_quote: "",
+  banner_image_url: "",
   content: "",
   visibility: "staff" as AccessLevel,
   is_published: true,
@@ -78,6 +81,7 @@ export default function AdminHandbookPage() {
       parent_slug: section.parent_slug ?? "",
       order_index: section.order_index,
       pull_quote: section.pull_quote ?? "",
+      banner_image_url: section.banner_image_url ?? "",
       content: section.content,
       visibility: section.visibility,
       is_published: section.is_published,
@@ -98,6 +102,7 @@ export default function AdminHandbookPage() {
       parent_slug: form.parent_slug || null,
       order_index: form.order_index,
       pull_quote: form.pull_quote || null,
+      banner_image_url: form.banner_image_url || null,
       content: form.content,
       visibility: form.visibility,
       is_published: form.is_published,
@@ -230,6 +235,13 @@ export default function AdminHandbookPage() {
               placeholder="Many hands make light work."
             />
           </div>
+
+          <ImageUploader
+            images={form.banner_image_url ? [form.banner_image_url] : []}
+            onChange={(imgs) => update("banner_image_url", imgs[0] ?? "")}
+            maxImages={1}
+            label="Banner Image (optional)"
+          />
 
           <div>
             <div className="flex items-center justify-between mb-1">
