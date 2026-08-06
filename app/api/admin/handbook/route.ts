@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       order_index: Number.isFinite(body.order_index) ? body.order_index : 0,
       pull_quote: typeof body.pull_quote === "string" ? body.pull_quote.trim() || null : null,
       content: typeof body.content === "string" ? body.content : "",
-      visibility: ["anonymous", "verified_player", "clan_member"].includes(body.visibility) ? body.visibility : "clan_member",
+      visibility: ["anonymous", "verified_player", "clan_member", "staff"].includes(body.visibility) ? body.visibility : "staff",
       is_published: body.is_published !== false,
     })
     .select()
