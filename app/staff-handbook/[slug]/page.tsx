@@ -17,22 +17,6 @@ function getServiceClient() {
 
 export const revalidate = 300;
 
-// Decorative section banners pulled from the original handbook doc's
-// graphics -- keyed by slug since they're tied to specific chapters, not
-// admin-editable content (see /public/images/handbook for the full set,
-// including the two cover pages used on the index page).
-const SECTION_BANNERS: Record<string, string> = {
-  preface: "/images/handbook/preface.png",
-  "forest-explained": "/images/handbook/forest-explained.png",
-  "duties-expectations": "/images/handbook/duties-expectations.png",
-  discipline: "/images/handbook/discipline.png",
-  "events-challenges": "/images/handbook/events-challenges.png",
-  "onboarding-mentoring": "/images/handbook/onboarding-mentoring.png",
-  "promotion-growth": "/images/handbook/promotion-growth.png",
-  "inactivity-stepping-down": "/images/handbook/inactivity-stepping-down.png",
-  "appendix-clan-rules": "/images/handbook/appendix-clan-rules.png",
-};
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const tree = await getHandbookTree();
@@ -117,12 +101,12 @@ export default async function HandbookSectionPage({ params }: { params: Promise<
             </Card>
           ) : (
             <>
-              {SECTION_BANNERS[section.slug] && (
+              {section.banner_image_url && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={SECTION_BANNERS[section.slug]}
+                  src={section.banner_image_url}
                   alt=""
-                  className="w-full h-40 sm:h-52 object-cover rounded-lg mb-6 shadow-md"
+                  className="w-full h-40 sm:h-52 object-cover object-bottom rounded-lg mb-6 shadow-md"
                 />
               )}
 
