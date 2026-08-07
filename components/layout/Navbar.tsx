@@ -46,6 +46,14 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/availability", label: "Availability" },
     ],
   },
+  {
+    type: "dropdown",
+    label: "Bank",
+    items: [
+      { href: "/loans", label: "Browse Loans" },
+      { href: "/loans/apply", label: "Request a Loan" },
+    ],
+  },
   { type: "link", href: "/about", label: "About" },
 ];
 

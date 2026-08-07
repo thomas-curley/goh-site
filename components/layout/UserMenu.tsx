@@ -101,6 +101,13 @@ export function UserMenu() {
             My Gn0meBook Profile
           </Link>
           <Link
+            href="/loans/mine"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"
+          >
+            My Loans
+          </Link>
+          <Link
             href="/admin"
             onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"

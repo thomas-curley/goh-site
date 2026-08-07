@@ -15,6 +15,7 @@ export const ALERT_CHANNEL_FEATURES: AlertChannelFeature[] = [
   { key: "surveys", label: "Survey Responses" },
   { key: "feedback", label: "Feedback Submissions" },
   { key: "competitions", label: "WOM Competitions" },
+  { key: "loans", label: "Loan Requests" },
 ];
 
 /**

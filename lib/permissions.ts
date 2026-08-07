@@ -87,6 +87,11 @@ export const PERMISSIONS = {
     label: "Manage Staff Handbook",
     description: "Create and edit Staff Handbook pages",
   },
+  manage_loans: {
+    key: "manage_loans",
+    label: "Manage Loan Board",
+    description: "View every loan request, force-close disputes, and oversee the clan loan board",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
