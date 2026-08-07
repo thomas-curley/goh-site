@@ -17,7 +17,7 @@ export function LoanApplicationForm({ verifiedName }: { verifiedName: string }) 
   const [purpose, setPurpose] = useState("");
   const [collateralOffered, setCollateralOffered] = useState("");
   const [collateralValue, setCollateralValue] = useState("");
-  const [previousLoans, setPreviousLoans] = useState(PREVIOUS_LOAN_OPTIONS[0]);
+  const [previousLoans, setPreviousLoans] = useState<string>(PREVIOUS_LOAN_OPTIONS[0]);
   const [repaymentPlan, setRepaymentPlan] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [agreedTerms, setAgreedTerms] = useState(false);
