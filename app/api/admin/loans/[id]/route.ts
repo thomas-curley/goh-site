@@ -30,9 +30,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
+  const update: Record<string, unknown> = { status: body.status, updated_at: new Date().toISOString() };
+  if (typeof body.note === "string") {
+    update.admin_note = body.note.trim().slice(0, 1000) || null;
+  }
+
   const { error } = await supabase
     .from("loan_requests")
-    .update({ status: body.status, updated_at: new Date().toISOString() })
+    .update(update)
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: "Failed to update loan." }, { status: 500 });
