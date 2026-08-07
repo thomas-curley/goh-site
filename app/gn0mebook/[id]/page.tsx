@@ -51,7 +51,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      <div className="flex items-end gap-4 mb-6 px-2">
+      <div className="relative z-10 flex items-end gap-4 mb-6 px-2">
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarUrl} alt="" className="w-24 h-24 rounded-full object-cover border-4 border-parchment shadow-lg" />
