@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { useIsStaff } from "@/lib/use-is-staff";
 import type { User } from "@supabase/supabase-js";
 
 export function UserMenu() {
@@ -10,6 +11,7 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
+  const isStaff = useIsStaff();
 
   useEffect(() => {
     let mounted = true;
@@ -100,13 +102,15 @@ export function UserMenu() {
           >
             My Gn0meBook Profile
           </Link>
-          <Link
-            href="/loans/mine"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"
-          >
-            My Loans
-          </Link>
+          {isStaff && (
+            <Link
+              href="/loans/mine"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"
+            >
+              My Loans
+            </Link>
+          )}
           <Link
             href="/admin"
             onClick={() => setOpen(false)}
