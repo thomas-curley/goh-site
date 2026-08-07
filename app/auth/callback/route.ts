@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     try {
       const serviceClient = createClient(supabaseUrl, serviceKey);
 
-      const { error: upsertError } = await serviceClient
+      const { data: profile, error: upsertError } = await serviceClient
         .from("user_profiles")
         .upsert(
           {
@@ -84,10 +84,18 @@ export async function GET(request: NextRequest) {
             updated_at: new Date().toISOString(),
           },
           { onConflict: "id" }
-        );
+        )
+        .select("rsn, onboarding_skipped")
+        .single();
 
       if (upsertError) {
         console.error("Profile upsert failed:", upsertError);
+      } else if (profile && !profile.rsn && !profile.onboarding_skipped) {
+        // First login (or never answered the prompt) -- route through
+        // onboarding before their original destination. The auth cookies
+        // already queued on `response` via setAll are preserved since we're
+        // only swapping the Location header, not building a new response.
+        response.headers.set("location", `${origin}/onboarding?redirect=${encodeURIComponent(redirect)}`);
       }
     } catch (err) {
       console.error("Profile creation error:", err);
