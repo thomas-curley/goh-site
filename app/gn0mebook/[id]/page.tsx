@@ -43,8 +43,12 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       {profile.banner_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={profile.banner_url} alt="" className="w-full h-48 object-cover rounded-lg mb-[-3rem]" />
+        <div className="relative w-full h-48 rounded-lg overflow-hidden mb-[-3rem]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={profile.banner_url} alt="" className="w-full h-full object-cover" />
+          {/* Scrim so the name/rank overlaid below stay readable over any photo. */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
+        </div>
       )}
 
       <div className="flex items-end gap-4 mb-6 px-2">
@@ -57,7 +61,13 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
           </div>
         )}
         <div className="min-w-0 pb-1">
-          <h1 className="font-display text-3xl text-gnome-green truncate">{name}</h1>
+          <h1
+            className={`font-display text-3xl truncate ${
+              profile.banner_url ? "text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.6)]" : "text-gnome-green"
+            }`}
+          >
+            {name}
+          </h1>
           <div className="flex items-center gap-2 mt-1">
             {profile.clan_rank && <RankBadge rank={profile.clan_rank} />}
           </div>
