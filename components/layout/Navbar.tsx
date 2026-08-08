@@ -1,18 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CLAN_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { NavDropdown } from "./NavDropdown";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { useIsStaff } from "@/lib/use-is-staff";
 import type { User } from "@supabase/supabase-js";
+
+interface SubNavItem {
+  href: string;
+  label: string;
+  // Hides this item from the nav entirely for non-staff, rather than
+  // showing it and letting the page's own gate screen turn people away --
+  // purely a UI convenience (see lib/use-is-staff.ts), the real access
+  // check still lives server-side on each page.
+  requiredTier?: "staff";
+}
 
 type NavItem =
   | { type: "link"; href: string; label: string }
-  | { type: "dropdown"; label: string; items: { href: string; label: string }[] };
+  | { type: "dropdown"; label: string; items: SubNavItem[] };
 
 const NAV_ITEMS: NavItem[] = [
   { type: "link", href: "/", label: "Home" },
@@ -22,7 +33,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Members",
     items: [
       { href: "/gn0mebook", label: "Gn0meBook" },
-      { href: "/staff-handbook", label: "Staff Handbook" },
+      { href: "/staff-handbook", label: "Staff Handbook", requiredTier: "staff" },
       { href: "/members", label: "Member List" },
       { href: "/leaderboard", label: "Leaderboard" },
       { href: "/competitions", label: "Competitions" },
@@ -50,27 +61,40 @@ const NAV_ITEMS: NavItem[] = [
     type: "dropdown",
     label: "Bank",
     items: [
-      { href: "/loans", label: "Browse Loans" },
-      { href: "/loans/apply", label: "Request a Loan" },
+      { href: "/loans", label: "Browse Loans", requiredTier: "staff" },
+      { href: "/loans/apply", label: "Request a Loan", requiredTier: "staff" },
     ],
   },
   { type: "link", href: "/about", label: "About" },
 ];
-
-// Flattened for the mobile menu -- section headers for dropdown groups,
-// their items indented directly beneath (no nested accordion; the whole
-// mobile menu is already one big collapsible panel).
-const MOBILE_NAV_ITEMS: { href: string; label: string; group?: string }[] = NAV_ITEMS.flatMap((item) =>
-  item.type === "link"
-    ? [{ href: item.href, label: item.label }]
-    : item.items.map((sub) => ({ href: sub.href, label: sub.label, group: item.label }))
-);
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const isStaff = useIsStaff();
+
+  const visibleNavItems = useMemo(() => {
+    return NAV_ITEMS.map((item) => {
+      if (item.type === "link") return item;
+      const items = item.items.filter((sub) => !sub.requiredTier || isStaff);
+      return items.length > 0 ? { ...item, items } : null;
+    }).filter((item): item is NavItem => item !== null);
+  }, [isStaff]);
+
+  // Flattened for the mobile menu -- section headers for dropdown groups,
+  // their items indented directly beneath (no nested accordion; the whole
+  // mobile menu is already one big collapsible panel).
+  const mobileNavItems = useMemo<{ href: string; label: string; group?: string }[]>(
+    () =>
+      visibleNavItems.flatMap((item) =>
+        item.type === "link"
+          ? [{ href: item.href, label: item.label }]
+          : item.items.map((sub) => ({ href: sub.href, label: sub.label, group: item.label }))
+      ),
+    [visibleNavItems]
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -119,7 +143,7 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((item) =>
+            {visibleNavItems.map((item) =>
               item.type === "link" ? (
                 <Link
                   key={item.href}
@@ -184,8 +208,8 @@ export function Navbar() {
             mobileOpen ? "max-h-[800px] pb-4" : "max-h-0"
           )}
         >
-          {MOBILE_NAV_ITEMS.map((link, i) => {
-            const isNewGroup = link.group && MOBILE_NAV_ITEMS[i - 1]?.group !== link.group;
+          {mobileNavItems.map((link, i) => {
+            const isNewGroup = link.group && mobileNavItems[i - 1]?.group !== link.group;
             return (
               <div key={link.href}>
                 {isNewGroup && (
