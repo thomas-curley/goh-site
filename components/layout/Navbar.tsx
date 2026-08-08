@@ -86,7 +86,7 @@ export function Navbar() {
   // Flattened for the mobile menu -- section headers for dropdown groups,
   // their items indented directly beneath (no nested accordion; the whole
   // mobile menu is already one big collapsible panel).
-  const mobileNavItems = useMemo(
+  const mobileNavItems = useMemo<{ href: string; label: string; group?: string }[]>(
     () =>
       visibleNavItems.flatMap((item) =>
         item.type === "link"
