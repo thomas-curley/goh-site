@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
+import { ChannelSelector } from "@/components/admin/ChannelSelector";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -257,14 +258,14 @@ export default function AdminPollsPage() {
             <p className="text-xs text-iron-grey mt-1">Hours (max 768 / 32 days)</p>
           </div>
 
-          <div>
-            <label className={labelClass}>Post To (optional)</label>
+          <div className="space-y-2">
+            <ChannelSelector value={destination} onChange={setDestination} label="Post To (optional)" allowBlank />
             <input
               type="text"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              className={`${inputClass} font-mono text-sm`}
-              placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+              className={`${inputClass} font-mono text-xs`}
+              placeholder="Or paste a link/ID manually"
             />
           </div>
 

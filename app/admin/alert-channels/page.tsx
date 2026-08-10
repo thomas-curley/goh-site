@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ChannelSelector } from "@/components/admin/ChannelSelector";
 
 interface FeatureRow {
   key: string;
@@ -83,13 +84,18 @@ export default function AlertChannelsPage() {
         {features.map((f) => (
           <Card key={f.key} hover={false}>
             <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-              <div className="flex-1">
-                <label className="block text-sm font-semibold text-bark-brown mb-1">{f.label}</label>
+              <div className="flex-1 space-y-2">
+                <ChannelSelector
+                  value={drafts[f.key] ?? ""}
+                  onChange={(id) => setDrafts((prev) => ({ ...prev, [f.key]: id }))}
+                  label={f.label}
+                  allowBlank
+                />
                 <input
                   type="text"
                   value={drafts[f.key] ?? ""}
                   onChange={(e) => setDrafts((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                  placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+                  placeholder="Or paste a link/ID manually"
                   className={inputClass}
                 />
                 <p className="text-xs text-iron-grey mt-1">
