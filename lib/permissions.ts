@@ -87,6 +87,11 @@ export const PERMISSIONS = {
     label: "Manage Staff Handbook",
     description: "Create and edit Staff Handbook pages",
   },
+  manage_payouts: {
+    key: "manage_payouts",
+    label: "Manage Prize Payouts",
+    description: "Track and mark competition/raffle/giveaway winners as paid",
+  },
   manage_loans: {
     key: "manage_loans",
     label: "Manage Loan Board",

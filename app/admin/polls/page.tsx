@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
+import { ChannelSelector } from "@/components/admin/ChannelSelector";
+import { downloadXlsx, slugifyFilename, type SheetCell } from "@/lib/export-xlsx";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -34,6 +36,24 @@ const DURATION_PRESETS = [
   { label: "1 Week", hours: 168 },
   { label: "2 Weeks", hours: 336 },
 ];
+
+function exportPollResults(results: PollResults) {
+  const summaryRows: SheetCell[][] = [
+    ["Question", results.question],
+    ["Total Votes", results.totalVotes],
+    ["Status", results.isFinalized ? "Closed" : "Open"],
+    ["Allows Multiple Choices", results.allowMultiselect ? "Yes" : "No"],
+  ];
+  const resultsRows: SheetCell[][] = [
+    ["Option", "Votes", "Share"],
+    ...results.options.map((o) => [o.text, o.count, results.totalVotes > 0 ? `${Math.round((o.count / results.totalVotes) * 100)}%` : "0%"] as SheetCell[]),
+  ];
+
+  downloadXlsx(`poll-${slugifyFilename(results.question)}`, [
+    { name: "Summary", rows: summaryRows },
+    { name: "Results", rows: resultsRows },
+  ]);
+}
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 const labelClass = "block text-sm font-semibold text-bark-brown mb-1";
@@ -257,14 +277,14 @@ export default function AdminPollsPage() {
             <p className="text-xs text-iron-grey mt-1">Hours (max 768 / 32 days)</p>
           </div>
 
-          <div>
-            <label className={labelClass}>Post To (optional)</label>
+          <div className="space-y-2">
+            <ChannelSelector value={destination} onChange={setDestination} label="Post To (optional)" allowBlank />
             <input
               type="text"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              className={`${inputClass} font-mono text-sm`}
-              placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+              className={`${inputClass} font-mono text-xs`}
+              placeholder="Or paste a link/ID manually"
             />
           </div>
 
@@ -339,6 +359,9 @@ export default function AdminPollsPage() {
                         <div className="flex flex-wrap items-center gap-3 mt-4">
                           <Button size="sm" variant="ghost" onClick={() => refreshResults(poll.id)}>
                             Refresh
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => exportPollResults(pollResults)}>
+                            Export to Excel
                           </Button>
                           {!pollResults.isFinalized && (
                             <Button

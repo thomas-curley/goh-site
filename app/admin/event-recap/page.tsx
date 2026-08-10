@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { ChannelSelector } from "@/components/admin/ChannelSelector";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 import { PageTour } from "@/components/admin/tour/PageTour";
@@ -330,20 +331,16 @@ export default function EventRecapPage() {
                   ))}
                 </select>
               </div>
-              <div data-tour="recap-destination">
-                <label className={labelClass}>Post To (forum post link or ID) *</label>
+              <div data-tour="recap-destination" className="space-y-2">
+                <ChannelSelector value={destination} onChange={setDestination} label="Post To (forum post) *" />
                 <input
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   required
-                  className={`${inputClass} font-mono text-sm`}
-                  placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+                  className={`${inputClass} font-mono text-xs`}
+                  placeholder="Or paste a link/ID manually (for an archived thread)"
                 />
-                <p className="text-xs text-iron-grey mt-1">
-                  Open the event&apos;s forum post in Discord, right-click any message in it (or the post
-                  itself) → <span className="font-semibold">Copy Message Link</span>, and paste it here.
-                </p>
               </div>
               <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
                 <input

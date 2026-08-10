@@ -8,6 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { ACCESS_LEVEL_LABELS, LIKERT_LABELS, QUESTION_TYPE_LABELS, type AccessLevel, type LikertScale, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
+import { downloadXlsx, slugifyFilename, type SheetCell } from "@/lib/export-xlsx";
 
 interface Survey {
   id: string;
@@ -35,6 +36,40 @@ const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light b
 
 function newQuestion(): SurveyQuestion {
   return { id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, type: "text", prompt: "", options: [], required: false };
+}
+
+function formatAnswerForExport(question: SurveyQuestion, value: string | number | string[] | null | undefined): SheetCell {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.join("; ");
+  if (question.type === "likert" && typeof value === "number") {
+    const labels = LIKERT_LABELS[question.scale ?? 5];
+    return labels[value - 1] ?? value;
+  }
+  return value;
+}
+
+function exportSurveyResults(survey: Survey, responses: SurveyResponse[]) {
+  const responseHeader: SheetCell[] = ["Respondent", "Submitted At", "IP Address", ...survey.questions.map((q) => q.prompt)];
+  const responseRows: SheetCell[][] = responses.map((r) => [
+    r.respondent_name || "Anonymous",
+    new Date(r.submitted_at).toLocaleString(),
+    r.ip_address ?? "",
+    ...survey.questions.map((q) => formatAnswerForExport(q, r.answers.find((a) => a.question_id === q.id)?.value)),
+  ]);
+
+  const questionHeader: SheetCell[] = ["#", "Prompt", "Type", "Required", "Options"];
+  const questionRows: SheetCell[][] = survey.questions.map((q, i) => [
+    i + 1,
+    q.prompt,
+    QUESTION_TYPE_LABELS[q.type],
+    q.required ? "Yes" : "No",
+    (q.options ?? []).join("; "),
+  ]);
+
+  downloadXlsx(`survey-${slugifyFilename(survey.title)}`, [
+    { name: "Responses", rows: [responseHeader, ...responseRows] },
+    { name: "Questions", rows: [questionHeader, ...questionRows] },
+  ]);
 }
 
 export default function AdminSurveysPage() {
@@ -362,6 +397,9 @@ export default function AdminSurveysPage() {
                       </Button>
                       <Button size="sm" variant="ghost" disabled={togglingId === survey.id} onClick={() => toggleActive(survey)}>
                         {togglingId === survey.id ? "..." : survey.is_active ? "Close Survey" : "Reopen Survey"}
+                      </Button>
+                      <Button size="sm" variant="ghost" disabled={responses.length === 0} onClick={() => exportSurveyResults(survey, responses)}>
+                        Export to Excel
                       </Button>
                     </div>
 

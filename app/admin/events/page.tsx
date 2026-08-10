@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { ChannelSelector } from "@/components/admin/ChannelSelector";
 import { EventFormFields, EMPTY_FORM, eventTemplateData } from "@/components/admin/EventFormFields";
 import type { EventForm } from "@/components/admin/EventFormFields";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -139,19 +140,15 @@ export default function AdminEventsPage() {
                     The form below only shows the fields this template uses — pick a different one to see more.
                   </p>
                 )}
-                <div>
-                  <label className="block text-sm font-semibold text-bark-brown mb-1">Post To (optional)</label>
+                <div className="space-y-2">
+                  <ChannelSelector value={destination} onChange={setDestination} label="Post To (optional)" allowBlank />
                   <input
                     type="text"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    className="w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green"
-                    placeholder="https://discord.com/channels/.../.../... or a channel/thread ID"
+                    className="w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono text-xs focus:outline-none focus:ring-2 focus:ring-gnome-green"
+                    placeholder="Or paste a link/ID manually (leave blank to use the default events channel)"
                   />
-                  <p className="text-xs text-iron-grey mt-1">
-                    Leave blank to use the default events channel. To post somewhere else, right-click a
-                    message in that channel or thread → Copy Message Link, and paste it here.
-                  </p>
                 </div>
               </div>
             )}
