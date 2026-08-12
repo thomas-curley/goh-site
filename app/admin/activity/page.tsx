@@ -344,7 +344,7 @@ export default function AdminActivityPage() {
                     <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "#555" }} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
-                      formatter={(v: number) => [v.toLocaleString(), "XP Gained"]}
+                      formatter={(v) => [Number(v).toLocaleString(), "XP Gained"]}
                     />
                     <Bar dataKey="totalGained" name="XP Gained" fill="#2D5016" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -365,7 +365,7 @@ export default function AdminActivityPage() {
                     <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "#555" }} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
-                      formatter={(v: number) => [v.toLocaleString(), "KC Gained"]}
+                      formatter={(v) => [Number(v).toLocaleString(), "KC Gained"]}
                     />
                     <Bar dataKey="totalGained" name="KC Gained" fill="#8B1A1A" radius={[0, 4, 4, 0]} />
                   </BarChart>
