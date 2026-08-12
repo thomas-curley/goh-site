@@ -1,34 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getGroupMembers, getGroupGains, normalizeRsn } from "@/lib/wom";
+import { resolveRange } from "@/lib/activity-range";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   return createClient(url, key);
-}
-
-function resolveRange(searchParams: URLSearchParams): { start: Date; end: Date } {
-  const startParam = searchParams.get("start");
-  const endParam = searchParams.get("end");
-  const period = searchParams.get("period") ?? "month";
-
-  const end = endParam ? new Date(endParam) : new Date();
-
-  if (startParam) return { start: new Date(startParam), end };
-
-  const start = new Date(end);
-  if (period === "week") {
-    start.setDate(start.getDate() - 7);
-  } else if (period === "all") {
-    // WOM has no canned "all time" gains period — go back far enough that
-    // it's effectively the group's whole history.
-    start.setFullYear(start.getFullYear() - 10);
-  } else {
-    start.setMonth(start.getMonth() - 1);
-  }
-  return { start, end };
 }
 
 export type Focus = "skiller" | "bosser" | "balanced" | "inactive";

@@ -1,4 +1,4 @@
-import { WOMClient } from "@wise-old-man/utils";
+import { WOMClient, SKILLS, BOSSES, SkillProps, BossProps } from "@wise-old-man/utils";
 import { WOM_GROUP_ID, WOM_BASE_URL } from "./constants";
 
 const womClient = new WOMClient({
@@ -119,8 +119,8 @@ export interface GroupGainEntry {
   gained: number;
 }
 
-/** Per-member gained amount for one metric (e.g. "ehp"/"ehb") over a date range. */
-export async function getGroupGains(metric: "ehp" | "ehb", startDate: Date, endDate: Date, limit: number = 500): Promise<GroupGainEntry[]> {
+/** Per-member gained amount for one metric (e.g. "ehp", "ehb", a skill, or a boss) over a date range. */
+export async function getGroupGains(metric: string, startDate: Date, endDate: Date, limit: number = 500): Promise<GroupGainEntry[]> {
   try {
     const result = await womClient.groups.getGroupGains(WOM_GROUP_ID, { metric: metric as never, startDate, endDate }, { limit });
     return result.map((r) => ({
@@ -132,6 +132,45 @@ export async function getGroupGains(metric: "ehp" | "ehb", startDate: Date, endD
     console.error(`Failed to fetch group gains for ${metric}:`, error);
     return [];
   }
+}
+
+export interface MetricGainTotal {
+  metric: string;
+  metricType: "skill" | "boss";
+  name: string;
+  totalGained: number;
+}
+
+/**
+ * Clan-wide total XP/KC gained for every skill and boss over a date range --
+ * "as a whole," not per-member. WOM has no single call that returns every
+ * metric at once, so this is ~79 sequential-in-small-batches getGroupGains
+ * calls (one per skill/boss), meant to run from a daily cron, not live on a
+ * page load. "overall" is skipped since it's just the sum of every skill
+ * and would dwarf everything else in a "what's the clan grinding" ranking.
+ */
+export async function getAllSkillBossGains(startDate: Date, endDate: Date): Promise<MetricGainTotal[]> {
+  const metrics: { key: string; type: "skill" | "boss"; name: string }[] = [
+    ...SKILLS.filter((s) => s !== "overall").map((s) => ({ key: s, type: "skill" as const, name: SkillProps[s].name })),
+    ...BOSSES.map((b) => ({ key: b, type: "boss" as const, name: BossProps[b].name })),
+  ];
+
+  const BATCH_SIZE = 8;
+  const results: MetricGainTotal[] = [];
+
+  for (let i = 0; i < metrics.length; i += BATCH_SIZE) {
+    const batch = metrics.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map(async ({ key, type, name }) => {
+        const gains = await getGroupGains(key, startDate, endDate);
+        const totalGained = gains.reduce((sum, g) => sum + Math.max(0, g.gained), 0);
+        return { metric: key, metricType: type, name, totalGained };
+      })
+    );
+    results.push(...batchResults);
+  }
+
+  return results;
 }
 
 export interface CreateCompetitionResult {

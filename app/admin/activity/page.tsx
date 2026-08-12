@@ -8,6 +8,7 @@ import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import type { ActivityMember, Focus } from "@/app/api/admin/activity/route";
+import type { MetricRanking } from "@/app/api/admin/activity/skills-bosses/route";
 
 type Preset = "week" | "month" | "all" | "custom";
 
@@ -71,6 +72,31 @@ export default function AdminActivityPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [linkedFilter, setLinkedFilter] = useState<Set<LinkedFilter>>(new Set(ALL_LINKED_FILTERS));
   const [focusFilter, setFocusFilter] = useState<Set<Focus>>(new Set(ALL_FOCUS_FILTERS));
+  const [topSkills, setTopSkills] = useState<MetricRanking[]>([]);
+  const [topBosses, setTopBosses] = useState<MetricRanking[]>([]);
+  const [gainsAsOf, setGainsAsOf] = useState<string | null>(null);
+
+  const loadSkillsBosses = useCallback(async (activePreset: Preset, start: string, end: string) => {
+    const params = new URLSearchParams();
+    if (activePreset === "custom") {
+      if (start) params.set("start", new Date(start).toISOString());
+      if (end) params.set("end", new Date(end + "T23:59:59").toISOString());
+    } else {
+      params.set("period", activePreset);
+    }
+
+    try {
+      const res = await fetch(`/api/admin/activity/skills-bosses?${params.toString()}`);
+      const data = await res.json();
+      if (res.ok) {
+        setTopSkills((data.skills ?? []).slice(0, 10));
+        setTopBosses((data.bosses ?? []).slice(0, 10));
+        setGainsAsOf(data.asOfDate ?? null);
+      }
+    } catch {
+      // Non-critical: the rest of the dashboard is still usable if this fails.
+    }
+  }, []);
 
   const load = useCallback(async (activePreset: Preset, start: string, end: string) => {
     setLoading(true);
@@ -99,11 +125,15 @@ export default function AdminActivityPage() {
     }
   }, []);
 
-  useEffect(() => { load(preset, customStart, customEnd); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load(preset, customStart, customEnd);
+    loadSkillsBosses(preset, customStart, customEnd);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectPreset = (p: Preset) => {
     setPreset(p);
     load(p, customStart, customEnd);
+    loadSkillsBosses(p, customStart, customEnd);
   };
 
   const applyCustomRange = (e: React.FormEvent) => {
@@ -111,6 +141,7 @@ export default function AdminActivityPage() {
     if (!customStart && !customEnd) return;
     setPreset("custom");
     load("custom", customStart, customEnd);
+    loadSkillsBosses("custom", customStart, customEnd);
   };
 
   const toggleSort = (key: SortKey) => {
@@ -297,6 +328,56 @@ export default function AdminActivityPage() {
               </ResponsiveContainer>
             </Card>
           </div>
+
+          {/* Skills & Bosses breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card hover={false}>
+              <h3 className="font-display text-lg text-bark-brown mb-1">Top Skills</h3>
+              <p className="text-xs text-iron-grey mb-4">Most XP gained clan-wide this range</p>
+              {topSkills.length === 0 ? (
+                <p className="text-sm text-iron-grey">No skill gains recorded for this range yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={topSkills} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: "#555" }} />
+                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "#555" }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
+                      formatter={(v) => [Number(v).toLocaleString(), "XP Gained"]}
+                    />
+                    <Bar dataKey="totalGained" name="XP Gained" fill="#2D5016" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </Card>
+
+            <Card hover={false}>
+              <h3 className="font-display text-lg text-bark-brown mb-1">Top Bosses</h3>
+              <p className="text-xs text-iron-grey mb-4">Most KC gained clan-wide this range</p>
+              {topBosses.length === 0 ? (
+                <p className="text-sm text-iron-grey">No boss gains recorded for this range yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={topBosses} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: "#555" }} />
+                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "#555" }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
+                      formatter={(v) => [Number(v).toLocaleString(), "KC Gained"]}
+                    />
+                    <Bar dataKey="totalGained" name="KC Gained" fill="#8B1A1A" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </Card>
+          </div>
+          {(topSkills.length > 0 || topBosses.length > 0) && (
+            <p className="text-xs text-iron-grey -mt-4 mb-6">
+              Skill/boss gains are captured once a day, not live{gainsAsOf ? ` — updated as of ${new Date(gainsAsOf).toLocaleDateString()}` : ""}.
+            </p>
+          )}
 
           {/* Full roster table */}
           <Card hover={false}>

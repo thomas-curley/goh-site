@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { normalizeRsn } from "@/lib/wom";
+import { normalizeRsn, getAllSkillBossGains } from "@/lib/wom";
+
+// ~79 skill/boss gains calls to WOM (batched 8-at-a-time in getAllSkillBossGains)
+// can take longer than the platform default -- give this route more room.
+export const maxDuration = 60;
 
 /**
  * Captures a daily clan snapshot. Triggered two ways:
@@ -62,6 +66,34 @@ async function runCapture() {
       }
     }
 
+    const today = new Date().toISOString().split("T")[0];
+
+    // Clan-wide (not per-member) daily totals of XP/KC gained per skill and
+    // boss, for the Player Activity dashboard's "what's the clan grinding"
+    // ranking -- there's no live single call for this across every metric,
+    // so it's captured once a day here rather than computed on page load.
+    let skillBossMetricsRecorded = 0;
+    try {
+      const gainsEnd = new Date();
+      const gainsStart = new Date(gainsEnd.getTime() - 24 * 60 * 60 * 1000);
+      const metricTotals = await getAllSkillBossGains(gainsStart, gainsEnd);
+      const rows = metricTotals.map((m) => ({
+        date: today,
+        metric: m.metric,
+        metric_type: m.metricType,
+        total_gained: Math.round(m.totalGained),
+      }));
+      if (rows.length > 0) {
+        const { error: gainsError } = await supabase
+          .from("skill_boss_gains_daily")
+          .upsert(rows, { onConflict: "date,metric" });
+        if (gainsError) throw gainsError;
+        skillBossMetricsRecorded = rows.length;
+      }
+    } catch (err) {
+      console.error("Skill/boss gains capture failed:", err);
+    }
+
     // Count registered users and linked RSNs
     const { count: registeredUsers } = await supabase
       .from("user_profiles")
@@ -81,8 +113,6 @@ async function runCapture() {
       .from("events")
       .select("*", { count: "exact", head: true })
       .gte("start_time", monthStart.toISOString());
-
-    const today = new Date().toISOString().split("T")[0];
 
     const { error } = await supabase
       .from("clan_snapshots")
@@ -109,6 +139,7 @@ async function runCapture() {
       registered_users: registeredUsers,
       linked_rsns: linkedRsns,
       ranks_synced: ranksSynced,
+      skill_boss_metrics_recorded: skillBossMetricsRecorded,
     });
   } catch (err) {
     console.error("Snapshot capture error:", err);
