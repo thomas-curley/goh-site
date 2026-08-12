@@ -75,6 +75,7 @@ export default function AdminActivityPage() {
   const [topSkills, setTopSkills] = useState<MetricRanking[]>([]);
   const [topBosses, setTopBosses] = useState<MetricRanking[]>([]);
   const [gainsAsOf, setGainsAsOf] = useState<string | null>(null);
+  const [capturing, setCapturing] = useState(false);
 
   const loadSkillsBosses = useCallback(async (activePreset: Preset, start: string, end: string) => {
     const params = new URLSearchParams();
@@ -134,6 +135,16 @@ export default function AdminActivityPage() {
     setPreset(p);
     load(p, customStart, customEnd);
     loadSkillsBosses(p, customStart, customEnd);
+  };
+
+  const captureNow = async () => {
+    setCapturing(true);
+    try {
+      await fetch("/api/snapshots/capture", { method: "POST" });
+      await loadSkillsBosses(preset, customStart, customEnd);
+    } finally {
+      setCapturing(false);
+    }
   };
 
   const applyCustomRange = (e: React.FormEvent) => {
@@ -381,9 +392,14 @@ export default function AdminActivityPage() {
 
           {/* Full roster table */}
           <Card hover={false}>
-            <h3 className="font-display text-lg text-bark-brown mb-4">
-              Full Roster ({sortedMembers.length}{sortedMembers.length !== members.length ? ` of ${members.length}` : ""})
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg text-bark-brown">
+                Full Roster ({sortedMembers.length}{sortedMembers.length !== members.length ? ` of ${members.length}` : ""})
+              </h3>
+              <Button variant="ghost" size="sm" onClick={captureNow} disabled={capturing}>
+                {capturing ? "Updating..." : "🔄 Update"}
+              </Button>
+            </div>
 
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-sm">
               <div className="flex items-center gap-3">
