@@ -6,6 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import { Button } from "@/components/ui/Button";
+import { useIsStaff } from "@/lib/use-is-staff";
 
 interface CalendarEvent {
   id: string;
@@ -58,6 +59,8 @@ const FILTER_TYPES: { key: string; label: string; color: string }[] = [
 
 export function EventCalendar({ events }: EventCalendarProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const isStaff = useIsStaff();
   // Empty = nothing hidden = every type shown by default; clicking a legend
   // chip toggles that type out (or back in) rather than the other way
   // around, so filtering is something you opt into, not a default limit.
@@ -70,6 +73,13 @@ export function EventCalendar({ events }: EventCalendarProps) {
       else next.add(key);
       return next;
     });
+  };
+
+  const handleCopyCheckInLink = async (eventId: string) => {
+    const url = `${window.location.origin}/events/${eventId}/signup`;
+    await navigator.clipboard.writeText(url);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   const visibleEvents = events.filter(
@@ -120,7 +130,10 @@ export function EventCalendar({ events }: EventCalendarProps) {
           events={coloredEvents}
           eventClick={(info) => {
             const event = visibleEvents.find((e) => e.id === info.event.id);
-            if (event) setSelectedEvent(event);
+            if (event) {
+              setSelectedEvent(event);
+              setLinkCopied(false);
+            }
           }}
           height="auto"
           eventDisplay="block"
@@ -259,6 +272,15 @@ export function EventCalendar({ events }: EventCalendarProps) {
                 <a href={`/events/${selectedEvent.id}/signup`} className="block mt-4">
                   <Button className="w-full">Check In</Button>
                 </a>
+                {isStaff && (
+                  <Button
+                    variant="ghost"
+                    className="w-full mt-2"
+                    onClick={() => handleCopyCheckInLink(selectedEvent.id)}
+                  >
+                    {linkCopied ? "Copied!" : "Copy Check-In Link"}
+                  </Button>
+                )}
               </>
             )}
           </div>

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ACCESS_LEVEL_LABELS, type AccessLevel } from "@/lib/clan-access";
 import { WEEKDAYS, WEEKDAY_LABELS } from "@/lib/availability";
+import type { WeekdayAvailability } from "@/app/api/admin/availability/weekly/route";
 
 interface AvailabilityPoll {
   id: string;
@@ -62,6 +63,12 @@ export default function AdminAvailabilityPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [weeklyAvailability, setWeeklyAvailability] = useState<WeekdayAvailability[]>([]);
+  const [respondedCount, setRespondedCount] = useState(0);
+  const [totalLinked, setTotalLinked] = useState(0);
+  const [weeklyLoading, setWeeklyLoading] = useState(true);
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+
   const loadPolls = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/availability");
@@ -70,7 +77,20 @@ export default function AdminAvailabilityPage() {
     setLoading(false);
   }, []);
 
+  const loadWeeklyAvailability = useCallback(async () => {
+    setWeeklyLoading(true);
+    const res = await fetch("/api/admin/availability/weekly");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setWeeklyAvailability(data.weekdays ?? []);
+      setRespondedCount(data.respondedCount ?? 0);
+      setTotalLinked(data.totalLinked ?? 0);
+    }
+    setWeeklyLoading(false);
+  }, []);
+
   useEffect(() => { loadPolls(); }, [loadPolls]);
+  useEffect(() => { loadWeeklyAvailability(); }, [loadWeeklyAvailability]);
 
   const updateDay = (i: number, value: string) => setDays((prev) => prev.map((d, idx) => (idx === i ? value : d)));
   const addDay = () => setDays((prev) => [...prev, todayStr()]);
@@ -151,6 +171,65 @@ export default function AdminAvailabilityPage() {
       <p className="text-bark-brown-light mb-6">
         Pick candidate days and a time window, share the link, and review the results as a heatmap to find the best time for an event.
       </p>
+
+      <Card hover={false} className="mb-8">
+        <h3 className="font-display text-lg text-bark-brown mb-1">Clan-Wide Weekly Availability</h3>
+        <p className="text-xs text-iron-grey mb-4">
+          Standing, recurring availability members set on their own Account page -- not tied to a poll.
+        </p>
+
+        {weeklyLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-4 border-parchment-dark border-t-gnome-green rounded-full animate-spin" />
+          </div>
+        ) : respondedCount === 0 ? (
+          <p className="text-sm text-iron-grey">
+            No one has set their weekly availability yet — it&apos;s on their Account page.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              {weeklyAvailability.map((d) => {
+                const maxCount = Math.max(1, ...weeklyAvailability.map((w) => w.count));
+                return (
+                  <div key={d.weekday}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedDay((prev) => (prev === d.weekday ? null : d.weekday))}
+                      className="w-full text-left cursor-pointer"
+                    >
+                      <p className="text-xs font-semibold text-bark-brown mb-1">{WEEKDAY_LABELS[d.weekday]}</p>
+                      <div className="h-2 rounded-full bg-parchment-dark overflow-hidden mb-1">
+                        <div
+                          className="h-full bg-gnome-green rounded-full"
+                          style={{ width: `${(d.count / maxCount) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-sm font-stats text-gnome-green">{d.count}</p>
+                    </button>
+                    {expandedDay === d.weekday && (
+                      <ul className="mt-2 space-y-0.5">
+                        {d.members.length === 0 ? (
+                          <li className="text-xs text-iron-grey">No one</li>
+                        ) : (
+                          d.members.map((m, i) => (
+                            <li key={i} className="text-xs text-bark-brown-light truncate">
+                              {m.rsn ?? m.discordUsername}
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-iron-grey mt-4">
+              Based on {respondedCount} of {totalLinked} linked members who&apos;ve set their availability.
+            </p>
+          </>
+        )}
+      </Card>
 
       <Card hover={false} className="mb-8">
         <h3 className="font-display text-lg text-bark-brown mb-4">New Poll</h3>
