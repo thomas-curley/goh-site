@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { WEEKDAYS, WEEKDAY_LABELS } from "@/lib/availability";
 
 interface UserProfile {
   discord_id: string;
@@ -13,6 +14,7 @@ interface UserProfile {
   rsn_verified: boolean;
   clan_rank: string | null;
   linked_at: string | null;
+  available_weekdays: string[] | null;
 }
 
 interface AccountFormProps {
@@ -28,6 +30,9 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const [status, setStatus] = useState<{ type: "success" | "error" | "taken"; message: string; takenBy?: string } | null>(null);
   const [resetReason, setResetReason] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
+  const [weekdays, setWeekdays] = useState<string[]>([]);
+  const [savingAvailability, setSavingAvailability] = useState(false);
+  const [availabilityStatus, setAvailabilityStatus] = useState<string | null>(null);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -41,6 +46,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
     if (data) {
       setProfile(data);
       if (data.rsn) setRsn(data.rsn);
+      setWeekdays(data.available_weekdays ?? []);
     }
     setLoading(false);
   }, [supabase, userId]);
@@ -198,6 +204,23 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
     setSaving(false);
   };
 
+  const toggleWeekday = (day: string) => {
+    setWeekdays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+    setAvailabilityStatus(null);
+  };
+
+  const handleSaveAvailability = async () => {
+    setSavingAvailability(true);
+    setAvailabilityStatus(null);
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({ available_weekdays: weekdays, updated_at: new Date().toISOString() })
+      .eq("id", userId);
+
+    setAvailabilityStatus(error ? "Failed to save. Try again." : "Availability saved.");
+    setSavingAvailability(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -326,6 +349,40 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
               </Button>
             </form>
           </div>
+        )}
+      </Card>
+
+      {/* Weekly Availability */}
+      <Card hover={false} className="mt-6">
+        <h2 className="font-display text-xl text-bark-brown mb-2">Weekly Availability</h2>
+        <p className="text-sm text-bark-brown-light mb-4">
+          Which days of the week are you generally around? This is generic and recurring —
+          not tied to any specific date or event — and helps staff spot clan-wide patterns
+          when picking good times for things.
+        </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {WEEKDAYS.map((day) => (
+            <button
+              key={day}
+              type="button"
+              onClick={() => toggleWeekday(day)}
+              className={`px-3 py-1.5 rounded-md border-2 text-sm font-semibold transition-colors cursor-pointer ${
+                weekdays.includes(day)
+                  ? "bg-gnome-green/15 border-gnome-green text-gnome-green"
+                  : "border-bark-brown-light text-bark-brown-light hover:border-gnome-green"
+              }`}
+            >
+              {WEEKDAY_LABELS[day]}
+            </button>
+          ))}
+        </div>
+        <Button onClick={handleSaveAvailability} disabled={savingAvailability} size="sm">
+          {savingAvailability ? "Saving..." : "Save Availability"}
+        </Button>
+        {availabilityStatus && (
+          <p className={`text-sm mt-3 ${availabilityStatus.startsWith("Failed") ? "text-red-accent" : "text-gnome-green"}`}>
+            {availabilityStatus}
+          </p>
         )}
       </Card>
 
