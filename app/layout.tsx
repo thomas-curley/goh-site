@@ -62,6 +62,7 @@ export const metadata: Metadata = {
     "bosses",
     "community",
   ],
+  other: ADSENSE_CLIENT_ID ? { "google-adsense-account": ADSENSE_CLIENT_ID } : undefined,
 };
 
 export default function RootLayout({
