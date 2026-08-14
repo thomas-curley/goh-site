@@ -16,6 +16,15 @@ const SITE_TOOLS = [
   },
 ];
 
+const SPOTLIGHT_TOOLS = [
+  {
+    name: "OSRS Portal",
+    url: "https://osrsportal.com",
+    description: "A great lineup of OSRS tools and calculators — our favorite is their Mastering Mixology helper below.",
+    highlight: { name: "Mastering Mixology Tool", url: "https://osrsportal.com/mixology" },
+  },
+];
+
 const COMMUNITY_TOOLS = [
   {
     name: "Wise Old Man",
@@ -41,6 +50,11 @@ const COMMUNITY_TOOLS = [
     name: "RuneLite",
     url: "https://runelite.net",
     description: "The most popular OSRS client. Must-have plugins: Quest Helper, Inventory Setups, Bank Tags.",
+  },
+  {
+    name: "Boat Planner",
+    url: "https://boatplannerrs.com",
+    description: "Plan out your OSRS boat routes.",
   },
 ];
 
@@ -81,6 +95,33 @@ export default function ToolsPage() {
                 <p className="text-xs text-iron-grey mt-1">{tool.url}</p>
               </Card>
             </a>
+          ))}
+        </div>
+      </section>
+
+      {/* Community Spotlight */}
+      <section className="mb-10">
+        <h2 className="font-display text-2xl text-bark-brown mb-4">Community Spotlight</h2>
+        <div className="space-y-3">
+          {SPOTLIGHT_TOOLS.map((tool) => (
+            <Card key={tool.name} className="mb-3">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <a href={tool.url} target="_blank" rel="noopener noreferrer">
+                    <h3 className="font-semibold text-bark-brown hover:text-gnome-green transition-colors">{tool.name}</h3>
+                  </a>
+                  <p className="text-xs text-bark-brown-light mt-1">{tool.description}</p>
+                </div>
+                <a
+                  href={tool.highlight.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-sm px-3 py-1.5 rounded-md bg-gnome-green/15 text-gnome-green font-semibold hover:bg-gnome-green/25 transition-colors"
+                >
+                  {tool.highlight.name} &rarr;
+                </a>
+              </div>
+            </Card>
           ))}
         </div>
       </section>
