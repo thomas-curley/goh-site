@@ -152,42 +152,44 @@ export default function AvailabilityResultsPage() {
         </select>
       </Card>
 
-      <Card hover={false} className="mb-6">
-        <h3 className="font-display text-lg text-bark-brown mb-3">Respondents</h3>
-        {responses.length === 0 ? (
-          <p className="text-sm text-iron-grey">No responses yet.</p>
-        ) : (
-          <ul className="space-y-1.5 text-sm">
-            {responses.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-3">
-                <span className="text-bark-brown">{r.respondent_name || "Anonymous"}</span>
-                <span className="text-iron-grey text-xs shrink-0">
-                  {r.slots.length} slot{r.slots.length === 1 ? "" : "s"} · {new Date(r.submitted_at).toLocaleString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      {topSlots.length > 0 && (
-        <Card hover={false} className="mb-6">
-          <h3 className="font-display text-lg text-bark-brown mb-3">Top Time Slots</h3>
-          <ol className="space-y-2">
-            {topSlots.map(([id, count], i) => (
-              <li key={id} className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-bark-brown">
-                  <span className="font-semibold text-gnome-green mr-2">#{i + 1}</span>
-                  {formatSlotLabel(id)}
-                </span>
-                <span className="text-iron-grey shrink-0">
-                  {count}/{responses.length} available
-                </span>
-              </li>
-            ))}
-          </ol>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card hover={false}>
+          <h3 className="font-display text-lg text-bark-brown mb-3">Respondents</h3>
+          {responses.length === 0 ? (
+            <p className="text-sm text-iron-grey">No responses yet.</p>
+          ) : (
+            <ul className="space-y-1.5 text-sm">
+              {responses.map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3">
+                  <span className="text-bark-brown">{r.respondent_name || "Anonymous"}</span>
+                  <span className="text-iron-grey text-xs shrink-0">
+                    {r.slots.length} slot{r.slots.length === 1 ? "" : "s"} · {new Date(r.submitted_at).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
-      )}
+
+        {topSlots.length > 0 && (
+          <Card hover={false}>
+            <h3 className="font-display text-lg text-bark-brown mb-3">Top Time Slots</h3>
+            <ol className="space-y-2">
+              {topSlots.map(([id, count], i) => (
+                <li key={id} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-bark-brown">
+                    <span className="font-semibold text-gnome-green mr-2">#{i + 1}</span>
+                    {formatSlotLabel(id)}
+                  </span>
+                  <span className="text-iron-grey shrink-0">
+                    {count}/{responses.length} available
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        )}
+      </div>
 
       <Card hover={false} className="mb-6 overflow-x-auto">
         <h3 className="font-display text-lg text-bark-brown mb-3">Heatmap</h3>

@@ -81,6 +81,11 @@ export function Footer() {
 
         <div className="border-t border-bark-brown-light mt-8 pt-6 text-center text-xs text-parchment-dark">
           <p>&copy; {new Date().getFullYear()} {CLAN_NAME}. Not affiliated with Jagex Ltd.</p>
+          <p className="mt-1">
+            <Link href="/privacy" className="hover:text-gold-light transition-colors">
+              Privacy Policy
+            </Link>
+          </p>
         </div>
       </div>
     </footer>
