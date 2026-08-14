@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { MedievalSharp, Merriweather, JetBrains_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { AdBanner } from "@/components/ads/AdBanner";
 import "./globals.css";
+
+const ADSENSE_CLIENT_ID = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
 const medievalSharp = MedievalSharp({
   weight: "400",
@@ -71,8 +75,17 @@ export default function RootLayout({
       className={`${medievalSharp.variable} ${merriweather.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {ADSENSE_CLIENT_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
         <Navbar />
         <main className="flex-1">{children}</main>
+        <AdBanner />
         <Footer />
       </body>
     </html>
