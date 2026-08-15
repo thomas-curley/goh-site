@@ -154,9 +154,10 @@ export async function PUT(
           video_url: data.video_url,
           pingRoles: ping_roles,
         });
-        const allImages: string[] = [];
-        if (data.banner_url) allImages.push(data.banner_url);
-        if (Array.isArray(extra_images)) allImages.push(...extra_images.filter(Boolean));
+        // The banner only goes on the Discord Scheduled Event's calendar
+        // cover (synced above via updateDiscordEvent's image field) -- kept
+        // out of the channel message so it doesn't also show up there.
+        const allImages: string[] = Array.isArray(extra_images) ? extra_images.filter(Boolean) : [];
         await editChannelMessage(channelId, data.discord_message_id, message, allImages.length > 0 ? allImages : undefined);
         sync.eventPostSynced = true;
       } catch (err) {

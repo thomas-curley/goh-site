@@ -137,10 +137,11 @@ export async function POST(request: NextRequest) {
               pingRoles: body.ping_roles,
             });
 
-            // Combine banner + extra images
-            const allImages: string[] = [];
-            if (body.banner_url) allImages.push(body.banner_url);
-            if (Array.isArray(body.extra_images)) allImages.push(...body.extra_images.filter(Boolean));
+            // The banner only goes on the Discord Scheduled Event's calendar
+            // cover (set above via createDiscordEvent's image field) -- it's
+            // deliberately excluded here so it doesn't also show up as an
+            // image in the channel message itself.
+            const allImages: string[] = Array.isArray(body.extra_images) ? body.extra_images.filter(Boolean) : [];
             const posted = await postToDestination(channelId, eventRow.title, message, allImages.length > 0 ? allImages : undefined);
             discordMessageId = posted.messageId;
             discordChannelId = posted.channelId;
