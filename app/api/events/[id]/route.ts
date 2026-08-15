@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage } from "@/lib/discord";
+import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage, urlToDataUri } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 import { getAlertChannel } from "@/lib/alert-channels";
@@ -104,6 +104,8 @@ export async function PUT(
     // Sync to Discord if event has a linked Discord event
     if (data.discord_event_id) {
       try {
+        const bannerDataUri = data.banner_url ? await urlToDataUri(data.banner_url) : null;
+
         await updateDiscordEvent(data.discord_event_id, {
           name: data.title,
           description: data.description ?? undefined,
@@ -114,6 +116,7 @@ export async function PUT(
             location: [data.location, data.meet_location].filter(Boolean).join(" — Meet: ") || "In-game",
           },
           privacy_level: 2,
+          image: bannerDataUri,
         });
       } catch (discordErr) {
         console.error("Discord event update failed:", discordErr);

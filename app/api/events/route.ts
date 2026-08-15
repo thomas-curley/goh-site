@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination } from "@/lib/discord";
+import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination, urlToDataUri } from "@/lib/discord";
 import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
         if (eventRow.show_on_calendar) {
           const endTime = eventRow.end_time ?? new Date(new Date(eventRow.start_time).getTime() + 2 * 60 * 60 * 1000).toISOString();
 
+          const bannerDataUri = body.banner_url ? await urlToDataUri(body.banner_url) : null;
+
           const discordEvent = await createDiscordEvent({
             name: eventRow.title,
             description: formatDiscordEventDescription(eventRow),
@@ -99,6 +101,7 @@ export async function POST(request: NextRequest) {
               location: [eventRow.location, eventRow.meet_location].filter(Boolean).join(" — Meet: ") || "In-game",
             },
             privacy_level: 2,
+            ...(bannerDataUri ? { image: bannerDataUri } : {}),
           });
 
           discordEventId = discordEvent.id;

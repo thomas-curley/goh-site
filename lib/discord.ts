@@ -99,6 +99,26 @@ interface DiscordScheduledEvent {
   entity_type: 3; // External
   entity_metadata?: { location?: string };
   privacy_level: 2; // Guild only
+  image?: string | null; // base64 data URI -- Discord's scheduled-event cover doesn't accept a plain URL
+}
+
+/**
+ * Fetches an image (e.g. a public Supabase Storage URL) and re-encodes it as
+ * a base64 data URI -- required by Discord's scheduled-event `image` field,
+ * which unlike message embeds doesn't accept a plain URL. Returns null on
+ * any failure so a broken/unreachable banner never blocks the rest of event
+ * creation/sync.
+ */
+export async function urlToDataUri(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") ?? "image/png";
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return `data:${contentType};base64,${buffer.toString("base64")}`;
+  } catch {
+    return null;
+  }
 }
 
 export async function createDiscordEvent(event: DiscordScheduledEvent) {
