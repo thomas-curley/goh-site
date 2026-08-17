@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   const endsAt = typeof body.endsAt === "string" ? body.endsAt : "";
   const participantMode = body.participantMode;
   const postToDiscord = body.postToDiscord !== false;
-  const payoutWinnerCount = Number.isInteger(body.payoutWinnerCount) ? Math.max(0, Math.min(20, body.payoutWinnerCount)) : 3;
+  const payoutWinnerCount = Number.isInteger(body.payoutWinnerCount) ? Math.max(0, Math.min(20, body.payoutWinnerCount)) : 10;
 
   if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
   if (!VALID_METRICS.has(metric)) return NextResponse.json({ error: "Invalid metric." }, { status: 400 });
