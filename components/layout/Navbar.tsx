@@ -55,6 +55,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/feedback", label: "Submit Feedback" },
       { href: "/surveys", label: "Surveys" },
       { href: "/availability", label: "Availability" },
+      { href: "/review-a-gnomie", label: "Review a Gn0mie" },
     ],
   },
   {
