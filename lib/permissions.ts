@@ -97,6 +97,11 @@ export const PERMISSIONS = {
     label: "Manage Loan Board",
     description: "View every loan request, force-close disputes, and oversee the clan loan board",
   },
+  manage_gnomie_reviews: {
+    key: "manage_gnomie_reviews",
+    label: "Review a Gn0mie Submissions",
+    description: "Approve or reject public shoutouts about clan members before they post to Discord",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
