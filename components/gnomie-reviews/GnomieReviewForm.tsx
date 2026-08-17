@@ -32,8 +32,8 @@ export function GnomieReviewForm() {
 
   const suggestions = useMemo(() => {
     const q = targetRsn.trim().toLowerCase();
-    if (!q) return [];
-    return members.filter((name) => name.toLowerCase().includes(q)).slice(0, 8);
+    const matches = q ? members.filter((name) => name.toLowerCase().includes(q)) : members;
+    return matches.slice(0, 20);
   }, [targetRsn, members]);
 
   const handleSubmit = async (e: React.FormEvent) => {
