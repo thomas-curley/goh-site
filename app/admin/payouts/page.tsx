@@ -73,6 +73,8 @@ function PayoutRow({
   onRollDownChange,
   onConfirmRollDown,
   onCancelRollDown,
+  rollDownSuggested,
+  suggestingRollDown,
 }: {
   payout: Payout;
   busyId: string | null;
@@ -92,6 +94,8 @@ function PayoutRow({
   onRollDownChange: (value: string) => void;
   onConfirmRollDown: (p: Payout) => void;
   onCancelRollDown: () => void;
+  rollDownSuggested: boolean;
+  suggestingRollDown: boolean;
 }) {
   const linked = linkedSourceLabel(payout);
   const editingThisPrize = editingPrizeId === payout.id;
@@ -158,19 +162,25 @@ function PayoutRow({
           )}
 
           {rollingDownThis && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className="text-xs text-iron-grey">Declined — reassign to:</span>
-              <input
-                autoFocus
-                type="text"
-                value={rollDownValue}
-                onChange={(e) => onRollDownChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onConfirmRollDown(payout)}
-                placeholder="Next RSN"
-                className="px-2 py-0.5 rounded border border-bark-brown-light bg-parchment text-text-primary text-sm font-mono w-40"
-              />
-              <button type="button" onClick={() => onConfirmRollDown(payout)} className="text-xs text-gnome-green hover:underline cursor-pointer">Confirm</button>
-              <button type="button" onClick={onCancelRollDown} className="text-xs text-iron-grey hover:underline cursor-pointer">Cancel</button>
+            <div className="mt-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-iron-grey">Declined — reassign to:</span>
+                <input
+                  autoFocus
+                  type="text"
+                  value={rollDownValue}
+                  onChange={(e) => onRollDownChange(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && onConfirmRollDown(payout)}
+                  placeholder={suggestingRollDown ? "Looking up next place..." : "Next RSN"}
+                  disabled={suggestingRollDown}
+                  className="px-2 py-0.5 rounded border border-bark-brown-light bg-parchment text-text-primary text-sm font-mono w-40"
+                />
+                <button type="button" onClick={() => onConfirmRollDown(payout)} disabled={suggestingRollDown} className="text-xs text-gnome-green hover:underline cursor-pointer">Confirm</button>
+                <button type="button" onClick={onCancelRollDown} className="text-xs text-iron-grey hover:underline cursor-pointer">Cancel</button>
+              </div>
+              {rollDownSuggested && !suggestingRollDown && (
+                <p className="text-xs text-iron-grey mt-1">Suggested from the competition's next-placed finisher — edit if needed.</p>
+              )}
             </div>
           )}
         </div>
@@ -226,6 +236,8 @@ export default function AdminPayoutsPage() {
 
   const [rollingDownId, setRollingDownId] = useState<string | null>(null);
   const [rollDownValue, setRollDownValue] = useState("");
+  const [rollDownSuggested, setRollDownSuggested] = useState(false);
+  const [suggestingRollDown, setSuggestingRollDown] = useState(false);
 
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [raffleTitle, setRaffleTitle] = useState("");
@@ -319,12 +331,29 @@ export default function AdminPayoutsPage() {
     setBusyId(null);
   };
 
-  const startRollDown = (payout: Payout) => {
+  const startRollDown = async (payout: Payout) => {
     setRollingDownId(payout.id);
     setRollDownValue("");
+    setRollDownSuggested(false);
+
+    if (payout.wom_competition_id) {
+      setSuggestingRollDown(true);
+      const res = await fetch(`/api/admin/payouts/${payout.id}/suggest-next`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.suggestedRsn) {
+        setRollDownValue(data.suggestedRsn);
+        setRollDownSuggested(true);
+      }
+      setSuggestingRollDown(false);
+    }
   };
 
   const cancelRollDown = () => setRollingDownId(null);
+
+  const editRollDownValue = (value: string) => {
+    setRollDownValue(value);
+    setRollDownSuggested(false);
+  };
 
   const confirmRollDown = async (payout: Payout) => {
     const newRsn = rollDownValue.trim();
@@ -443,9 +472,11 @@ export default function AdminPayoutsPage() {
     rollingDownId,
     rollDownValue,
     onStartRollDown: startRollDown,
-    onRollDownChange: setRollDownValue,
+    onRollDownChange: editRollDownValue,
     onConfirmRollDown: confirmRollDown,
     onCancelRollDown: cancelRollDown,
+    rollDownSuggested,
+    suggestingRollDown,
   };
 
   return (
