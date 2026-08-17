@@ -67,6 +67,12 @@ function PayoutRow({
   expandedScreenshotsId,
   onToggleScreenshots,
   onScreenshotsChange,
+  rollingDownId,
+  rollDownValue,
+  onStartRollDown,
+  onRollDownChange,
+  onConfirmRollDown,
+  onCancelRollDown,
 }: {
   payout: Payout;
   busyId: string | null;
@@ -80,9 +86,16 @@ function PayoutRow({
   expandedScreenshotsId: string | null;
   onToggleScreenshots: (id: string) => void;
   onScreenshotsChange: (p: Payout, urls: string[]) => void;
+  rollingDownId: string | null;
+  rollDownValue: string;
+  onStartRollDown: (p: Payout) => void;
+  onRollDownChange: (value: string) => void;
+  onConfirmRollDown: (p: Payout) => void;
+  onCancelRollDown: () => void;
 }) {
   const linked = linkedSourceLabel(payout);
   const editingThisPrize = editingPrizeId === payout.id;
+  const rollingDownThis = rollingDownId === payout.id;
 
   return (
     <Card hover={false}>
@@ -143,11 +156,39 @@ function PayoutRow({
               />
             </div>
           )}
+
+          {rollingDownThis && (
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className="text-xs text-iron-grey">Declined — reassign to:</span>
+              <input
+                autoFocus
+                type="text"
+                value={rollDownValue}
+                onChange={(e) => onRollDownChange(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onConfirmRollDown(payout)}
+                placeholder="Next RSN"
+                className="px-2 py-0.5 rounded border border-bark-brown-light bg-parchment text-text-primary text-sm font-mono w-40"
+              />
+              <button type="button" onClick={() => onConfirmRollDown(payout)} className="text-xs text-gnome-green hover:underline cursor-pointer">Confirm</button>
+              <button type="button" onClick={onCancelRollDown} className="text-xs text-iron-grey hover:underline cursor-pointer">Cancel</button>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button size="sm" variant={payout.is_paid ? "ghost" : "primary"} disabled={busyId === payout.id} onClick={() => onTogglePaid(payout)}>
             {busyId === payout.id ? "..." : payout.is_paid ? "Mark Unpaid" : "Mark Paid"}
           </Button>
+          {!payout.is_paid && (
+            <button
+              type="button"
+              onClick={() => onStartRollDown(payout)}
+              disabled={busyId === payout.id}
+              className="text-xs text-gold-display hover:underline cursor-pointer shrink-0"
+              title="Recipient declined -- reassign this entry to the next runner-up"
+            >
+              Roll Down
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onDelete(payout)}
@@ -182,6 +223,9 @@ export default function AdminPayoutsPage() {
   const [editingPrizeId, setEditingPrizeId] = useState<string | null>(null);
   const [editPrizeValue, setEditPrizeValue] = useState("");
   const [expandedScreenshotsId, setExpandedScreenshotsId] = useState<string | null>(null);
+
+  const [rollingDownId, setRollingDownId] = useState<string | null>(null);
+  const [rollDownValue, setRollDownValue] = useState("");
 
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [raffleTitle, setRaffleTitle] = useState("");
@@ -272,6 +316,31 @@ export default function AdminPayoutsPage() {
     setBusyId(payout.id);
     const res = await fetch(`/api/admin/payouts/${payout.id}`, { method: "DELETE" });
     if (res.ok) await load();
+    setBusyId(null);
+  };
+
+  const startRollDown = (payout: Payout) => {
+    setRollingDownId(payout.id);
+    setRollDownValue("");
+  };
+
+  const cancelRollDown = () => setRollingDownId(null);
+
+  const confirmRollDown = async (payout: Payout) => {
+    const newRsn = rollDownValue.trim();
+    if (!newRsn) return;
+    setRollingDownId(null);
+    setBusyId(payout.id);
+    await fetch(`/api/admin/payouts/${payout.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient_rsn: newRsn,
+        is_paid: false,
+        notes: [payout.notes, `Rolled down from ${payout.recipient_rsn} (declined)`].filter(Boolean).join("\n"),
+      }),
+    });
+    await load();
     setBusyId(null);
   };
 
@@ -371,6 +440,12 @@ export default function AdminPayoutsPage() {
     expandedScreenshotsId,
     onToggleScreenshots: toggleScreenshots,
     onScreenshotsChange: changeScreenshots,
+    rollingDownId,
+    rollDownValue,
+    onStartRollDown: startRollDown,
+    onRollDownChange: setRollDownValue,
+    onConfirmRollDown: confirmRollDown,
+    onCancelRollDown: cancelRollDown,
   };
 
   return (
