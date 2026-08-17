@@ -683,11 +683,22 @@ export default function AdminPayoutsPage() {
                   </div>
 
                   {winners.length > 0 && (
-                    <div className="space-y-2 mb-2">
+                    <ul className="space-y-1 mb-2">
                       {winners.map((p) => (
-                        <PayoutRow key={p.id} payout={p} {...rowProps} />
+                        <li key={p.id} className="flex items-center justify-between gap-3 text-sm py-1 px-2 rounded bg-parchment-dark/40">
+                          <span>
+                            <span className="font-mono text-bark-brown">{p.recipient_rsn}</span>
+                            <span className="text-bark-brown-light"> — {p.prize || "no amount set"}</span>
+                          </span>
+                          <span className={`text-xs shrink-0 ${p.is_paid ? "text-gnome-green" : "text-iron-grey"}`}>
+                            {p.is_paid ? "Paid" : "Unpaid"}
+                          </span>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
+                  )}
+                  {winners.length > 0 && (
+                    <p className="text-xs text-iron-grey mb-2">Manage payment status, screenshots, and roll-downs for these in the list below.</p>
                   )}
 
                   {expandedRaffleId === raffle.id && (
