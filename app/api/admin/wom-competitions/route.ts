@@ -28,7 +28,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("wom_competitions")
-    .select("id, wom_id, title, metric, type, starts_at, ends_at, group_linked, participants, teams, created_by, created_at")
+    .select("id, wom_id, title, metric, type, starts_at, ends_at, group_linked, participants, teams, payout_winner_count, created_by, created_at")
     .order("starts_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: "Failed to load competitions." }, { status: 500 });
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
   const endsAt = typeof body.endsAt === "string" ? body.endsAt : "";
   const participantMode = body.participantMode;
   const postToDiscord = body.postToDiscord !== false;
+  const payoutWinnerCount = Number.isInteger(body.payoutWinnerCount) ? Math.max(0, Math.min(20, body.payoutWinnerCount)) : 3;
 
   if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
   if (!VALID_METRICS.has(metric)) return NextResponse.json({ error: "Invalid metric." }, { status: 400 });
@@ -134,6 +135,7 @@ export async function POST(request: NextRequest) {
     verification_code: created.verificationCode,
     participants: participantsToStore,
     teams: teamsToStore,
+    payout_winner_count: payoutWinnerCount,
     created_by: user?.discord_username ?? null,
   });
 

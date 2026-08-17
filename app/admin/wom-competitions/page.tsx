@@ -54,6 +54,7 @@ export default function WomCompetitionsPage() {
   const [metric, setMetric] = useState("overall");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  const [payoutWinnerCount, setPayoutWinnerCount] = useState(3);
 
   const [participantMode, setParticipantMode] = useState<ParticipantMode>("clan");
   const [participants, setParticipants] = useState<string[]>([""]);
@@ -90,6 +91,7 @@ export default function WomCompetitionsPage() {
     setMetric("overall");
     setStartsAt("");
     setEndsAt("");
+    setPayoutWinnerCount(3);
     setParticipantMode("clan");
     setParticipants([""]);
     setTeams([emptyTeam(), emptyTeam()]);
@@ -139,6 +141,7 @@ export default function WomCompetitionsPage() {
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
       participantMode,
       postToDiscord,
+      payoutWinnerCount,
     };
     if (participantMode === "participants") {
       body.participants = participants.map((p) => p.trim()).filter(Boolean);
@@ -250,6 +253,21 @@ export default function WomCompetitionsPage() {
             {startsAt && endsAt && new Date(endsAt) <= new Date(startsAt) && (
               <p className="text-xs text-red-accent">End time must be after the start time.</p>
             )}
+            <div>
+              <label className="block text-sm font-semibold text-bark-brown mb-1">Winners to pay out</label>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={payoutWinnerCount}
+                onChange={(e) => setPayoutWinnerCount(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
+                className={`${inputClass} sm:w-32`}
+              />
+              <p className="text-xs text-iron-grey mt-1">
+                Once this competition ends, the morning cron auto-adds this many top finishers to Prize Payouts
+                as unpaid entries (0 to skip -- e.g. for a competition with no prize).
+              </p>
+            </div>
           </div>
         )}
 

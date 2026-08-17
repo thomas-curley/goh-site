@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
   const paidParam = request.nextUrl.searchParams.get("paid");
-  let query = supabase.from("prize_payouts").select("*").order("created_at", { ascending: false });
+  let query = supabase
+    .from("prize_payouts")
+    .select("*, wom_competitions(title), events(title), raffles(title)")
+    .order("created_at", { ascending: false });
   if (paidParam === "true") query = query.eq("is_paid", true);
   if (paidParam === "false") query = query.eq("is_paid", false);
 
@@ -43,12 +46,22 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const rawEntries = Array.isArray(body.entries) ? body.entries : [];
 
+  // Applied to every row in the batch, mirroring how category/source_detail
+  // already apply batch-wide -- lets "Add Winners" tie a whole batch to the
+  // competition/event/raffle it came from instead of freeform text.
+  const womCompetitionId = typeof body.womCompetitionId === "string" && body.womCompetitionId ? body.womCompetitionId : null;
+  const eventId = typeof body.eventId === "string" && body.eventId ? body.eventId : null;
+  const raffleId = typeof body.raffleId === "string" && body.raffleId ? body.raffleId : null;
+
   const rows = rawEntries
     .map((e: Record<string, unknown>) => ({
       recipient_rsn: typeof e.recipient_rsn === "string" ? e.recipient_rsn.trim().slice(0, MAX_RSN_LENGTH) : "",
       prize: typeof e.prize === "string" ? e.prize.trim().slice(0, MAX_PRIZE_LENGTH) : "",
       category: CATEGORIES.includes(e.category as string) ? e.category : "other",
       source_detail: typeof e.source_detail === "string" ? e.source_detail.trim() || null : null,
+      wom_competition_id: womCompetitionId,
+      event_id: eventId,
+      raffle_id: raffleId,
       created_by: user?.discord_username ?? null,
     }))
     .filter((r: { recipient_rsn: string; prize: string }) => r.recipient_rsn && r.prize);

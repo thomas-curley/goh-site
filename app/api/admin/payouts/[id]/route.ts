@@ -47,6 +47,9 @@ export async function PATCH(
   }
   if (body.source_detail !== undefined) update.source_detail = typeof body.source_detail === "string" ? body.source_detail.trim() || null : null;
   if (body.notes !== undefined) update.notes = typeof body.notes === "string" ? body.notes.trim() || null : null;
+  if (Array.isArray(body.screenshot_urls)) {
+    update.screenshot_urls = body.screenshot_urls.filter((u: unknown) => typeof u === "string" && u);
+  }
 
   const { data, error } = await supabase
     .from("prize_payouts")
