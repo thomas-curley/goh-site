@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   if (!comp) return NextResponse.json({ error: "Competition not found." }, { status: 404 });
 
   const isEnded = new Date(comp.ends_at) <= new Date();
-  const leaders = isEnded ? await getCompetitionLeaders(comp.wom_id, comp.payout_winner_count || 3) : [];
+  const leaders = isEnded ? await getCompetitionLeaders(comp.wom_id, comp.payout_winner_count || 10) : [];
 
   return NextResponse.json({ leaders, isEnded });
 }

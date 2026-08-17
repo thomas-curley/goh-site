@@ -55,7 +55,7 @@ export default function WomCompetitionsPage() {
   const [metric, setMetric] = useState("overall");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
-  const [payoutWinnerCount, setPayoutWinnerCount] = useState(3);
+  const [payoutWinnerCount, setPayoutWinnerCount] = useState(10);
 
   const [participantMode, setParticipantMode] = useState<ParticipantMode>("clan");
   const [participants, setParticipants] = useState<string[]>([""]);
@@ -92,7 +92,7 @@ export default function WomCompetitionsPage() {
     setMetric("overall");
     setStartsAt("");
     setEndsAt("");
-    setPayoutWinnerCount(3);
+    setPayoutWinnerCount(10);
     setParticipantMode("clan");
     setParticipants([""]);
     setTeams([emptyTeam(), emptyTeam()]);
