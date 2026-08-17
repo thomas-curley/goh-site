@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { SKILLS, BOSSES, ACTIVITIES, COMPUTED_METRICS, MetricProps } from "@wise-old-man/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -589,6 +590,10 @@ function ManagePanel({ comp, onChanged }: { comp: TrackedCompetition; onChanged:
       {status && (
         <div className="p-3 rounded-md bg-gnome-green/10 border border-gnome-green/30 text-sm text-gnome-green">{status}</div>
       )}
+
+      <Link href={`/admin/payouts?competitionId=${comp.id}`} className="text-xs text-gnome-green hover:underline inline-block">
+        View Payouts for this Competition →
+      </Link>
 
       <div className="space-y-3">
         <p className="text-xs font-semibold text-bark-brown uppercase tracking-wide">Details</p>

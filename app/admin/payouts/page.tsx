@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
@@ -214,6 +215,10 @@ function PayoutRow({
 }
 
 export default function AdminPayoutsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const filterCompetitionId = searchParams.get("competitionId");
+
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<FilterTab>("unpaid");
@@ -229,6 +234,8 @@ export default function AdminPayoutsPage() {
 
   const [womCompetitions, setWomCompetitions] = useState<{ id: string; title: string }[]>([]);
   const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
+  const [loadingCompetitionLeaders, setLoadingCompetitionLeaders] = useState(false);
+  const [competitionLeadersStatus, setCompetitionLeadersStatus] = useState<string | null>(null);
 
   const [editingPrizeId, setEditingPrizeId] = useState<string | null>(null);
   const [editPrizeValue, setEditPrizeValue] = useState("");
@@ -278,6 +285,33 @@ export default function AdminPayoutsPage() {
   };
   const addRow = () => setRows((prev) => [...prev, { recipient_rsn: "", prize: "" }]);
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
+
+  const selectCompetition = async (id: string) => {
+    setBatchWomCompetitionId(id);
+    setCompetitionLeadersStatus(null);
+    if (!id) return;
+
+    setLoadingCompetitionLeaders(true);
+    const res = await fetch(`/api/admin/payouts/competition-leaders?competitionId=${id}`);
+    const data = await res.json().catch(() => ({}));
+    setLoadingCompetitionLeaders(false);
+
+    if (!res.ok) {
+      setCompetitionLeadersStatus("Couldn't load standings for that competition.");
+      return;
+    }
+    if (!data.isEnded) {
+      setCompetitionLeadersStatus("This competition hasn't ended yet -- add winners manually once it closes.");
+      return;
+    }
+    if (!data.leaders || data.leaders.length === 0) {
+      setCompetitionLeadersStatus("No participants found for this competition.");
+      return;
+    }
+
+    setRows(data.leaders.map((l: { displayName: string }) => ({ recipient_rsn: l.displayName, prize: "" })));
+    setCompetitionLeadersStatus(`Filled in ${data.leaders.length} finisher${data.leaders.length === 1 ? "" : "s"} from Wise Old Man -- add prize amounts below.`);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -450,12 +484,16 @@ export default function AdminPayoutsPage() {
     setRaffleSubmitting(false);
   };
 
-  const filtered = payouts.filter((p) => {
+  const competitionScoped = filterCompetitionId ? payouts.filter((p) => p.wom_competition_id === filterCompetitionId) : payouts;
+  const filtered = competitionScoped.filter((p) => {
     if (tab === "unpaid") return !p.is_paid;
     if (tab === "paid") return p.is_paid;
     return true;
   });
-  const unpaidCount = payouts.filter((p) => !p.is_paid).length;
+  const unpaidCount = competitionScoped.filter((p) => !p.is_paid).length;
+  const filterCompetitionTitle = filterCompetitionId
+    ? womCompetitions.find((c) => c.id === filterCompetitionId)?.title ?? payouts.find((p) => p.wom_competition_id === filterCompetitionId)?.wom_competitions?.title
+    : null;
 
   const rowProps = {
     busyId,
@@ -487,6 +525,15 @@ export default function AdminPayoutsPage() {
         winners from competitions with a configured payout count are added here automatically once they end.
       </p>
 
+      {filterCompetitionId && (
+        <div className="flex items-center justify-between gap-3 mb-6 p-3 rounded-md bg-gold/10 border border-gold/30 text-sm text-bark-brown">
+          <span>Showing payouts for <span className="font-semibold">{filterCompetitionTitle ?? "this competition"}</span></span>
+          <button type="button" onClick={() => router.push("/admin/payouts")} className="text-xs text-gnome-green hover:underline cursor-pointer shrink-0">
+            Clear filter
+          </button>
+        </div>
+      )}
+
       <Card hover={false} className="mb-8">
         <h2 className="font-display text-lg text-bark-brown mb-4">Add Winners</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -514,12 +561,22 @@ export default function AdminPayoutsPage() {
           {(batchCategory === "sotw" || batchCategory === "botw") && womCompetitions.length > 0 && (
             <div>
               <label className="block text-sm font-semibold text-bark-brown mb-1">Link to Competition (optional)</label>
-              <select value={batchWomCompetitionId} onChange={(e) => setBatchWomCompetitionId(e.target.value)} className={`${inputClass} cursor-pointer`}>
+              <select
+                value={batchWomCompetitionId}
+                onChange={(e) => selectCompetition(e.target.value)}
+                disabled={loadingCompetitionLeaders}
+                className={`${inputClass} cursor-pointer`}
+              >
                 <option value="">— None —</option>
                 {womCompetitions.map((c) => (
                   <option key={c.id} value={c.id}>{c.title}</option>
                 ))}
               </select>
+              <p className="text-xs text-iron-grey mt-1">
+                {loadingCompetitionLeaders
+                  ? "Loading standings from Wise Old Man..."
+                  : competitionLeadersStatus ?? "Picking a closed competition fills in its top finishers below automatically."}
+              </p>
             </div>
           )}
 
