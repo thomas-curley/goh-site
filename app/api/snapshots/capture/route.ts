@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { normalizeRsn, getAllSkillBossGains } from "@/lib/wom";
+import { normalizeRsn, getAllSkillBossGains, getCompetitionLeaders, classifyMetric } from "@/lib/wom";
 
 // ~79 skill/boss gains calls to WOM (batched 8-at-a-time in getAllSkillBossGains)
 // can take longer than the platform default -- give this route more room.
@@ -94,6 +94,43 @@ async function runCapture() {
       console.error("Skill/boss gains capture failed:", err);
     }
 
+    // Auto-populate unpaid Prize Payouts entries for any WOM competition
+    // that's ended since the last run, using each competition's configured
+    // payout_winner_count. winners_captured marks a competition as handled
+    // regardless of outcome (including zero participants) so it's never
+    // retried on a later run.
+    let competitionPayoutsCreated = 0;
+    try {
+      const { data: endedComps } = await supabase
+        .from("wom_competitions")
+        .select("id, wom_id, title, metric, payout_winner_count")
+        .eq("winners_captured", false)
+        .lt("ends_at", new Date().toISOString());
+
+      for (const comp of endedComps ?? []) {
+        if (comp.payout_winner_count > 0) {
+          const leaders = await getCompetitionLeaders(comp.wom_id, comp.payout_winner_count);
+          if (leaders.length > 0) {
+            const metricKind = classifyMetric(comp.metric);
+            const category = metricKind === "skill" ? "sotw" : metricKind === "boss" ? "botw" : "other";
+            const { error: payoutError } = await supabase.from("prize_payouts").insert(
+              leaders.map((l) => ({
+                recipient_rsn: l.displayName,
+                prize: "",
+                category,
+                wom_competition_id: comp.id,
+                source_detail: comp.title,
+              }))
+            );
+            if (!payoutError) competitionPayoutsCreated += leaders.length;
+          }
+        }
+        await supabase.from("wom_competitions").update({ winners_captured: true }).eq("id", comp.id);
+      }
+    } catch (err) {
+      console.error("Competition payout capture failed:", err);
+    }
+
     // Count registered users and linked RSNs
     const { count: registeredUsers } = await supabase
       .from("user_profiles")
@@ -140,6 +177,7 @@ async function runCapture() {
       linked_rsns: linkedRsns,
       ranks_synced: ranksSynced,
       skill_boss_metrics_recorded: skillBossMetricsRecorded,
+      competition_payouts_created: competitionPayoutsCreated,
     });
   } catch (err) {
     console.error("Snapshot capture error:", err);

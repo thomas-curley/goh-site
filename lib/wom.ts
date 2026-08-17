@@ -99,6 +99,13 @@ export interface CompetitionLeader {
   gained: number;
 }
 
+/** Classifies a WOM metric as a skill, boss, or neither -- used to sort a finished competition's auto-captured payouts into "sotw" vs "botw". */
+export function classifyMetric(metric: string): "skill" | "boss" | "other" {
+  if ((SKILLS as readonly string[]).includes(metric)) return "skill";
+  if ((BOSSES as readonly string[]).includes(metric)) return "boss";
+  return "other";
+}
+
 /** Top N participants by progress gained, for a single competition -- who's currently leading (or won, once it's over). */
 export async function getCompetitionLeaders(id: number, limit: number = 3): Promise<CompetitionLeader[]> {
   try {
