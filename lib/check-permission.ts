@@ -22,11 +22,11 @@ export async function checkPermission(permission: PermissionKey): Promise<{
       .eq("id", user.id)
       .single();
 
-    if (!profile?.clan_rank) {
-      return { allowed: false, user: profile ? { id: user.id, ...profile } : null };
-    }
-
-    const normalizedRole = normalizeRole(profile.clan_rank);
+    // No linked/verified clan rank yet -- resolve to "guest" instead of an
+    // automatic denial, so an admin can explicitly grant a capability to
+    // signed-in-but-unregistered users via the Guest row in role_permissions
+    // if they choose to (defaults to false either way until they do).
+    const normalizedRole = profile?.clan_rank ? normalizeRole(profile.clan_rank) : "guest";
 
     // Check permission
     const { data: perm } = await supabase
@@ -38,7 +38,7 @@ export async function checkPermission(permission: PermissionKey): Promise<{
 
     return {
       allowed: perm?.granted ?? false,
-      user: { id: user.id, clan_rank: profile.clan_rank, discord_username: profile.discord_username },
+      user: { id: user.id, clan_rank: profile?.clan_rank ?? null, discord_username: profile?.discord_username ?? "" },
     };
   } catch {
     // Supabase not configured

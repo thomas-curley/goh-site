@@ -3,40 +3,50 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { SITE_SECTIONS } from "@/lib/site-sections";
+import { ASSIGNABLE_ROLES } from "@/lib/permissions";
 
-interface SectionRow {
-  key: string;
-  staff_only: boolean;
-  updated_by: string | null;
-  updated_at: string;
+interface VisibilityRow {
+  id: string;
+  role: string;
+  section_key: string;
+  visible: boolean;
 }
 
 export default function AdminSectionsPage() {
-  const [sections, setSections] = useState<SectionRow[]>([]);
+  const [rows, setRows] = useState<VisibilityRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch("/api/admin/sections");
+    const res = await fetch("/api/admin/section-visibility");
     const data = await res.json().catch(() => ({}));
-    setSections(res.ok ? data.sections ?? [] : []);
+    if (res.ok) setRows(data.visibility ?? []);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const isStaffOnly = (key: string) => sections.find((s) => s.key === key)?.staff_only ?? false;
+  // Absence of a row means visible -- fails open, same default the backend uses.
+  const isVisible = (role: string, sectionKey: string): boolean => {
+    const row = rows.find((r) => r.role === role && r.section_key === sectionKey);
+    return row?.visible ?? true;
+  };
 
-  const toggle = async (key: string) => {
-    setSavingKey(key);
-    await fetch("/api/admin/sections", {
+  const toggle = async (role: string, sectionKey: string) => {
+    setSaving(true);
+    setStatus(null);
+    const nextVisible = !isVisible(role, sectionKey);
+
+    await fetch("/api/admin/section-visibility", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, staffOnly: !isStaffOnly(key) }),
+      body: JSON.stringify({ role, sectionKey, visible: nextVisible }),
     });
+
     await load();
-    setSavingKey(null);
+    setStatus(`Updated ${role} → ${sectionKey}`);
+    setSaving(false);
   };
 
   if (loading) {
@@ -47,58 +57,120 @@ export default function AdminSectionsPage() {
     );
   }
 
+  const sortedRoles = [...ASSIGNABLE_ROLES].sort((a, b) => b.order - a.order);
+
   return (
     <div>
       <h1 className="font-display text-3xl text-gnome-green mb-2">Section Visibility</h1>
       <p className="text-sm text-bark-brown-light mb-6">
-        Toggle a section staff-only to hide its nav links and lock the pages themselves down while a feature
-        isn&apos;t released yet. Turning a toggle off restores the section&apos;s normal access level.
+        Control which ranks (and Guests -- anyone not registered or not signed in) can see each part of the
+        public site. Everything is visible by default until you uncheck it here.
       </p>
 
-      <div className="space-y-3">
-        {SITE_SECTIONS.map((section) => {
-          const staffOnly = isStaffOnly(section.key);
-          const row = sections.find((s) => s.key === section.key);
-          return (
-            <Card key={section.key} hover={false}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-semibold text-bark-brown">{section.label}</p>
-                  <p className="text-xs text-iron-grey mt-0.5">{section.description}</p>
-                  {row?.updated_by && (
-                    <p className="text-xs text-iron-grey mt-1">
-                      Last changed by {row.updated_by} on {new Date(row.updated_at).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => toggle(section.key)}
-                  disabled={savingKey === section.key}
-                  className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-md border-2 text-sm font-semibold transition-colors cursor-pointer ${
-                    staffOnly
-                      ? "bg-gnome-green/15 border-gnome-green text-gnome-green"
-                      : "border-bark-brown-light text-bark-brown-light hover:border-gnome-green"
-                  }`}
+      {status && (
+        <div className="mb-4 p-3 rounded-md bg-gnome-green/10 border border-gnome-green/30 text-sm text-gnome-green">
+          {status}
+        </div>
+      )}
+
+      {/* Desktop table */}
+      <Card hover={false} className="overflow-x-auto hidden md:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-bark-brown-light">
+              <th className="text-left py-3 pr-4 text-iron-grey font-semibold">Rank</th>
+              {SITE_SECTIONS.map((section) => (
+                <th
+                  key={section.key}
+                  className="text-center py-3 px-2 text-iron-grey font-semibold"
+                  title={section.description}
                 >
-                  <span
-                    className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                      staffOnly ? "bg-gnome-green border-gnome-green" : "border-bark-brown-light"
-                    }`}
+                  <div className="text-xs leading-tight">{section.label}</div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sortedRoles.map((role) => (
+              <tr key={role.key} className="border-b border-parchment-dark last:border-0">
+                <td className="py-3 pr-4">
+                  <span className="font-semibold text-bark-brown">{role.name}</span>
+                </td>
+                {SITE_SECTIONS.map((section) => {
+                  const visible = isVisible(role.key, section.key);
+                  return (
+                    <td key={section.key} className="text-center py-3 px-2">
+                      <button
+                        onClick={() => toggle(role.key, section.key)}
+                        disabled={saving}
+                        className={`w-8 h-8 rounded-md border-2 transition-colors cursor-pointer inline-flex items-center justify-center ${
+                          visible
+                            ? "bg-gnome-green border-gnome-green"
+                            : "bg-transparent border-bark-brown-light hover:border-gnome-green"
+                        }`}
+                        title={`${visible ? "Hide" : "Show"} "${section.label}" for ${role.name}`}
+                      >
+                        {visible && (
+                          <svg className="w-4 h-4 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-4">
+        {sortedRoles.map((role) => (
+          <Card key={role.key} hover={false}>
+            <h3 className="font-display text-lg text-bark-brown mb-3">{role.name}</h3>
+            <div className="space-y-2">
+              {SITE_SECTIONS.map((section) => {
+                const visible = isVisible(role.key, section.key);
+                return (
+                  <button
+                    key={section.key}
+                    onClick={() => toggle(role.key, section.key)}
+                    disabled={saving}
+                    className="w-full flex items-center justify-between py-2 px-3 rounded-md hover:bg-parchment-dark transition-colors cursor-pointer"
                   >
-                    {staffOnly && (
-                      <svg className="w-3 h-3 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </span>
-                  {savingKey === section.key ? "Saving..." : staffOnly ? "Staff Only" : "Visible"}
-                </button>
-              </div>
-            </Card>
-          );
-        })}
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-bark-brown">{section.label}</p>
+                      <p className="text-xs text-iron-grey">{section.description}</p>
+                    </div>
+                    <div
+                      className={`w-6 h-6 rounded border-2 shrink-0 ml-3 flex items-center justify-center ${
+                        visible ? "bg-gnome-green border-gnome-green" : "border-bark-brown-light"
+                      }`}
+                    >
+                      {visible && (
+                        <svg className="w-3 h-3 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+        ))}
       </div>
+
+      <Card hover={false} className="mt-6 bg-parchment-dark">
+        <h3 className="font-display text-base text-bark-brown mb-2">How this works</h3>
+        <ul className="space-y-1 text-xs text-bark-brown-light">
+          <li>• Guests are anyone not signed in, or signed in without a linked &amp; verified RSN</li>
+          <li>• A checked box means that rank can see the section; unchecked hides it and blocks the page directly</li>
+          <li>• A section with no boxes unchecked for a rank is visible to it by default</li>
+        </ul>
+      </Card>
     </div>
   );
 }

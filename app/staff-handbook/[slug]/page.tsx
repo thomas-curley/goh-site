@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { getHandbookTree, flattenHandbookTree, type HandbookNode } from "@/lib/handbook";
 import { checkClanEligibility } from "@/lib/clan-access";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import { RichText } from "@/lib/render-lite-markdown";
 import { Card } from "@/components/ui/Card";
 import type { Metadata } from "next";
@@ -65,6 +67,7 @@ export default async function HandbookSectionPage({ params }: { params: Promise<
   const section = flat.find((s) => s.slug === slug);
 
   if (!section) notFound();
+  if (!(await checkSectionAccess("staff_handbook"))) return <SectionUnavailable />;
 
   const authClient = await createSupabaseServerClient();
   const { data: { user } } = await authClient.auth.getUser();

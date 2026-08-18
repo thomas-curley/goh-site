@@ -1,5 +1,7 @@
 import { MemberGrid } from "@/components/members/MemberGrid";
 import { getGroupMembers } from "@/lib/wom";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,9 +9,11 @@ export const metadata: Metadata = {
   description: "View all members of the Gn0me Home OSRS clan.",
 };
 
-export const revalidate = 3600; // ISR: revalidate every hour
+export const dynamic = "force-dynamic"; // gated per-viewer now, can't be statically cached
 
 export default async function MembersPage() {
+  if (!(await checkSectionAccess("members_list"))) return <SectionUnavailable />;
+
   const members = await getGroupMembers();
 
   return (

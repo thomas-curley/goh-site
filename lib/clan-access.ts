@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getGroupMembers } from "@/lib/wom";
 import { getRankByName } from "@/lib/constants";
+import { normalizeRole } from "@/lib/permissions";
 import type { SiteSectionKey } from "@/lib/site-sections";
 
 export type AccessLevel = "anonymous" | "verified_player" | "clan_member" | "staff";
@@ -78,12 +79,39 @@ export async function checkClanEligibility(
 }
 
 /**
- * Whether an admin has currently toggled a section (see lib/site-sections.ts)
- * staff-only via /admin/sections. Absence of a row means "not staff-only" --
- * the section is left at whatever baseline access level its own page
- * already checks, until an admin explicitly restricts it.
+ * Resolves a caller to their effective role key for the section-visibility
+ * grid: a normalized RANKS key (see lib/permissions.ts's normalizeRole) if
+ * they're a linked, verified, current clan member, or "guest" for anyone
+ * else -- never logged in, no linked RSN, unverified, or no longer in the
+ * clan. Shared so checkClanEligibility and isSectionVisible don't each keep
+ * their own copy of the WOM-roster-lookup logic.
  */
-export async function isSectionStaffOnly(supabase: SupabaseClient, key: SiteSectionKey): Promise<boolean> {
-  const { data } = await supabase.from("site_sections").select("staff_only").eq("key", key).maybeSingle();
-  return data?.staff_only ?? false;
+async function resolveEffectiveRole(supabase: SupabaseClient, userId: string | null): Promise<string> {
+  if (!userId) return "guest";
+
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("rsn, rsn_verified")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!profile?.rsn || !profile.rsn_verified) return "guest";
+
+  const members = await getGroupMembers();
+  const normalized = normalizeRsn(profile.rsn);
+  const member = members.find((m) => normalizeRsn(m.displayName) === normalized);
+  return member ? normalizeRole(member.role) : "guest";
+}
+
+/**
+ * Whether a section (see lib/site-sections.ts) is visible to the caller,
+ * per the role grid an admin configures at /admin/sections. Absence of a
+ * row for their resolved role means visible -- fails open, so registering a
+ * new section never silently locks anyone out until an admin explicitly
+ * restricts it for that role.
+ */
+export async function isSectionVisible(supabase: SupabaseClient, key: SiteSectionKey, userId: string | null): Promise<boolean> {
+  const role = await resolveEffectiveRole(supabase, userId);
+  const { data } = await supabase.from("section_visibility").select("visible").eq("role", role).eq("section_key", key).maybeSingle();
+  return data?.visible ?? true;
 }

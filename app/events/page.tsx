@@ -1,6 +1,8 @@
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { createClient } from "@supabase/supabase-js";
 import { getGroupCompetitions } from "@/lib/wom";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -41,6 +43,8 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 };
 
 export default async function EventsPage() {
+  if (!(await checkSectionAccess("events"))) return <SectionUnavailable />;
+
   const [events, competitions] = await Promise.all([getEvents(), getGroupCompetitions()]);
 
   const eventEntries = events.map((e) => ({

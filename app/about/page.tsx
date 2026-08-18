@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/Card";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE, RANKS } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,7 +11,9 @@ export const metadata: Metadata = {
   description: `Learn about ${CLAN_NAME}, our history, values, rank structure, and how to join.`,
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  if (!(await checkSectionAccess("about"))) return <SectionUnavailable />;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="font-display text-4xl text-gnome-green mb-8">

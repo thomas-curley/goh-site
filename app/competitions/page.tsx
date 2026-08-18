@@ -1,6 +1,8 @@
 import { getGroupCompetitions, getCompetitionLeaders, type CompetitionLeader } from "@/lib/wom";
 import { Card } from "@/components/ui/Card";
 import { formatNumber } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,9 +10,11 @@ export const metadata: Metadata = {
   description: "View active and past Gn0me Home clan competitions from Wise Old Man.",
 };
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic"; // gated per-viewer now, can't be statically cached
 
 export default async function CompetitionsPage() {
+  if (!(await checkSectionAccess("competitions"))) return <SectionUnavailable />;
+
   const competitions = await getGroupCompetitions();
 
   const now = new Date();

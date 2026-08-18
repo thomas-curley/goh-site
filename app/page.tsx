@@ -8,6 +8,8 @@ import { formatNumber } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
 import { EVENT_TYPES } from "@/lib/constants";
 import { resolveUnicodeShortcodes } from "@/lib/emoji-shortcodes";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +72,8 @@ async function getAnnouncements() {
 }
 
 export default async function HomePage() {
+  if (!(await checkSectionAccess("home"))) return <SectionUnavailable />;
+
   const [groupDetails, achievements, upcomingEvents, activeCompetitions, announcements] = await Promise.all([
     getGroupDetails(),
     getGroupAchievements(50),

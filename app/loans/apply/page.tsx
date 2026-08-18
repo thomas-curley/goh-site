@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { checkClanEligibility, isSectionStaffOnly } from "@/lib/clan-access";
+import { checkClanEligibility } from "@/lib/clan-access";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import { LoanApplicationForm } from "@/components/loans/LoanApplicationForm";
 import { Card } from "@/components/ui/Card";
 import type { Metadata } from "next";
@@ -21,16 +23,13 @@ function getServiceClient() {
 }
 
 export default async function LoanApplyPage() {
+  if (!(await checkSectionAccess("bank"))) return <SectionUnavailable />;
+
   const authClient = await createSupabaseServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   const serviceClient = getServiceClient();
   const eligibility = serviceClient
-    ? await checkClanEligibility(
-        serviceClient,
-        (await isSectionStaffOnly(serviceClient, "bank")) ? "staff" : "verified_player",
-        user?.id ?? null,
-        "the loan board"
-      )
+    ? await checkClanEligibility(serviceClient, "verified_player", user?.id ?? null, "the loan board")
     : { eligible: true };
 
   return (

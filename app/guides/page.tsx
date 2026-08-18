@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -62,7 +64,9 @@ const ICONS: Record<string, string> = {
   monitor: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
 };
 
-export default function GuidesPage() {
+export default async function GuidesPage() {
+  if (!(await checkSectionAccess("guides"))) return <SectionUnavailable />;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <h1 className="font-display text-4xl text-gnome-green mb-2">
