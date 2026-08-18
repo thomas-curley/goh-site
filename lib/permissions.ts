@@ -102,6 +102,11 @@ export const PERMISSIONS = {
     label: "Review a Gn0mie Submissions",
     description: "Approve or reject public shoutouts about clan members before they post to Discord",
   },
+  manage_sections: {
+    key: "manage_sections",
+    label: "Manage Section Visibility",
+    description: "Toggle which site sections are staff-only",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",

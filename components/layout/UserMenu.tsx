@@ -12,6 +12,14 @@ export function UserMenu() {
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   const isStaff = useIsStaff();
+  const [bankStaffOnly, setBankStaffOnly] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/site-sections/staff-only")
+      .then((res) => res.json())
+      .then((data) => setBankStaffOnly(Array.isArray(data.keys) && data.keys.includes("bank")))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -102,7 +110,7 @@ export function UserMenu() {
           >
             My Gn0meBook Profile
           </Link>
-          {isStaff && (
+          {(!bankStaffOnly || isStaff) && (
             <Link
               href="/loans/mine"
               onClick={() => setOpen(false)}

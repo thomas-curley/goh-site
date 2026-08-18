@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getGroupMembers } from "@/lib/wom";
 import { getRankByName } from "@/lib/constants";
+import type { SiteSectionKey } from "@/lib/site-sections";
 
 export type AccessLevel = "anonymous" | "verified_player" | "clan_member" | "staff";
 
@@ -74,4 +75,15 @@ export async function checkClanEligibility(
   }
 
   return { eligible: true, verifiedName: profile.rsn, discordId: profile.discord_id };
+}
+
+/**
+ * Whether an admin has currently toggled a section (see lib/site-sections.ts)
+ * staff-only via /admin/sections. Absence of a row means "not staff-only" --
+ * the section is left at whatever baseline access level its own page
+ * already checks, until an admin explicitly restricts it.
+ */
+export async function isSectionStaffOnly(supabase: SupabaseClient, key: SiteSectionKey): Promise<boolean> {
+  const { data } = await supabase.from("site_sections").select("staff_only").eq("key", key).maybeSingle();
+  return data?.staff_only ?? false;
 }
