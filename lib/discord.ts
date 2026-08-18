@@ -3,6 +3,8 @@
  * Requires DISCORD_BOT_TOKEN and DISCORD_GUILD_ID env vars.
  */
 
+import { resolveUnicodeShortcodes } from "./emoji-shortcodes";
+
 const DISCORD_API = "https://discord.com/api/v10";
 
 function getHeaders() {
@@ -69,26 +71,28 @@ export async function getGuildEmojis(): Promise<GuildEmoji[]> {
 }
 
 /**
- * Resolves :name: shorthand for custom server emotes into Discord's actual
- * <:name:id> (or <a:name:id> for animated) message syntax. Discord's own
- * client does this automatically as you type, but that conversion never
+ * Resolves :name: shorthand for both custom server emotes (into Discord's
+ * actual <:name:id>/<a:name:id> message syntax) and standard Unicode emoji
+ * (into the real character, via lib/emoji-shortcodes.ts). Discord's own
+ * client does both automatically as you type, but that conversion never
  * happens for messages sent through the bot API -- without this, an emote
- * typed as :GnomePog: just posts as the literal text ":GnomePog:". Content
- * with no :word:-shaped token skips the emoji-list fetch entirely; a name
- * that doesn't match any real server emote is left untouched rather than
+ * typed as :GnomePog: or :crescent_moon: just posts as literal text.
+ * Content with no :word:-shaped token skips the emoji-list fetch entirely;
+ * a name that doesn't match either source is left untouched rather than
  * erroring (it might just be literal text with colons in it).
  */
 async function resolveEmoteShorthand(content: string): Promise<string> {
   if (!/:[a-zA-Z0-9_]+:/.test(content)) return content;
 
   const emojis = await getGuildEmojis();
-  if (emojis.length === 0) return content;
-
   const byName = new Map(emojis.map((e) => [e.name, e]));
-  return content.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
+
+  const withCustomEmotes = content.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
     const emoji = byName.get(name);
     return emoji ? `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>` : match;
   });
+
+  return resolveUnicodeShortcodes(withCustomEmotes);
 }
 
 interface DiscordScheduledEvent {

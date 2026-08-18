@@ -7,6 +7,7 @@ import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
 import { EVENT_TYPES } from "@/lib/constants";
+import { resolveUnicodeShortcodes } from "@/lib/emoji-shortcodes";
 
 export const dynamic = "force-dynamic";
 
@@ -290,10 +291,10 @@ export default async function HomePage() {
                     </p>
                   </div>
                   <h3 className="font-display text-lg text-bark-brown">
-                    {a.title}
+                    {resolveUnicodeShortcodes(a.title)}
                   </h3>
                   <p className="text-sm text-bark-brown-light mt-2 line-clamp-3">
-                    {a.content}
+                    {resolveUnicodeShortcodes(a.content)}
                   </p>
                   {a.author_name && (
                     <p className="text-xs text-iron-grey mt-2">— {a.author_name}</p>
