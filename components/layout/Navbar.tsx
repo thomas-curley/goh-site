@@ -72,6 +72,10 @@ const NAV_ITEMS: NavItem[] = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  // Separate accordion state for the mobile panel's dropdown groups -- only
+  // one open at a time, so the list stays short instead of every group's
+  // items being visible (and the whole menu needing to scroll) at once.
+  const [mobileOpenGroup, setMobileOpenGroup] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const isStaff = useIsStaff();
@@ -84,18 +88,10 @@ export function Navbar() {
     }).filter((item): item is NavItem => item !== null);
   }, [isStaff]);
 
-  // Flattened for the mobile menu -- section headers for dropdown groups,
-  // their items indented directly beneath (no nested accordion; the whole
-  // mobile menu is already one big collapsible panel).
-  const mobileNavItems = useMemo<{ href: string; label: string; group?: string }[]>(
-    () =>
-      visibleNavItems.flatMap((item) =>
-        item.type === "link"
-          ? [{ href: item.href, label: item.label }]
-          : item.items.map((sub) => ({ href: sub.href, label: sub.label, group: item.label }))
-      ),
-    [visibleNavItems]
-  );
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+    setMobileOpenGroup(null);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -172,7 +168,7 @@ export function Navbar() {
           <div className="flex md:hidden items-center gap-1">
             <ThemeToggle />
             <button
-              onClick={() => setMobileOpen(!mobileOpen)}
+              onClick={() => (mobileOpen ? closeMobileMenu() : setMobileOpen(true))}
               className="p-2 rounded-md text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
               aria-label="Toggle navigation menu"
             >
@@ -202,32 +198,62 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu -- an accordion (one dropdown group open at a time)
+            inside its own scrollable region, so it never grows taller than
+            the viewport and clips off unreachable links the way a fixed
+            max-height would. */}
         <div
           className={cn(
-            "md:hidden overflow-hidden transition-all duration-300",
-            mobileOpen ? "max-h-[800px] pb-4" : "max-h-0"
+            "md:hidden transition-all duration-300",
+            mobileOpen ? "max-h-[calc(100vh-4rem)] overflow-y-auto pb-4" : "max-h-0 overflow-hidden"
           )}
         >
-          {mobileNavItems.map((link, i) => {
-            const isNewGroup = link.group && mobileNavItems[i - 1]?.group !== link.group;
-            return (
-              <div key={link.href}>
-                {isNewGroup && (
-                  <p className="px-3 pt-3 pb-1 text-xs uppercase tracking-wide text-parchment/60">
-                    {link.group}
-                  </p>
-                )}
+          {visibleNavItems.map((item) => {
+            if (item.type === "link") {
+              return (
                 <Link
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "block py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors",
-                    link.group ? "px-5" : "px-3"
-                  )}
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMobileMenu}
+                  className="block px-3 py-2.5 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                 >
-                  {link.label}
+                  {item.label}
                 </Link>
+              );
+            }
+
+            const isOpen = mobileOpenGroup === item.label;
+            return (
+              <div key={item.label} className="border-t border-bark-brown-light/40 first:border-t-0">
+                <button
+                  type="button"
+                  onClick={() => setMobileOpenGroup((prev) => (prev === item.label ? null : item.label))}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors cursor-pointer"
+                >
+                  {item.label}
+                  <svg
+                    className={cn("w-4 h-4 transition-transform shrink-0", isOpen ? "rotate-180" : "")}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isOpen && (
+                  <div className="pb-1">
+                    {item.items.map((sub) => (
+                      <Link
+                        key={sub.href}
+                        href={sub.href}
+                        onClick={closeMobileMenu}
+                        className="block px-6 py-2 rounded-md text-sm font-body text-parchment/90 hover:text-gold-light hover:bg-bark-brown-light transition-colors"
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -256,34 +282,34 @@ export function Navbar() {
                   </div>
                   <Link
                     href="/account"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={closeMobileMenu}
                     className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                   >
                     My Account / Link RSN
                   </Link>
                   <Link
                     href="/gn0mebook/edit"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={closeMobileMenu}
                     className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                   >
                     My Gn0meBook Profile
                   </Link>
                   <Link
                     href="/admin"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={closeMobileMenu}
                     className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                   >
                     Admin Panel
                   </Link>
                   <Link
                     href="/apply"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={closeMobileMenu}
                     className="block px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
                   >
                     Apply for Staff
                   </Link>
                   <button
-                    onClick={() => { setMobileOpen(false); handleLogout(); }}
+                    onClick={() => { closeMobileMenu(); handleLogout(); }}
                     className="block w-full text-left px-3 py-2 rounded-md text-base font-body text-red-accent hover:bg-bark-brown-light transition-colors cursor-pointer"
                   >
                     Log Out
@@ -292,7 +318,7 @@ export function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={closeMobileMenu}
                   className="block px-3 py-2 rounded-md text-base font-body text-gold hover:text-gold-light hover:bg-bark-brown-light transition-colors font-semibold"
                 >
                   Login with Discord
