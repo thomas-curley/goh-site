@@ -3,6 +3,8 @@ import { getPublishedProfiles } from "@/lib/gn0mebook";
 import { getRankByName } from "@/lib/constants";
 import { ProfileCard } from "@/components/gn0mebook/ProfileCard";
 import { Card } from "@/components/ui/Card";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,9 +12,11 @@ export const metadata: Metadata = {
   description: "Meet the people behind Gn0me Home -- who's running the clan, and who's in it.",
 };
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic"; // gated per-viewer now, can't be statically cached
 
 export default async function Gn0meBookPage() {
+  if (!(await checkSectionAccess("gn0mebook"))) return <SectionUnavailable />;
+
   const profiles = await getPublishedProfiles();
   const founders = profiles.filter((p) => getRankByName(p.clan_rank ?? "")?.key === "council_member");
   const staff = profiles.filter((p) => ["yew", "pine", "oak"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));

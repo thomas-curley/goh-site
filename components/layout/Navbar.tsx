@@ -8,59 +8,54 @@ import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { NavDropdown } from "./NavDropdown";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { useIsStaff } from "@/lib/use-is-staff";
 import type { SiteSectionKey } from "@/lib/site-sections";
 import type { User } from "@supabase/supabase-js";
 
 interface SubNavItem {
   href: string;
   label: string;
-  // Hides this item from the nav entirely for non-staff, rather than
-  // showing it and letting the page's own gate screen turn people away --
-  // purely a UI convenience (see lib/use-is-staff.ts), the real access
-  // check still lives server-side on each page.
-  requiredTier?: "staff";
-  // Same idea, but the staff-only-ness is admin-toggled at runtime (see
-  // lib/site-sections.ts + /admin/sections) instead of permanently hardcoded
-  // -- for features not released yet that'll eventually open up to everyone.
-  sectionKey?: SiteSectionKey;
+  // Which registered section (see lib/site-sections.ts + /admin/sections)
+  // gates this item. Filtered client-side against the current viewer's
+  // hidden-key set purely as a UI convenience -- the real access check
+  // still lives server-side on each page.
+  sectionKey: SiteSectionKey;
 }
 
 type NavItem =
-  | { type: "link"; href: string; label: string }
+  | { type: "link"; href: string; label: string; sectionKey: SiteSectionKey }
   | { type: "dropdown"; label: string; items: SubNavItem[] };
 
 const NAV_ITEMS: NavItem[] = [
-  { type: "link", href: "/", label: "Home" },
-  { type: "link", href: "/events", label: "Events" },
+  { type: "link", href: "/", label: "Home", sectionKey: "home" },
+  { type: "link", href: "/events", label: "Events", sectionKey: "events" },
   {
     type: "dropdown",
     label: "Members",
     items: [
-      { href: "/gn0mebook", label: "Gn0meBook" },
-      { href: "/staff-handbook", label: "Staff Handbook", requiredTier: "staff" },
-      { href: "/members", label: "Member List" },
-      { href: "/leaderboard", label: "Leaderboard" },
-      { href: "/competitions", label: "Competitions" },
-      { href: "/hiscores", label: "Hiscores" },
+      { href: "/gn0mebook", label: "Gn0meBook", sectionKey: "gn0mebook" },
+      { href: "/staff-handbook", label: "Staff Handbook", sectionKey: "staff_handbook" },
+      { href: "/members", label: "Member List", sectionKey: "members_list" },
+      { href: "/leaderboard", label: "Leaderboard", sectionKey: "leaderboard" },
+      { href: "/competitions", label: "Competitions", sectionKey: "competitions" },
+      { href: "/hiscores", label: "Hiscores", sectionKey: "hiscores" },
     ],
   },
   {
     type: "dropdown",
     label: "Guides",
     items: [
-      { href: "/guides", label: "Guides" },
-      { href: "/tools", label: "Tools" },
+      { href: "/guides", label: "Guides", sectionKey: "guides" },
+      { href: "/tools", label: "Tools", sectionKey: "tools" },
     ],
   },
   {
     type: "dropdown",
     label: "Feedback",
     items: [
-      { href: "/feedback", label: "Submit Feedback" },
-      { href: "/surveys", label: "Surveys" },
-      { href: "/availability", label: "Availability" },
-      { href: "/review-a-gnomie", label: "Review a Gn0mie" },
+      { href: "/feedback", label: "Submit Feedback", sectionKey: "feedback" },
+      { href: "/surveys", label: "Surveys", sectionKey: "surveys" },
+      { href: "/availability", label: "Availability", sectionKey: "availability" },
+      { href: "/review-a-gnomie", label: "Review a Gn0mie", sectionKey: "gnomie_reviews" },
     ],
   },
   {
@@ -71,7 +66,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/loans/apply", label: "Request a Loan", sectionKey: "bank" },
     ],
   },
-  { type: "link", href: "/about", label: "About" },
+  { type: "link", href: "/about", label: "About", sectionKey: "about" },
 ];
 
 export function Navbar() {
@@ -83,27 +78,24 @@ export function Navbar() {
   const [mobileOpenGroup, setMobileOpenGroup] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
-  const [staffOnlySections, setStaffOnlySections] = useState<Set<string>>(new Set());
-  const isStaff = useIsStaff();
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/site-sections/staff-only")
+    fetch("/api/site-sections/visible")
       .then((res) => res.json())
-      .then((data) => setStaffOnlySections(new Set(Array.isArray(data.keys) ? data.keys : [])))
+      .then((data) => setHiddenKeys(new Set(Array.isArray(data.hiddenKeys) ? data.hiddenKeys : [])))
       .catch(() => {});
   }, []);
 
   const visibleNavItems = useMemo(() => {
     return NAV_ITEMS.map((item) => {
-      if (item.type === "link") return item;
-      const items = item.items.filter((sub) => {
-        if (sub.requiredTier === "staff" && !isStaff) return false;
-        if (sub.sectionKey && staffOnlySections.has(sub.sectionKey) && !isStaff) return false;
-        return true;
-      });
+      if (item.type === "link") {
+        return hiddenKeys.has(item.sectionKey) ? null : item;
+      }
+      const items = item.items.filter((sub) => !hiddenKeys.has(sub.sectionKey));
       return items.length > 0 ? { ...item, items } : null;
     }).filter((item): item is NavItem => item !== null);
-  }, [isStaff, staffOnlySections]);
+  }, [hiddenKeys]);
 
   const closeMobileMenu = () => {
     setMobileOpen(false);

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { useIsStaff } from "@/lib/use-is-staff";
 import type { User } from "@supabase/supabase-js";
 
 export function UserMenu() {
@@ -11,13 +10,12 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
-  const isStaff = useIsStaff();
-  const [bankStaffOnly, setBankStaffOnly] = useState(true);
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/site-sections/staff-only")
+    fetch("/api/site-sections/visible")
       .then((res) => res.json())
-      .then((data) => setBankStaffOnly(Array.isArray(data.keys) && data.keys.includes("bank")))
+      .then((data) => setHiddenKeys(new Set(Array.isArray(data.hiddenKeys) ? data.hiddenKeys : [])))
       .catch(() => {});
   }, []);
 
@@ -110,7 +108,7 @@ export function UserMenu() {
           >
             My Gn0meBook Profile
           </Link>
-          {(!bankStaffOnly || isStaff) && (
+          {!hiddenKeys.has("bank") && (
             <Link
               href="/loans/mine"
               onClick={() => setOpen(false)}

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { checkClanEligibility, isSectionStaffOnly } from "@/lib/clan-access";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import { ClaimButton } from "@/components/loans/ClaimButton";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -37,20 +38,14 @@ interface OpenLoan {
 }
 
 export default async function LoansBoardPage() {
+  if (!(await checkSectionAccess("bank"))) return <SectionUnavailable />;
+
   const authClient = await createSupabaseServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   const serviceClient = getServiceClient();
-  const eligibility = serviceClient
-    ? await checkClanEligibility(
-        serviceClient,
-        (await isSectionStaffOnly(serviceClient, "bank")) ? "staff" : "verified_player",
-        user?.id ?? null,
-        "the loan board"
-      )
-    : { eligible: true };
 
   let loans: OpenLoan[] = [];
-  if (eligibility.eligible && serviceClient) {
+  if (serviceClient) {
     const { data } = await serviceClient
       .from("loan_requests")
       .select("*, borrower:user_profiles!loan_requests_borrower_id_fkey(discord_username, rsn)")
@@ -72,16 +67,7 @@ export default async function LoansBoardPage() {
         over Discord once you do.
       </p>
 
-      {!eligibility.eligible ? (
-        <Card hover={false} className="text-center py-10">
-          <p className="text-bark-brown-light mb-4">{eligibility.reason}</p>
-          {eligibility.reason?.includes("signed in") ? (
-            <Link href="/login" className="text-sm text-gnome-green hover:underline">Log in →</Link>
-          ) : eligibility.reason?.includes("Link and verify") ? (
-            <Link href="/account" className="text-sm text-gnome-green hover:underline">Go to your Account →</Link>
-          ) : null}
-        </Card>
-      ) : loans.length === 0 ? (
+      {loans.length === 0 ? (
         <Card hover={false} className="text-center py-10">
           <p className="text-bark-brown-light">No open loan requests right now.</p>
         </Card>

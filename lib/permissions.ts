@@ -116,12 +116,19 @@ export const PERMISSIONS = {
 
 export type PermissionKey = keyof typeof PERMISSIONS;
 
-// All assignable roles (matching RANKS from constants, using the display keys)
-export const ASSIGNABLE_ROLES = RANKS.map((r) => ({
-  key: r.key,
-  name: r.name,
-  order: r.order,
-}));
+// All assignable roles (matching RANKS from constants, using the display
+// keys) plus a synthetic "Guest" role -- order -1, always first -- covering
+// anyone with no clan rank at all: never logged in, or logged in without a
+// linked/verified RSN. Both the Permissions grid and the Section Visibility
+// grid iterate this same list, so adding it here surfaces it in both.
+export const ASSIGNABLE_ROLES = [
+  { key: "guest", name: "Guest / Not Registered", order: -1 },
+  ...RANKS.map((r) => ({
+    key: r.key,
+    name: r.name,
+    order: r.order,
+  })),
+];
 
 /**
  * Normalize a WOM role name to our internal role key.

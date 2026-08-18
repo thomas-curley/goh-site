@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import { OWNER_TOOLS, WOM_GROUP_URL } from "@/lib/constants";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -58,7 +60,9 @@ const COMMUNITY_TOOLS = [
   },
 ];
 
-export default function ToolsPage() {
+export default async function ToolsPage() {
+  if (!(await checkSectionAccess("tools"))) return <SectionUnavailable />;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="font-display text-4xl text-gnome-green mb-2">Tools & Links</h1>

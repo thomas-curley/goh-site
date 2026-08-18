@@ -4,13 +4,15 @@ import { formatNumber } from "@/lib/utils";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { HiscoresSelector } from "@/components/hiscores/HiscoresSelector";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 
 export const metadata: Metadata = {
   title: "Hiscores",
   description: "Gn0me Home clan leaderboards — top members by skills, bosses, and more.",
 };
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic"; // gated per-viewer now, can't be statically cached
 
 const DEFAULT_METRICS = [
   { key: "overall", label: "Overall", type: "skill" },
@@ -22,6 +24,8 @@ const DEFAULT_METRICS = [
 ];
 
 export default async function HiscoresPage() {
+  if (!(await checkSectionAccess("hiscores"))) return <SectionUnavailable />;
+
   // Fetch default leaderboards in parallel
   const results = await Promise.all(
     DEFAULT_METRICS.map(async (metric) => {
