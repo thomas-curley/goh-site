@@ -11,8 +11,6 @@ interface NavItem {
   group?: string;
 }
 
-const COLLAPSED_GROUPS_KEY = "admin_nav_collapsed_groups";
-
 function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -29,37 +27,6 @@ function ChevronIcon({ open }: { open: boolean }) {
 export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-  const [loadedPrefs, setLoadedPrefs] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(COLLAPSED_GROUPS_KEY);
-      if (stored) setCollapsedGroups(new Set(JSON.parse(stored)));
-    } catch {
-      // ignore malformed/unavailable storage
-    }
-    setLoadedPrefs(true);
-  }, []);
-
-  // Close the mobile panel on navigation.
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
-
-  const toggleGroup = (name: string) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      if (loadedPrefs) {
-        try {
-          localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify([...next]));
-        } catch {
-          // ignore storage failures (private browsing, quota, etc.)
-        }
-      }
-      return next;
-    });
-  };
 
   const ungrouped = navItems.filter((item) => !item.group);
   const groups: { name: string; items: NavItem[] }[] = [];
@@ -72,6 +39,21 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
     }
     group.items.push(item);
   }
+
+  // Accordion: only one group open at a time, so the sidebar stays scannable
+  // instead of every section being expanded at once. Whichever group
+  // contains the current page is opened automatically on navigation.
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    const activeGroup = groups.find((g) => g.items.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`)));
+    setOpenGroup(activeGroup?.name ?? null);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleGroup = (name: string) => {
+    setOpenGroup((prev) => (prev === name ? null : name));
+  };
 
   const linkClass = (href: string) =>
     cn(
@@ -113,7 +95,7 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
           </div>
 
           {groups.map((group) => {
-            const collapsed = collapsedGroups.has(group.name);
+            const isOpen = openGroup === group.name;
             return (
               <div key={group.name} className="pt-2">
                 <button
@@ -122,9 +104,9 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
                   className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-iron-grey hover:text-gnome-green transition-colors cursor-pointer"
                 >
                   {group.name}
-                  <ChevronIcon open={!collapsed} />
+                  <ChevronIcon open={isOpen} />
                 </button>
-                {!collapsed && (
+                {isOpen && (
                   <div className="space-y-1 mt-1">
                     {group.items.map((item) => (
                       <Link key={item.href} href={item.href} className={linkClass(item.href)}>
