@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { checkClanEligibility } from "@/lib/clan-access";
+import { checkClanEligibility, isSectionStaffOnly } from "@/lib/clan-access";
 import { getAlertChannel } from "@/lib/alert-channels";
 import { postToDestination } from "@/lib/discord";
 import { LOAN_TIMEFRAMES, LOAN_PURPOSES, PREVIOUS_LOAN_OPTIONS, type LoanType, type LoanStatus } from "@/lib/loans";
@@ -25,7 +25,12 @@ export async function GET(request: NextRequest) {
 
   const authClient = await createSupabaseServerClient();
   const { data: { user } } = await authClient.auth.getUser();
-  const eligibility = await checkClanEligibility(supabase, "verified_player", user?.id ?? null, "the loan board");
+  const eligibility = await checkClanEligibility(
+    supabase,
+    (await isSectionStaffOnly(supabase, "bank")) ? "staff" : "verified_player",
+    user?.id ?? null,
+    "the loan board"
+  );
 
   if (!eligibility.eligible) {
     return NextResponse.json({ loans: [], eligibility });
@@ -52,7 +57,12 @@ export async function POST(request: NextRequest) {
 
   const authClient = await createSupabaseServerClient();
   const { data: { user } } = await authClient.auth.getUser();
-  const eligibility = await checkClanEligibility(supabase, "verified_player", user?.id ?? null, "the loan board");
+  const eligibility = await checkClanEligibility(
+    supabase,
+    (await isSectionStaffOnly(supabase, "bank")) ? "staff" : "verified_player",
+    user?.id ?? null,
+    "the loan board"
+  );
   if (!eligibility.eligible || !user) {
     return NextResponse.json({ error: eligibility.reason ?? "You are not eligible to request a loan." }, { status: 403 });
   }

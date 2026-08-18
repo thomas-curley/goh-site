@@ -9,6 +9,7 @@ import { UserMenu } from "./UserMenu";
 import { NavDropdown } from "./NavDropdown";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useIsStaff } from "@/lib/use-is-staff";
+import type { SiteSectionKey } from "@/lib/site-sections";
 import type { User } from "@supabase/supabase-js";
 
 interface SubNavItem {
@@ -19,6 +20,10 @@ interface SubNavItem {
   // purely a UI convenience (see lib/use-is-staff.ts), the real access
   // check still lives server-side on each page.
   requiredTier?: "staff";
+  // Same idea, but the staff-only-ness is admin-toggled at runtime (see
+  // lib/site-sections.ts + /admin/sections) instead of permanently hardcoded
+  // -- for features not released yet that'll eventually open up to everyone.
+  sectionKey?: SiteSectionKey;
 }
 
 type NavItem =
@@ -62,8 +67,8 @@ const NAV_ITEMS: NavItem[] = [
     type: "dropdown",
     label: "Bank",
     items: [
-      { href: "/loans", label: "Browse Loans", requiredTier: "staff" },
-      { href: "/loans/apply", label: "Request a Loan", requiredTier: "staff" },
+      { href: "/loans", label: "Browse Loans", sectionKey: "bank" },
+      { href: "/loans/apply", label: "Request a Loan", sectionKey: "bank" },
     ],
   },
   { type: "link", href: "/about", label: "About" },
@@ -78,15 +83,27 @@ export function Navbar() {
   const [mobileOpenGroup, setMobileOpenGroup] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [staffOnlySections, setStaffOnlySections] = useState<Set<string>>(new Set());
   const isStaff = useIsStaff();
+
+  useEffect(() => {
+    fetch("/api/site-sections/staff-only")
+      .then((res) => res.json())
+      .then((data) => setStaffOnlySections(new Set(Array.isArray(data.keys) ? data.keys : [])))
+      .catch(() => {});
+  }, []);
 
   const visibleNavItems = useMemo(() => {
     return NAV_ITEMS.map((item) => {
       if (item.type === "link") return item;
-      const items = item.items.filter((sub) => !sub.requiredTier || isStaff);
+      const items = item.items.filter((sub) => {
+        if (sub.requiredTier === "staff" && !isStaff) return false;
+        if (sub.sectionKey && staffOnlySections.has(sub.sectionKey) && !isStaff) return false;
+        return true;
+      });
       return items.length > 0 ? { ...item, items } : null;
     }).filter((item): item is NavItem => item !== null);
-  }, [isStaff]);
+  }, [isStaff, staffOnlySections]);
 
   const closeMobileMenu = () => {
     setMobileOpen(false);

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { checkClanEligibility } from "@/lib/clan-access";
+import { checkClanEligibility, isSectionStaffOnly } from "@/lib/clan-access";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { ClaimButton } from "@/components/loans/ClaimButton";
 import { Card } from "@/components/ui/Card";
@@ -41,7 +41,12 @@ export default async function LoansBoardPage() {
   const { data: { user } } = await authClient.auth.getUser();
   const serviceClient = getServiceClient();
   const eligibility = serviceClient
-    ? await checkClanEligibility(serviceClient, "verified_player", user?.id ?? null, "the loan board")
+    ? await checkClanEligibility(
+        serviceClient,
+        (await isSectionStaffOnly(serviceClient, "bank")) ? "staff" : "verified_player",
+        user?.id ?? null,
+        "the loan board"
+      )
     : { eligible: true };
 
   let loans: OpenLoan[] = [];

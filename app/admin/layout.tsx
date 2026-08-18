@@ -43,6 +43,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
   { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions", group: "System" },
   { href: "/admin/alert-channels", label: "Alert Channels", permission: "manage_settings", group: "System" },
   { href: "/admin/banned-ips", label: "Banned IPs", permission: "manage_banned_ips", group: "System" },
+  { href: "/admin/sections", label: "Section Visibility", permission: "manage_sections", group: "System" },
 ];
 
 export default async function AdminLayout({
