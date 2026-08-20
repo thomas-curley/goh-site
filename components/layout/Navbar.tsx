@@ -27,8 +27,14 @@ type NavItem =
 
 const NAV_ITEMS: NavItem[] = [
   { type: "link", href: "/", label: "Home", sectionKey: "home" },
-  { type: "link", href: "/events", label: "Events", sectionKey: "events" },
-  { type: "link", href: "/bingo", label: "Bingo", sectionKey: "bingo" },
+  {
+    type: "dropdown",
+    label: "Events",
+    items: [
+      { href: "/events", label: "Calendar", sectionKey: "events" },
+      { href: "/bingo", label: "Bingo", sectionKey: "bingo" },
+    ],
+  },
   {
     type: "dropdown",
     label: "Members",
