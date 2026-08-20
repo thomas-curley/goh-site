@@ -23,7 +23,7 @@ export default function LoginPage() {
         provider: "discord",
         options: {
           redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
-          scopes: "identify guilds",
+          scopes: "identify email guilds",
         },
       });
 
