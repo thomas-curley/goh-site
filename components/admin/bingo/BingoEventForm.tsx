@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { GRID_SIZES } from "@/lib/bingo";
+import { normalizeRsn } from "@/lib/wom";
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
@@ -61,6 +62,24 @@ function emptyTile(position: number): TileDraft {
 function parseWomCompetitionId(input: string): number | null {
   const match = input.match(/(\d+)\s*$/);
   return match ? Number(match[1]) : null;
+}
+
+/** Splits a pasted block of RSNs on newlines/commas/semicolons into a clean, deduped list. */
+function parseRsnList(text: string): string[] {
+  const seen = new Set<string>();
+  return text
+    .split(/[\n,;]+/)
+    .map((s) => s.trim())
+    .filter((s) => {
+      if (!s || seen.has(s.toLowerCase())) return false;
+      seen.add(s.toLowerCase());
+      return true;
+    });
+}
+
+/** Matches a raw RSN against the clan roster (case/spacing-insensitive) so pasted or typed names line up with the canonical display name -- falls back to the raw text for anyone not found (e.g. a typo, or someone not in the clan yet). */
+function resolveRsn(raw: string, clanMembers: string[]): string {
+  return clanMembers.find((m) => normalizeRsn(m) === normalizeRsn(raw)) ?? raw;
 }
 
 export interface BingoEventFormInitial {
@@ -134,6 +153,33 @@ export function BingoEventForm({ initial }: { initial?: BingoEventFormInitial })
     updateTeam(ti, { members: [...teams[ti].members, rsn] });
   };
   const removeMember = (ti: number, rsn: string) => updateTeam(ti, { members: teams[ti].members.filter((m) => m !== rsn) });
+
+  // Bulk-add (paste list): resolve each pasted name against the roster, dedupe against what's already on the team, add the rest in one update.
+  const addMembers = (ti: number, rsns: string[]): number => {
+    const resolved = rsns.map((raw) => resolveRsn(raw, clanMembers));
+    const existing = new Set(teams[ti].members);
+    const toAdd: string[] = [];
+    for (const rsn of resolved) {
+      if (existing.has(rsn) || toAdd.includes(rsn)) continue;
+      toAdd.push(rsn);
+    }
+    if (toAdd.length > 0) updateTeam(ti, { members: [...teams[ti].members, ...toAdd] });
+    return toAdd.length;
+  };
+
+  // "Clan-wide" quick fill: round-robins every roster member not yet on any
+  // team into the current teams, in order -- leaves existing manual picks
+  // untouched rather than wiping and redistributing everyone.
+  const autoFillClanWide = () => {
+    const alreadyAssigned = new Set(teams.flatMap((t) => t.members));
+    const unassigned = clanMembers.filter((m) => !alreadyAssigned.has(m));
+    if (unassigned.length === 0 || teams.length === 0) return;
+    setTeams((prev) => {
+      const next = prev.map((t) => ({ ...t, members: [...t.members] }));
+      unassigned.forEach((rsn, i) => next[i % next.length].members.push(rsn));
+      return next;
+    });
+  };
 
   const updateTile = (i: number, patch: Partial<TileDraft>) => setTiles((prev) => prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
 
@@ -250,7 +296,12 @@ export function BingoEventForm({ initial }: { initial?: BingoEventFormInitial })
       </Card>
 
       <Card hover={false}>
-        <h2 className="font-display text-xl text-bark-brown mb-1">Teams</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+          <h2 className="font-display text-xl text-bark-brown">Teams</h2>
+          <button type="button" onClick={autoFillClanWide} className="text-xs text-gnome-green hover:underline cursor-pointer shrink-0">
+            Fill with entire clan (split evenly)
+          </button>
+        </div>
         <p className="text-xs text-iron-grey mb-4">Every team shares the same tiles -- each completes them independently.</p>
         <div className="space-y-4">
           {teams.map((team, ti) => (
@@ -264,6 +315,7 @@ export function BingoEventForm({ initial }: { initial?: BingoEventFormInitial })
               onRemove={() => removeTeam(ti)}
               onAddMember={(rsn) => addMember(ti, rsn)}
               onRemoveMember={(rsn) => removeMember(ti, rsn)}
+              onAddMembers={(rsns) => addMembers(ti, rsns)}
             />
           ))}
           <button type="button" onClick={addTeam} className="text-sm text-gnome-green hover:underline cursor-pointer">+ Add team</button>
@@ -389,7 +441,7 @@ export function BingoEventForm({ initial }: { initial?: BingoEventFormInitial })
 }
 
 function TeamEditor({
-  team, index, removable, clanMembers, onUpdate, onRemove, onAddMember, onRemoveMember,
+  team, index, removable, clanMembers, onUpdate, onRemove, onAddMember, onRemoveMember, onAddMembers,
 }: {
   team: TeamDraft;
   index: number;
@@ -399,9 +451,13 @@ function TeamEditor({
   onRemove: () => void;
   onAddMember: (rsn: string) => void;
   onRemoveMember: (rsn: string) => void;
+  onAddMembers: (rsns: string[]) => number;
 }) {
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [pasteResult, setPasteResult] = useState<string | null>(null);
 
   const suggestions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -448,6 +504,40 @@ function TeamEditor({
                 {name}
               </button>
             ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-2">
+        <button type="button" onClick={() => setShowPaste((v) => !v)} className="text-xs text-gnome-green hover:underline cursor-pointer">
+          {showPaste ? "Hide paste list" : "+ Paste a list of RSNs"}
+        </button>
+        {showPaste && (
+          <div className="mt-2">
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              rows={3}
+              placeholder={"One per line, or comma-separated -- e.g.\nGn0me Vlad\nGn0me Bob, Gn0me Alice"}
+              className={`${inputClass} font-mono`}
+            />
+            <div className="flex items-center gap-2 mt-1.5">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={!pasteText.trim()}
+                onClick={() => {
+                  const rsns = parseRsnList(pasteText);
+                  const added = onAddMembers(rsns);
+                  setPasteResult(`Added ${added} of ${rsns.length}.`);
+                  setPasteText("");
+                }}
+              >
+                Add All
+              </Button>
+              {pasteResult && <span className="text-xs text-iron-grey">{pasteResult}</span>}
+            </div>
           </div>
         )}
       </div>
