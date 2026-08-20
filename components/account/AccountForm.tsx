@@ -25,6 +25,7 @@ interface AccountFormProps {
 export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [rsn, setRsn] = useState("");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error" | "taken"; message: string; takenBy?: string } | null>(null);
@@ -229,7 +230,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
     );
   }
 
-  const avatarUrl = profile?.discord_avatar ?? userMeta?.avatar_url;
+  const avatarUrl = !avatarFailed && (profile?.discord_avatar ?? userMeta?.avatar_url);
   const displayName = profile?.discord_username ?? userMeta?.full_name ?? "User";
 
   return (
@@ -241,7 +242,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
         <h2 className="font-display text-xl text-bark-brown mb-4">Discord Profile</h2>
         <div className="flex items-center gap-4">
           {avatarUrl && (
-            <img src={avatarUrl} alt="Discord avatar" className="w-12 h-12 rounded-full" />
+            <img src={avatarUrl} alt="Discord avatar" onError={() => setAvatarFailed(true)} className="w-12 h-12 rounded-full" />
           )}
           <div>
             <p className="font-mono font-bold text-bark-brown">{displayName}</p>

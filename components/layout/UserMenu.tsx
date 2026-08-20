@@ -11,6 +11,7 @@ export function UserMenu() {
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   useEffect(() => {
     fetch("/api/site-sections/visible")
@@ -68,7 +69,7 @@ export function UserMenu() {
     );
   }
 
-  const avatar = user.user_metadata?.avatar_url;
+  const avatar = !avatarFailed && user.user_metadata?.avatar_url;
   const name = user.user_metadata?.full_name ?? user.user_metadata?.name ?? "User";
 
   return (
@@ -78,7 +79,7 @@ export function UserMenu() {
         className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-bark-brown-light transition-colors cursor-pointer"
       >
         {avatar ? (
-          <img src={avatar} alt="" className="w-7 h-7 rounded-full" />
+          <img src={avatar} alt="" onError={() => setAvatarFailed(true)} className="w-7 h-7 rounded-full" />
         ) : (
           <div className="w-7 h-7 rounded-full bg-gnome-green flex items-center justify-center text-xs text-text-light font-bold">
             {name.charAt(0).toUpperCase()}

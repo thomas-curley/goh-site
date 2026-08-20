@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { createClient } from "@supabase/supabase-js";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { Card } from "@/components/ui/Card";
+import { ProfileAvatar } from "@/components/gn0mebook/ProfileAvatar";
 import type { Metadata } from "next";
 
 function getServiceClient() {
@@ -52,14 +53,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       )}
 
       <div className="relative z-10 flex items-end gap-4 mb-6 px-2">
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatarUrl} alt="" className="w-24 h-24 rounded-full object-cover border-4 border-parchment shadow-lg" />
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-gnome-green/15 flex items-center justify-center text-3xl font-display text-gnome-green border-4 border-parchment shadow-lg">
-            {name.charAt(0).toUpperCase()}
-          </div>
-        )}
+        <ProfileAvatar src={avatarUrl} name={name} />
         <div className="min-w-0 pb-1">
           <h1
             className={`font-display text-3xl truncate ${
