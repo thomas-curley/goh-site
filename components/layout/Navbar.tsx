@@ -79,6 +79,7 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   useEffect(() => {
     fetch("/api/site-sections/visible")
@@ -274,10 +275,11 @@ export function Navbar() {
               {user ? (
                 <>
                   <div className="flex items-center gap-3 px-3 py-2">
-                    {user.user_metadata?.avatar_url ? (
+                    {user.user_metadata?.avatar_url && !avatarFailed ? (
                       <img
                         src={user.user_metadata.avatar_url}
                         alt=""
+                        onError={() => setAvatarFailed(true)}
                         className="w-8 h-8 rounded-full"
                       />
                     ) : (
