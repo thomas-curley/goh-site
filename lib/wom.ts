@@ -120,6 +120,27 @@ export async function getCompetitionLeaders(id: number, limit: number = 3): Prom
   }
 }
 
+export interface TeamProgress {
+  teamName: string;
+  gained: number;
+}
+
+/** Per-team total gained for a team competition -- sums each participant's progress.gained by their teamName. Used to auto-mark bingo tiles complete once a team crosses a tile's target value. */
+export async function getCompetitionTeamProgress(womId: number): Promise<TeamProgress[]> {
+  try {
+    const details = await womClient.competitions.getCompetitionDetails(womId);
+    const totals = new Map<string, number>();
+    for (const p of details.participations) {
+      const team = p.teamName ?? "";
+      totals.set(team, (totals.get(team) ?? 0) + p.progress.gained);
+    }
+    return [...totals.entries()].map(([teamName, gained]) => ({ teamName, gained }));
+  } catch (error) {
+    console.error(`Failed to fetch competition ${womId} team progress from WOM:`, error);
+    return [];
+  }
+}
+
 export interface GroupGainEntry {
   username: string;
   displayName: string;

@@ -20,6 +20,7 @@ export const SITE_SECTIONS = [
   { key: "availability", label: "Availability", description: "Availability poll index." },
   { key: "gnomie_reviews", label: "Review a Gn0mie", description: "Public shoutout form." },
   { key: "bank", label: "Bank (Loans)", description: "Loan board, request form, My Loans." },
+  { key: "bingo", label: "Bingo", description: "Bingo event boards." },
   { key: "about", label: "About", description: "About page." },
 ] as const;
 

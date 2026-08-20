@@ -107,6 +107,11 @@ export const PERMISSIONS = {
     label: "Manage Section Visibility",
     description: "Toggle which site sections are staff-only",
   },
+  manage_bingo: {
+    key: "manage_bingo",
+    label: "Manage Bingo Events",
+    description: "Create bingo boards, assign teams, and review manual tile submissions",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
