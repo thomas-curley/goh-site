@@ -7,6 +7,7 @@ import { getProfileByUserId } from "@/lib/gn0mebook";
 const VALID_VISIBILITY: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const MAX_TEXT_LENGTH = 4000;
 const MAX_TAGLINE_LENGTH = 150;
+const MAX_PRONOUNS_LENGTH = 30;
 const MAX_SOCIAL_LINKS = 8;
 
 function getServiceClient() {
@@ -63,6 +64,7 @@ export async function PUT(request: NextRequest) {
 
   const update = {
     user_id: userId,
+    pronouns: text(body.pronouns, MAX_PRONOUNS_LENGTH),
     tagline: text(body.tagline, MAX_TAGLINE_LENGTH),
     about: text(body.about, MAX_TEXT_LENGTH),
     interests: text(body.interests, MAX_TEXT_LENGTH),

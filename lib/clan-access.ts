@@ -84,9 +84,12 @@ export async function checkClanEligibility(
  * they're a linked, verified, current clan member, or "guest" for anyone
  * else -- never logged in, no linked RSN, unverified, or no longer in the
  * clan. Shared so checkClanEligibility and isSectionVisible don't each keep
- * their own copy of the WOM-roster-lookup logic.
+ * their own copy of the WOM-roster-lookup logic. Exported so a caller that
+ * needs to check several sections/permissions at once (e.g.
+ * /api/site-sections/visible) can resolve the role a single time instead of
+ * once per check -- each resolution costs a WOM API call.
  */
-async function resolveEffectiveRole(supabase: SupabaseClient, userId: string | null): Promise<string> {
+export async function resolveEffectiveRole(supabase: SupabaseClient, userId: string | null): Promise<string> {
   if (!userId) return "guest";
 
   const { data: profile } = await supabase
@@ -112,6 +115,11 @@ async function resolveEffectiveRole(supabase: SupabaseClient, userId: string | n
  */
 export async function isSectionVisible(supabase: SupabaseClient, key: SiteSectionKey, userId: string | null): Promise<boolean> {
   const role = await resolveEffectiveRole(supabase, userId);
+  return isSectionVisibleForRole(supabase, role, key);
+}
+
+/** Same check as isSectionVisible, but for a role resolved once up front -- for a caller checking several sections at once (see resolveEffectiveRole's doc comment). */
+export async function isSectionVisibleForRole(supabase: SupabaseClient, role: string, key: SiteSectionKey): Promise<boolean> {
   const { data } = await supabase.from("section_visibility").select("visible").eq("role", role).eq("section_key", key).maybeSingle();
   return data?.visible ?? true;
 }

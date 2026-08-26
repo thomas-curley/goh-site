@@ -25,37 +25,68 @@ export function normalizeRsn(s: string): string {
   return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-export async function getGroupMembers(): Promise<ClanMember[]> {
-  try {
-    const result = await womClient.groups.getGroupDetails(WOM_GROUP_ID);
-    const memberships = result.memberships ?? [];
+type GroupDetails = Awaited<ReturnType<typeof womClient.groups.getGroupDetails>>;
 
-    return memberships.map((m) => ({
-      username: m.player.username,
-      displayName: m.player.displayName,
-      type: m.player.type,
-      build: m.player.build,
-      role: m.role,
-      exp: m.player.exp,
-      ehp: m.player.ehp,
-      ehb: m.player.ehb,
-      ttm: m.player.ttm,
-      registeredAt: m.player.registeredAt.toString(),
-      lastChangedAt: m.player.lastChangedAt?.toString() ?? null,
-    }));
-  } catch (error) {
-    console.error("Failed to fetch group members from WOM:", error);
-    return [];
+// getGroupMembers/getGroupDetails both hit the same WOM endpoint, and a
+// single page load can trigger many independent role/eligibility checks
+// (section visibility resolves all 16 registered sections, each re-checking
+// the caller's role) -- without sharing one fetch, that's a dozen-plus
+// simultaneous calls to WOM per request, which reliably tripped WOM's rate
+// limit and made every feature that depends on this data (staff detection,
+// section visibility, RSN matching) silently fall back to its
+// least-privileged default. A short cache plus in-flight de-duplication
+// collapses concurrent callers onto one real request; failures are cached
+// too, briefly, so a rate-limit response doesn't get hammered with retries
+// from every caller still in flight.
+let groupDetailsCache: { data: GroupDetails | null; expiresAt: number } | null = null;
+let groupDetailsInFlight: Promise<GroupDetails | null> | null = null;
+const GROUP_DETAILS_SUCCESS_TTL_MS = 30_000;
+const GROUP_DETAILS_FAILURE_TTL_MS = 10_000;
+
+async function getCachedGroupDetails(): Promise<GroupDetails | null> {
+  if (groupDetailsCache && groupDetailsCache.expiresAt > Date.now()) {
+    return groupDetailsCache.data;
   }
+  if (groupDetailsInFlight) return groupDetailsInFlight;
+
+  groupDetailsInFlight = (async () => {
+    try {
+      const data = await womClient.groups.getGroupDetails(WOM_GROUP_ID);
+      groupDetailsCache = { data, expiresAt: Date.now() + GROUP_DETAILS_SUCCESS_TTL_MS };
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch group details from WOM:", error);
+      groupDetailsCache = { data: null, expiresAt: Date.now() + GROUP_DETAILS_FAILURE_TTL_MS };
+      return null;
+    } finally {
+      groupDetailsInFlight = null;
+    }
+  })();
+
+  return groupDetailsInFlight;
 }
 
-export async function getGroupDetails() {
-  try {
-    return await womClient.groups.getGroupDetails(WOM_GROUP_ID);
-  } catch (error) {
-    console.error("Failed to fetch group details from WOM:", error);
-    return null;
-  }
+export async function getGroupMembers(): Promise<ClanMember[]> {
+  const result = await getCachedGroupDetails();
+  const memberships = result?.memberships ?? [];
+
+  return memberships.map((m) => ({
+    username: m.player.username,
+    displayName: m.player.displayName,
+    type: m.player.type,
+    build: m.player.build,
+    role: m.role,
+    exp: m.player.exp,
+    ehp: m.player.ehp,
+    ehb: m.player.ehb,
+    ttm: m.player.ttm,
+    registeredAt: m.player.registeredAt.toString(),
+    lastChangedAt: m.player.lastChangedAt?.toString() ?? null,
+  }));
+}
+
+export async function getGroupDetails(): Promise<GroupDetails | null> {
+  return getCachedGroupDetails();
 }
 
 export async function getPlayerDetails(username: string) {

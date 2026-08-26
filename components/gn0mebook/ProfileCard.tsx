@@ -28,6 +28,9 @@ export function ProfileCard({ profile }: { profile: MemberProfile }) {
         )}
         <h3 className="font-mono text-base font-bold text-bark-brown truncate w-full">
           {profile.rsn || profile.discord_username}
+          {profile.pronouns && (
+            <span className="ml-1.5 font-body font-normal text-xs text-iron-grey">({profile.pronouns})</span>
+          )}
         </h3>
         {profile.clan_rank && <RankBadge rank={profile.clan_rank} />}
         {profile.tagline && (

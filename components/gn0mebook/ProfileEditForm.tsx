@@ -14,6 +14,7 @@ const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light b
 export function ProfileEditForm({ initialProfile, profileId }: { initialProfile: MemberProfile | null; profileId: string | null }) {
   const router = useRouter();
 
+  const [pronouns, setPronouns] = useState(initialProfile?.pronouns ?? "");
   const [tagline, setTagline] = useState(initialProfile?.tagline ?? "");
   const [about, setAbout] = useState(initialProfile?.about ?? "");
   const [interests, setInterests] = useState(initialProfile?.interests ?? "");
@@ -45,7 +46,7 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tagline, about, interests,
+        pronouns, tagline, about, interests,
         playSchedule, inGameFocus,
         avatarUrl, bannerUrl,
         socialLinks: socialLinks.filter((l) => l.label.trim() && l.url.trim()),
@@ -84,6 +85,12 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
       {status && (
         <div className="p-3 rounded-md bg-gnome-green/10 border border-gnome-green/30 text-sm text-gnome-green">{status}</div>
       )}
+
+      <Card hover={false}>
+        <label className="block text-sm font-semibold text-bark-brown mb-1">Pronouns</label>
+        <input type="text" value={pronouns} onChange={(e) => setPronouns(e.target.value)} maxLength={30} className={inputClass} placeholder="she/her, he/him, they/them..." />
+        <p className="text-xs text-iron-grey mt-1">Optional -- shown next to your name in the Gn0meBook directory.</p>
+      </Card>
 
       <Card hover={false}>
         <label className="block text-sm font-semibold text-bark-brown mb-1">Tagline</label>
