@@ -16,6 +16,7 @@ export interface SocialLink {
 export interface MemberProfile {
   id: string;
   user_id: string;
+  pronouns: string | null;
   tagline: string | null;
   about: string | null;
   interests: string | null;

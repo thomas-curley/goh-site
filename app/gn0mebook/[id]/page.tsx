@@ -61,6 +61,9 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
             }`}
           >
             {name}
+            {profile.pronouns && (
+              <span className="ml-2 font-body font-normal text-lg opacity-80">({profile.pronouns})</span>
+            )}
           </h1>
           <div className="flex items-center gap-2 mt-1">
             {profile.clan_rank && <RankBadge rank={profile.clan_rank} />}
