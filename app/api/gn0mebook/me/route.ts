@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkClanEligibility, type AccessLevel } from "@/lib/clan-access";
-import { getProfileByUserId } from "@/lib/gn0mebook";
+import { getProfileByUserId, PRONOUN_OPTIONS, PRONOUN_PREFER_NOT_TO_ANSWER } from "@/lib/gn0mebook";
 
 const VALID_VISIBILITY: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
+const VALID_PRONOUNS: string[] = [...PRONOUN_OPTIONS, PRONOUN_PREFER_NOT_TO_ANSWER];
 const MAX_TEXT_LENGTH = 4000;
 const MAX_TAGLINE_LENGTH = 150;
-const MAX_PRONOUNS_LENGTH = 120; // several preset chips can be combined with a custom addition, e.g. "She/Her, They/Them, Ask me"
 const MAX_SOCIAL_LINKS = 8;
 
 function getServiceClient() {
@@ -62,9 +62,15 @@ export async function PUT(request: NextRequest) {
         .slice(0, MAX_SOCIAL_LINKS)
     : [];
 
+  // Restricted to the fixed pronoun list -- never trust the client's UI
+  // restriction alone. Anything else in the submitted string is dropped.
+  const pronouns = typeof body.pronouns === "string"
+    ? body.pronouns.split(",").map((p) => p.trim()).filter((p) => VALID_PRONOUNS.includes(p)).join(", ") || null
+    : null;
+
   const update = {
     user_id: userId,
-    pronouns: text(body.pronouns, MAX_PRONOUNS_LENGTH),
+    pronouns,
     tagline: text(body.tagline, MAX_TAGLINE_LENGTH),
     about: text(body.about, MAX_TEXT_LENGTH),
     interests: text(body.interests, MAX_TEXT_LENGTH),
