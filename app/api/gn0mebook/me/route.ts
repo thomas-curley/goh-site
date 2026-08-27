@@ -64,9 +64,8 @@ export async function PUT(request: NextRequest) {
 
   // Restricted to the fixed pronoun list -- never trust the client's UI
   // restriction alone. Anything else in the submitted string is dropped.
-  const pronouns = typeof body.pronouns === "string"
-    ? body.pronouns.split(",").map((p) => p.trim()).filter((p) => VALID_PRONOUNS.includes(p)).join(", ") || null
-    : null;
+  const pronounsRaw: string = typeof body.pronouns === "string" ? body.pronouns : "";
+  const pronouns = pronounsRaw.split(",").map((p) => p.trim()).filter((p) => VALID_PRONOUNS.includes(p)).join(", ") || null;
 
   const update = {
     user_id: userId,
