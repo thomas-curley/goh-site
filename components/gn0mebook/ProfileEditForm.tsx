@@ -6,25 +6,22 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { ACCESS_LEVEL_LABELS, type AccessLevel } from "@/lib/clan-access";
-import { PRONOUN_OPTIONS, type MemberProfile, type SocialLink } from "@/lib/gn0mebook";
+import { PRONOUN_OPTIONS, PRONOUN_PREFER_NOT_TO_ANSWER, type MemberProfile, type SocialLink } from "@/lib/gn0mebook";
 
 const VISIBILITY_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
+const ALL_PRONOUN_CHOICES = [...PRONOUN_OPTIONS, PRONOUN_PREFER_NOT_TO_ANSWER];
 
-/** Splits a stored "She/Her, They/Them" (or an old free-text value from before this was a picker) into the preset chips it matches plus whatever's left over as custom text. */
-function parsePronouns(stored: string | null): { presets: string[]; custom: string } {
+/** Restricted to the fixed list -- anything stored that no longer matches an option (e.g. old free text from before this was a picker) just won't show as selected. */
+function parsePronouns(stored: string | null): string[] {
   const parts = (stored ?? "").split(",").map((p) => p.trim()).filter(Boolean);
-  const presets = parts.filter((p) => (PRONOUN_OPTIONS as readonly string[]).includes(p));
-  const custom = parts.filter((p) => !(PRONOUN_OPTIONS as readonly string[]).includes(p)).join(", ");
-  return { presets, custom };
+  return parts.filter((p) => (ALL_PRONOUN_CHOICES as readonly string[]).includes(p));
 }
 
 export function ProfileEditForm({ initialProfile, profileId }: { initialProfile: MemberProfile | null; profileId: string | null }) {
   const router = useRouter();
 
-  const initialPronouns = parsePronouns(initialProfile?.pronouns ?? null);
-  const [pronounPresets, setPronounPresets] = useState<string[]>(initialPronouns.presets);
-  const [customPronouns, setCustomPronouns] = useState(initialPronouns.custom);
+  const [pronounPresets, setPronounPresets] = useState<string[]>(parsePronouns(initialProfile?.pronouns ?? null));
   const [tagline, setTagline] = useState(initialProfile?.tagline ?? "");
   const [about, setAbout] = useState(initialProfile?.about ?? "");
   const [interests, setInterests] = useState(initialProfile?.interests ?? "");
@@ -41,8 +38,14 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
+  // "Prefer not to answer" doesn't combine with anything else -- picking it
+  // clears any other selection, and picking anything else clears it.
   const togglePronoun = (option: string) =>
-    setPronounPresets((prev) => (prev.includes(option) ? prev.filter((p) => p !== option) : [...prev, option]));
+    setPronounPresets((prev) => {
+      if (prev.includes(option)) return prev.filter((p) => p !== option);
+      if (option === PRONOUN_PREFER_NOT_TO_ANSWER) return [option];
+      return [...prev.filter((p) => p !== PRONOUN_PREFER_NOT_TO_ANSWER), option];
+    });
 
   const addSocialLink = () => setSocialLinks((prev) => [...prev, { label: "", url: "" }]);
   const updateSocialLink = (i: number, patch: Partial<SocialLink>) =>
@@ -55,7 +58,7 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
     setError(null);
     setStatus(null);
 
-    const pronouns = [...pronounPresets, customPronouns.trim()].filter(Boolean).join(", ");
+    const pronouns = pronounPresets.join(", ");
 
     const res = await fetch("/api/gn0mebook/me", {
       method: "PUT",
@@ -103,8 +106,8 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
 
       <Card hover={false}>
         <label className="block text-sm font-semibold text-bark-brown mb-2">Pronouns</label>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {PRONOUN_OPTIONS.map((option) => (
+        <div className="flex flex-wrap gap-2">
+          {ALL_PRONOUN_CHOICES.map((option) => (
             <button
               key={option}
               type="button"
@@ -119,16 +122,7 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
             </button>
           ))}
         </div>
-        <label className="block text-xs font-semibold text-bark-brown mb-1">Other (optional)</label>
-        <input
-          type="text"
-          value={customPronouns}
-          onChange={(e) => setCustomPronouns(e.target.value)}
-          maxLength={30}
-          className={inputClass}
-          placeholder="Not listed above? Add your own"
-        />
-        <p className="text-xs text-iron-grey mt-1">Optional -- pick any that fit, add your own, or leave blank. Shown next to your name in the Gn0meBook directory.</p>
+        <p className="text-xs text-iron-grey mt-1">Optional -- pick any that fit, or leave blank. Shown next to your name in the Gn0meBook directory.</p>
       </Card>
 
       <Card hover={false}>
