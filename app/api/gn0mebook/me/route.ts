@@ -7,7 +7,7 @@ import { getProfileByUserId } from "@/lib/gn0mebook";
 const VALID_VISIBILITY: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const MAX_TEXT_LENGTH = 4000;
 const MAX_TAGLINE_LENGTH = 150;
-const MAX_PRONOUNS_LENGTH = 30;
+const MAX_PRONOUNS_LENGTH = 120; // several preset chips can be combined with a custom addition, e.g. "She/Her, They/Them, Ask me"
 const MAX_SOCIAL_LINKS = 8;
 
 function getServiceClient() {

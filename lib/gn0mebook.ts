@@ -13,6 +13,24 @@ export interface SocialLink {
   url: string;
 }
 
+// A limited, curated set covering the pronoun sets most commonly recognized
+// today (GLAAD's pronoun guide and most major platforms' pronoun pickers
+// converge on some version of this list) -- kept short by design, with
+// "Other" as an escape hatch for anyone whose pronouns aren't listed
+// (neopronouns beyond the couple included here, "no pronouns please",
+// etc.) rather than trying to enumerate every possibility. Stored as a
+// comma-separated string in member_profiles.pronouns since someone can use
+// more than one set (e.g. "She/Her, They/Them").
+export const PRONOUN_OPTIONS = [
+  "She/Her",
+  "He/Him",
+  "They/Them",
+  "Ze/Zir",
+  "Xe/Xem",
+  "Fae/Faer",
+  "Any pronouns",
+] as const;
+
 export interface MemberProfile {
   id: string;
   user_id: string;
