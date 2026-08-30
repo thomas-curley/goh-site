@@ -137,9 +137,12 @@ export const ASSIGNABLE_ROLES = [
 
 /**
  * Normalize a WOM role name to our internal role key.
- * WOM uses "owner", "summoner", etc. — we map those to "council_member".
+ * WOM uses "summoner", "council", etc. — we map those to "council_member".
+ * "owner" is deliberately NOT included -- it's its own RANKS entry (see
+ * lib/constants.ts) so it can be managed separately from Council Member in
+ * Permissions/Section Visibility instead of always inheriting the same grants.
  */
-const COUNCIL_ALIASES = ["owner", "deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
+const COUNCIL_ALIASES = ["deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
 
 export function normalizeRole(womRole: string): string {
   const normalized = womRole.toLowerCase().replace(/ /g, "_");

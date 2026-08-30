@@ -19,6 +19,8 @@ export const ALERT_CHANNEL_FEATURES: AlertChannelFeature[] = [
   { key: "gnomie_reviews", label: "Gn0mie Reviews (Approved Highlights)", envVar: "DISCORD_GNOMIE_REVIEWS_CHANNEL_ID" },
   { key: "gnomie_reviews_staff", label: "Gn0mie Reviews (Staff Heads-Up)", envVar: "DISCORD_GNOMIE_REVIEWS_STAFF_CHANNEL_ID" },
   { key: "bingo_completions", label: "Bingo Tile Completions" },
+  { key: "weekly_competition_announcements", label: "Weekly SOTW/BotW Announcements (Results + New Week)" },
+  { key: "skill_or_kill_forum", label: "Skill or Kill of the Week Forum" },
 ];
 
 /**

@@ -15,12 +15,16 @@ export const RANKS = [
   { name: "Pine", order: 2, color: "bg-green-700 text-green-100", key: "pine" },
   { name: "Yew", order: 3, color: "bg-green-900 text-green-100", key: "yew" },
   { name: "Council Member", order: 4, color: "bg-yellow-500 text-yellow-900", key: "council_member" },
+  { name: "Owner", order: 5, color: "bg-red-700 text-red-100", key: "owner" },
 ] as const;
 
 export type RankName = (typeof RANKS)[number]["name"];
 
-// WOM roles that map to "Council Member" (highest rank)
-const COUNCIL_ALIASES = ["owner", "deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
+// WOM roles that map to "Council Member" -- "owner" used to be included
+// here too, but is now its own rank (see RANKS above) so it can be managed
+// separately in Permissions/Section Visibility instead of inheriting
+// whatever Council Member has.
+const COUNCIL_ALIASES = ["deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
 
 export function getRankByName(name: string) {
   const normalized = name.toLowerCase().replace(/ /g, "_");

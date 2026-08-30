@@ -26,6 +26,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
   { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys", group: "Engagement" },
   { href: "/admin/feedback", label: "Feedback", permission: "manage_feedback", group: "Engagement" },
   { href: "/admin/wom-competitions", label: "WOM Competitions", permission: "manage_competitions", group: "Engagement" },
+  { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", permission: "manage_competitions", group: "Engagement" },
   { href: "/admin/availability", label: "Availability Polls", permission: "manage_availability", group: "Engagement" },
   { href: "/admin/loans", label: "Loans", permission: "manage_loans", group: "Engagement" },
   { href: "/admin/payouts", label: "Prize Payouts", permission: "manage_payouts", group: "Engagement" },
