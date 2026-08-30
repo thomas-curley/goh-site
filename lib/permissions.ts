@@ -139,7 +139,7 @@ export const ASSIGNABLE_ROLES = [
  * Normalize a WOM role name to our internal role key.
  * WOM uses "owner", "summoner", etc. — we map those to "council_member".
  */
-const COUNCIL_ALIASES = ["owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
+const COUNCIL_ALIASES = ["owner", "deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
 
 export function normalizeRole(womRole: string): string {
   const normalized = womRole.toLowerCase().replace(/ /g, "_");
