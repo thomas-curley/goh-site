@@ -13,6 +13,7 @@ const RANK_ORDER: Record<string, number> = {
   pine: 2,
   yew: 3,
   council_member: 4,
+  owner: 5,
 };
 
 function getRankLevel(rank: string | null): number {

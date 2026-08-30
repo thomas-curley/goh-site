@@ -18,11 +18,11 @@ export default async function Gn0meBookPage() {
   if (!(await checkSectionAccess("gn0mebook"))) return <SectionUnavailable />;
 
   const profiles = await getPublishedProfiles();
-  const founders = profiles.filter((p) => getRankByName(p.clan_rank ?? "")?.key === "council_member");
+  const founders = profiles.filter((p) => ["council_member", "owner"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
   const staff = profiles.filter((p) => ["yew", "pine", "oak"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
   const members = profiles.filter((p) => {
-    const key = getRankByName(p.clan_rank ?? "")?.key;
-    return key !== "council_member" && !["yew", "pine", "oak"].includes(key ?? "");
+    const key = getRankByName(p.clan_rank ?? "")?.key ?? "";
+    return !["council_member", "owner"].includes(key) && !["yew", "pine", "oak"].includes(key);
   });
 
   return (
