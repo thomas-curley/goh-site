@@ -20,7 +20,7 @@ export const RANKS = [
 export type RankName = (typeof RANKS)[number]["name"];
 
 // WOM roles that map to "Council Member" (highest rank)
-const COUNCIL_ALIASES = ["owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
+const COUNCIL_ALIASES = ["owner", "deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
 
 export function getRankByName(name: string) {
   const normalized = name.toLowerCase().replace(/ /g, "_");
