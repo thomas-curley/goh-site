@@ -19,6 +19,7 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, 
   const [editingName, setEditingName] = useState(false);
   const [code, setCode] = useState("");
   const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Starts from the server-rendered prop, but can flip true mid-session if a
   // submit comes back saying a code is needed after all -- the page was
@@ -60,6 +61,25 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, 
     }
   };
 
+  const undoCheckIn = async () => {
+    if (!window.confirm("Remove your check-in for this event?")) return;
+    setRemoving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/events/${eventId}/signup`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to remove check-in.");
+        return;
+      }
+      setCheckedIn(null);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   if (!loggedIn) {
     return (
       <Card hover={false} className="text-center">
@@ -86,12 +106,22 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, 
         <p className="text-xs text-iron-grey mb-3">
           <Link href="/leaderboard" className="text-gnome-green hover:underline">See the attendance leaderboard</Link>
         </p>
-        <button
-          onClick={() => { setEditingName(true); setManualName(checkedIn.rsn ?? ""); }}
-          className="text-xs text-iron-grey hover:underline cursor-pointer"
-        >
-          Not you, or need to fix the name? Update it
-        </button>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => { setEditingName(true); setManualName(checkedIn.rsn ?? ""); }}
+            className="text-xs text-iron-grey hover:underline cursor-pointer"
+          >
+            Not you, or need to fix the name? Update it
+          </button>
+          <button
+            onClick={undoCheckIn}
+            disabled={removing}
+            className="text-xs text-red-accent hover:underline cursor-pointer"
+          >
+            {removing ? "Removing..." : "Checked in by mistake? Undo it"}
+          </button>
+        </div>
+        {error && <p className="text-red-accent text-sm mt-3">{error}</p>}
       </Card>
     );
   }

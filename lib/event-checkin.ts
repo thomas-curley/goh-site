@@ -76,3 +76,46 @@ export async function checkInToEvent(
 
   return { ok: true, name: identity.rsn };
 }
+
+export type RemoveCheckInResult = { ok: true } | { ok: false; status: number; error: string };
+
+/**
+ * Self-service undo for an accidental check-in -- reused by the website and
+ * plugin the same way checkInToEvent() is. Deliberately scoped to only
+ * remove a row this same self-check-in flow created (marked_by === "self");
+ * if a staff member has since reviewed/adjusted attendance for this event
+ * via the admin roster (a different marked_by value), this refuses rather
+ * than letting a member silently erase a staff decision.
+ */
+export async function removeCheckIn(
+  supabase: SupabaseClient,
+  eventId: string,
+  discordId: string
+): Promise<RemoveCheckInResult> {
+  const { data: existing } = await supabase
+    .from("event_attendance")
+    .select("marked_by")
+    .eq("event_id", eventId)
+    .eq("discord_id", discordId)
+    .maybeSingle();
+
+  if (!existing) {
+    return { ok: false, status: 404, error: "You're not checked in to this event." };
+  }
+
+  if (existing.marked_by !== "self") {
+    return { ok: false, status: 403, error: "This was recorded by a staff member -- ask them to remove it if it's a mistake." };
+  }
+
+  const { error } = await supabase
+    .from("event_attendance")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("discord_id", discordId);
+
+  if (error) {
+    return { ok: false, status: 500, error: "Failed to remove check-in. Try again." };
+  }
+
+  return { ok: true };
+}

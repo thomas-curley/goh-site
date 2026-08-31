@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyPluginToken } from "@/lib/plugin-auth";
-import { checkInToEvent } from "@/lib/event-checkin";
+import { checkInToEvent, removeCheckIn } from "@/lib/event-checkin";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,4 +45,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   return NextResponse.json({ checkedIn: true, name: result.name });
+}
+
+/**
+ * DELETE /api/plugin/events/[id]/checkin -- self-service undo for an
+ * accidental check-in from the plugin. No rsnVerified gate here -- removing
+ * your own record doesn't earn anything, unlike checking in.
+ */
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const identity = await verifyPluginToken(request);
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const supabase = getServiceClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  const result = await removeCheckIn(supabase, id, identity.discordId);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json({ removed: true });
 }
