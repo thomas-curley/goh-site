@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
       guide_text: body.guide_text || null,
       video_url: body.video_url || null,
       prize_pool: body.prize_pool || null,
+      check_in_code: body.check_in_code?.trim() || null,
       ping_roles: Array.isArray(body.ping_roles) ? body.ping_roles : [],
       extra_images: Array.isArray(body.extra_images) ? body.extra_images : [],
       show_on_calendar: body.show_on_calendar !== false,

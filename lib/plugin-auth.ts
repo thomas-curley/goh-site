@@ -12,6 +12,7 @@ function getServiceClient() {
 export interface PluginTokenIdentity {
   userId: string;
   discordId: string;
+  discordUsername: string;
   rsn: string | null;
   rsnVerified: boolean;
   clanRank: string | null;
@@ -45,7 +46,7 @@ export async function verifyPluginToken(request: NextRequest): Promise<PluginTok
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("discord_id, rsn, rsn_verified, clan_rank")
+    .select("discord_id, discord_username, rsn, rsn_verified, clan_rank")
     .eq("id", key.user_id)
     .maybeSingle();
 
@@ -60,6 +61,7 @@ export async function verifyPluginToken(request: NextRequest): Promise<PluginTok
   return {
     userId: key.user_id,
     discordId: profile.discord_id,
+    discordUsername: profile.discord_username,
     rsn: profile.rsn,
     rsnVerified: profile.rsn_verified,
     clanRank: profile.clan_rank,

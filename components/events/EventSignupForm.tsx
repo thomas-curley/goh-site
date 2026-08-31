@@ -10,25 +10,31 @@ interface EventSignupFormProps {
   loggedIn: boolean;
   profile: { rsn: string | null; rsn_verified: boolean; discord_username: string | null } | null;
   alreadyCheckedIn: { rsn: string | null; discord_username: string | null } | null;
+  requiresCode: boolean;
 }
 
-export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn }: EventSignupFormProps) {
+export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, requiresCode }: EventSignupFormProps) {
   const [checkedIn, setCheckedIn] = useState(alreadyCheckedIn);
   const [manualName, setManualName] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const [code, setCode] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasVerifiedRsn = !!profile?.rsn_verified && !!profile?.rsn;
 
   const submit = async (name?: string) => {
+    if (requiresCode && !code.trim()) {
+      setError("Enter the check-in code for this event.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       const res = await fetch(`/api/events/${eventId}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ manualName: name ?? "" }),
+        body: JSON.stringify({ manualName: name ?? "", code: requiresCode ? code.trim() : undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -87,6 +93,15 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn }
           <p className="text-sm text-bark-brown-light mb-4">
             Check in as <span className="font-mono text-gnome-green">{profile!.rsn}</span>
           </p>
+          {requiresCode && (
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Check-in code..."
+              className="w-full mb-3 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono text-center focus:outline-none focus:ring-2 focus:ring-gnome-green"
+            />
+          )}
           <Button size="lg" className="w-full" disabled={saving} onClick={() => submit()}>
             {saving ? "Checking In..." : "Check In"}
           </Button>
@@ -110,20 +125,31 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn }
               if (!manualName.trim()) return;
               submit(manualName.trim());
             }}
-            className="flex gap-2"
+            className="space-y-2"
           >
-            <input
-              type="text"
-              value={manualName}
-              onChange={(e) => setManualName(e.target.value)}
-              placeholder="RSN or name..."
-              required
-              maxLength={40}
-              className="flex-1 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-gnome-green"
-            />
-            <Button type="submit" disabled={saving}>
-              {saving ? "Checking In..." : "Check In"}
-            </Button>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="RSN or name..."
+                required
+                maxLength={40}
+                className="flex-1 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-gnome-green"
+              />
+              <Button type="submit" disabled={saving}>
+                {saving ? "Checking In..." : "Check In"}
+              </Button>
+            </div>
+            {requiresCode && (
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Check-in code..."
+                className="w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono text-center focus:outline-none focus:ring-2 focus:ring-gnome-green"
+              />
+            )}
           </form>
           {hasVerifiedRsn && (
             <button

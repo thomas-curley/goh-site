@@ -70,6 +70,7 @@ export default function EditEventPage() {
       guide_text: data.guide_text ?? "",
       video_url: data.video_url ?? "",
       prize_pool: data.prize_pool ?? "",
+      check_in_code: data.check_in_code ?? "",
       banner_url: data.banner_url ?? "",
       extra_images: Array.isArray(data.extra_images) ? data.extra_images : [],
       ping_roles: Array.isArray(data.ping_roles) ? data.ping_roles : [],

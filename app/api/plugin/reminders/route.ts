@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   const { data: upcomingEvents } = await supabase
     .from("events")
-    .select("id, title, start_time, world, meet_location, location")
+    .select("id, title, start_time, world, meet_location, location, description, requirements, prize_pool, host_rsn, check_in_code")
     .eq("show_on_calendar", true)
     .gte("start_time", now.toISOString())
     .lte("start_time", weekOut.toISOString())
@@ -72,6 +72,14 @@ export async function GET(request: NextRequest) {
     world: e.world,
     meetLocation: e.meet_location ?? e.location ?? null,
     signedUp: signedUpEventIds.has(e.id),
+    description: e.description ?? null,
+    requirements: e.requirements ?? null,
+    prizePool: e.prize_pool ?? null,
+    hostRsn: e.host_rsn ?? null,
+    // Never expose the actual code -- only whether one is required, so
+    // check-in still needs the real word (announced separately), not
+    // whatever the digest response happens to leak.
+    requiresCode: !!e.check_in_code?.trim(),
   }));
 
   let myPendingPrizes: { prize: string; competition: string }[] = [];

@@ -28,6 +28,7 @@ export interface EventForm {
   guide_text: string;
   video_url: string;
   prize_pool: string;
+  check_in_code: string;
   banner_url: string;
   extra_images: string[];
   ping_roles: string[];
@@ -54,6 +55,7 @@ export const EMPTY_FORM: EventForm = {
   guide_text: "",
   video_url: "",
   prize_pool: "",
+  check_in_code: "",
   banner_url: "",
   extra_images: [],
   ping_roles: [],
@@ -262,6 +264,15 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
               <input type="text" value={form.prize_pool} onChange={(e) => update("prize_pool", e.target.value)} className={inputClass} placeholder="50M GP" />
             </div>
           )}
+
+          <div>
+            <label className={labelClass}>Check-in Code</label>
+            <input type="text" value={form.check_in_code} onChange={(e) => update("check_in_code", e.target.value)} className={`${inputClass} font-mono`} placeholder="Leave blank for open check-in" />
+            <p className="text-xs text-bark-brown-light mt-1">
+              If set, members must enter this word to check in (website or plugin) -- announce it in person/Discord
+              at the event so only attendees get credit. Leave blank for the normal, code-free check-in.
+            </p>
+          </div>
         </div>
       </Card>
 
