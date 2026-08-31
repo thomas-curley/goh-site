@@ -59,6 +59,12 @@ const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label
 type FilterTab = "unpaid" | "paid" | "all";
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
+// inputClass bakes in w-full, which conflicts with an explicit width/flex
+// utility (w-20, flex-1, etc.) added alongside it on the same element --
+// Tailwind's generated stylesheet order (not the order classes appear in
+// className) decides which width wins, so the two together are unreliable.
+// This variant omits it for the few places that size themselves explicitly.
+const inputClassNoWidth = inputClass.replace("w-full ", "");
 
 function linkedSourceLabel(p: Payout): string | null {
   return p.wom_competitions?.title ?? p.events?.title ?? p.raffles?.title ?? null;
@@ -755,7 +761,7 @@ export default function AdminPayoutsPage() {
                     min={1}
                     value={p.placement}
                     onChange={(e) => updatePrizePlacementRow(i, { placement: Math.max(1, Number(e.target.value) || 1) })}
-                    className={`${inputClass} w-20`}
+                    className={`${inputClassNoWidth} w-20 shrink-0`}
                   />
                   <span className="text-xs text-iron-grey w-14 shrink-0">Amount</span>
                   <input
@@ -763,7 +769,7 @@ export default function AdminPayoutsPage() {
                     min={0}
                     value={p.amount}
                     onChange={(e) => updatePrizePlacementRow(i, { amount: Math.max(0, Number(e.target.value) || 0) })}
-                    className={`${inputClass} flex-1`}
+                    className={`${inputClassNoWidth} flex-1 min-w-0`}
                   />
                   <button type="button" onClick={() => removePrizePlacementRow(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
                 </div>
