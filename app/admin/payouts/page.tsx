@@ -5,6 +5,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { RsnAutocomplete } from "@/components/admin/RsnAutocomplete";
+
+function normalizeRsn(s: string): string {
+  return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+}
 
 interface Payout {
   id: string;
@@ -267,6 +272,8 @@ export default function AdminPayoutsPage() {
   const [dmTemplateDraft, setDmTemplateDraft] = useState("");
   const [showDmSettings, setShowDmSettings] = useState(false);
   const [savingDmTemplate, setSavingDmTemplate] = useState(false);
+  const [roster, setRoster] = useState<string[]>([]);
+  const [linkedRsns, setLinkedRsns] = useState<Set<string>>(new Set());
 
   const [batchCategory, setBatchCategory] = useState("sotw");
   const [batchSourceDetail, setBatchSourceDetail] = useState("");
@@ -330,11 +337,20 @@ export default function AdminPayoutsPage() {
     loadRaffles();
     loadDmTemplate();
     (async () => {
-      const [compRes, eventRes] = await Promise.all([fetch("/api/admin/wom-competitions"), fetch("/api/events")]);
+      const [compRes, eventRes, membersRes, linkedRes] = await Promise.all([
+        fetch("/api/admin/wom-competitions"),
+        fetch("/api/events"),
+        fetch("/api/clan-members"),
+        fetch("/api/admin/payouts/linked-rsns"),
+      ]);
       const compData = await compRes.json().catch(() => ({}));
       const eventData = await eventRes.json().catch(() => ({}));
+      const membersData = await membersRes.json().catch(() => ({}));
+      const linkedData = await linkedRes.json().catch(() => ({}));
       if (compRes.ok) setWomCompetitions((compData.competitions ?? []).map((c: { id: string; title: string }) => ({ id: c.id, title: c.title })));
       if (eventRes.ok) setEvents((eventData.events ?? []).map((e: { id: string; title: string }) => ({ id: e.id, title: e.title })));
+      if (membersRes.ok) setRoster((membersData.members ?? []).map((m: { displayName: string }) => m.displayName));
+      if (linkedRes.ok) setLinkedRsns(new Set((linkedData.rsns ?? []).map((r: string) => normalizeRsn(r))));
     })();
   }, [load, loadRaffles, loadDmTemplate]);
 
@@ -726,12 +742,12 @@ export default function AdminPayoutsPage() {
             <div className="space-y-2">
               {rows.map((row, i) => (
                 <div key={i} className="flex gap-2">
-                  <input
-                    type="text"
+                  <RsnAutocomplete
                     value={row.recipient_rsn}
-                    onChange={(e) => updateRow(i, "recipient_rsn", e.target.value)}
-                    placeholder="RSN"
-                    className={`${inputClass} flex-1 font-mono`}
+                    onChange={(value) => updateRow(i, "recipient_rsn", value)}
+                    roster={roster}
+                    linkedRsns={linkedRsns}
+                    className={`${inputClass} font-mono`}
                   />
                   <input
                     type="text"
@@ -852,12 +868,12 @@ export default function AdminPayoutsPage() {
                     <form onSubmit={(e) => handleAddRaffleWinners(e, raffle.id)} className="space-y-2 mt-2">
                       {raffleRows.map((row, i) => (
                         <div key={i} className="flex gap-2">
-                          <input
-                            type="text"
+                          <RsnAutocomplete
                             value={row.recipient_rsn}
-                            onChange={(e) => updateRaffleRow(i, "recipient_rsn", e.target.value)}
-                            placeholder="RSN"
-                            className={`${inputClass} flex-1 font-mono`}
+                            onChange={(value) => updateRaffleRow(i, "recipient_rsn", value)}
+                            roster={roster}
+                            linkedRsns={linkedRsns}
+                            className={`${inputClass} font-mono`}
                           />
                           <input
                             type="text"
