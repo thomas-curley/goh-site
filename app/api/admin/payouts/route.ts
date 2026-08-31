@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
+import { notifyPayoutWinner } from "@/lib/payouts";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
   const womCompetitionId = typeof body.womCompetitionId === "string" && body.womCompetitionId ? body.womCompetitionId : null;
   const eventId = typeof body.eventId === "string" && body.eventId ? body.eventId : null;
   const raffleId = typeof body.raffleId === "string" && body.raffleId ? body.raffleId : null;
+  const notifyWinners = body.notifyWinners === true;
 
   const rows = rawEntries
     .map((e: Record<string, unknown>) => ({
@@ -63,6 +65,7 @@ export async function POST(request: NextRequest) {
       event_id: eventId,
       raffle_id: raffleId,
       created_by: user?.discord_username ?? null,
+      dm_requested: notifyWinners,
     }))
     .filter((r: { recipient_rsn: string; prize: string }) => r.recipient_rsn && r.prize);
 
@@ -72,6 +75,36 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase.from("prize_payouts").insert(rows).select();
   if (error) return NextResponse.json({ error: "Failed to save payouts." }, { status: 500 });
+
+  if (notifyWinners && data) {
+    // A batch shares one competition/event/raffle link, so its display name
+    // only needs fetching once -- source_detail (per-row) is the fallback
+    // for any row that doesn't have one of those links.
+    let sharedLabel: string | null = null;
+    if (womCompetitionId) {
+      const { data: c } = await supabase.from("wom_competitions").select("title").eq("id", womCompetitionId).maybeSingle();
+      sharedLabel = c?.title ?? null;
+    } else if (eventId) {
+      const { data: e } = await supabase.from("events").select("title").eq("id", eventId).maybeSingle();
+      sharedLabel = e?.title ?? null;
+    } else if (raffleId) {
+      const { data: r } = await supabase.from("raffles").select("title").eq("id", raffleId).maybeSingle();
+      sharedLabel = r?.title ?? null;
+    }
+
+    // Sequential, not Promise.all -- Discord's DM-channel-creation endpoint
+    // has tighter rate limits than regular channel posts, and one failure
+    // must never stop the rest of the batch from being attempted.
+    for (const row of data) {
+      await notifyPayoutWinner(supabase, {
+        id: row.id,
+        recipient_rsn: row.recipient_rsn,
+        prize: row.prize,
+        placement: row.placement,
+        competitionLabel: sharedLabel ?? row.source_detail ?? "Gn0me Home",
+      });
+    }
+  }
 
   return NextResponse.json({ payouts: data }, { status: 201 });
 }

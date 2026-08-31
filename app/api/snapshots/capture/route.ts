@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { normalizeRsn, getAllSkillBossGains, getCompetitionLeaders, classifyMetric } from "@/lib/wom";
+import { resolvePayoutRecipient } from "@/lib/payouts";
 
 // ~79 skill/boss gains calls to WOM (batched 8-at-a-time in getAllSkillBossGains)
 // can take longer than the platform default -- give this route more room.
@@ -113,15 +114,26 @@ async function runCapture() {
           if (leaders.length > 0) {
             const metricKind = classifyMetric(comp.metric);
             const category = metricKind === "skill" ? "sotw" : metricKind === "boss" ? "botw" : "other";
-            const { error: payoutError } = await supabase.from("prize_payouts").insert(
-              leaders.map((l) => ({
-                recipient_rsn: l.displayName,
-                prize: "",
-                category,
-                wom_competition_id: comp.id,
-                source_detail: comp.title,
-              }))
+            // Leaders come back rank-ordered, so placement is captured now
+            // even though the prize amount (filled in by an admin later)
+            // isn't known yet -- recipient_user_id is resolved here too, so
+            // Send DM doesn't need to re-resolve once the admin fills the
+            // prize in and notifies.
+            const rows = await Promise.all(
+              leaders.map(async (l, i) => {
+                const recipient = await resolvePayoutRecipient(supabase, l.displayName);
+                return {
+                  recipient_rsn: l.displayName,
+                  prize: "",
+                  category,
+                  wom_competition_id: comp.id,
+                  source_detail: comp.title,
+                  placement: i + 1,
+                  recipient_user_id: recipient?.userId ?? null,
+                };
+              })
             );
+            const { error: payoutError } = await supabase.from("prize_payouts").insert(rows);
             if (!payoutError) competitionPayoutsCreated += leaders.length;
           }
         }
