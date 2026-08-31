@@ -90,6 +90,25 @@ export async function notifyPayoutWinner(
   }
 }
 
+export interface PayoutSourceRow {
+  source_detail: string | null;
+  wom_competitions: { title: string } | { title: string }[] | null;
+  events: { title: string } | { title: string }[] | null;
+  raffles: { title: string } | { title: string }[] | null;
+}
+
+/**
+ * Resolves a payout's human-readable source label from whichever of
+ * wom_competitions/events/raffles it's linked to, falling back to
+ * source_detail then a generic label. Shared by every place that reads
+ * prize_payouts joined to its source tables (the plugin reminders digest,
+ * the plugin admin payouts list) so the fallback chain stays in one place.
+ */
+export function payoutLabel(row: PayoutSourceRow): string {
+  const pick = (rel: PayoutSourceRow["wom_competitions"]) => (Array.isArray(rel) ? rel[0]?.title : rel?.title);
+  return pick(row.wom_competitions) ?? pick(row.events) ?? pick(row.raffles) ?? row.source_detail ?? "Gn0me Home";
+}
+
 function ordinal(n: number): string {
   const rem100 = n % 100;
   if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
