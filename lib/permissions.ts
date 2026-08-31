@@ -117,6 +117,11 @@ export const PERMISSIONS = {
     label: "Manage Bingo Events",
     description: "Create bingo boards, assign teams, and review manual tile submissions",
   },
+  manage_points: {
+    key: "manage_points",
+    label: "Manage Clan Points",
+    description: "Configure how many points each plugin-reported event is worth",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",

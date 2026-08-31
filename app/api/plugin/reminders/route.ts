@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyPluginToken } from "@/lib/plugin-auth";
 import { hasPermission } from "@/lib/permissions";
+import { getPointsBalance } from "@/lib/clan-points";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -126,8 +127,10 @@ export async function GET(request: NextRequest) {
     };
   }
 
+  const points = await getPointsBalance(supabase, identity.userId);
+
   return NextResponse.json({
-    member: { rsn: identity.rsn, clanRank: identity.clanRank },
+    member: { rsn: identity.rsn, clanRank: identity.clanRank, points },
     events,
     myPendingPrizes,
     admin,
