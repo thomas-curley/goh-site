@@ -4,6 +4,8 @@ import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE, RANKS } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
+import { getFeaturedTestimonials } from "@/lib/testimonials";
+import { TestimonialsSection } from "@/components/testimonials/TestimonialsSection";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   if (!(await checkSectionAccess("about"))) return <SectionUnavailable />;
+
+  const featuredTestimonials = await getFeaturedTestimonials();
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -92,6 +96,13 @@ export default async function AboutPage() {
           </div>
         </Card>
       </section>
+
+      {/* What Our Members Say */}
+      {featuredTestimonials.length > 0 && (
+        <section className="mb-12">
+          <TestimonialsSection testimonials={featuredTestimonials} viewAllHref="/testimonials" />
+        </section>
+      )}
 
       {/* How to Join */}
       <section className="mb-12">

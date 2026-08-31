@@ -102,6 +102,11 @@ export const PERMISSIONS = {
     label: "Review a Gn0mie Submissions",
     description: "Approve or reject public shoutouts about clan members before they post to Discord",
   },
+  manage_testimonials: {
+    key: "manage_testimonials",
+    label: "Manage Testimonials",
+    description: "Approve or reject public clan testimonials, and pick which ones are featured",
+  },
   manage_sections: {
     key: "manage_sections",
     label: "Manage Section Visibility",

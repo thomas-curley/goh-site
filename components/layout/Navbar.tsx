@@ -63,6 +63,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/surveys", label: "Surveys", sectionKey: "surveys" },
       { href: "/availability", label: "Availability", sectionKey: "availability" },
       { href: "/review-a-gnomie", label: "Review a Gn0mie", sectionKey: "gnomie_reviews" },
+      { href: "/testimonials", label: "Testimonials", sectionKey: "testimonials" },
     ],
   },
   {

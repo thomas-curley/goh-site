@@ -21,6 +21,7 @@ export const SITE_SECTIONS = [
   { key: "gnomie_reviews", label: "Review a Gn0mie", description: "Public shoutout form." },
   { key: "bank", label: "Bank (Loans)", description: "Loan board, request form, My Loans." },
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
+  { key: "testimonials", label: "Testimonials", description: "Public clan testimonials/reviews." },
   { key: "about", label: "About", description: "About page." },
 ] as const;
 

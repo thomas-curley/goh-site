@@ -10,6 +10,8 @@ import { EVENT_TYPES } from "@/lib/constants";
 import { resolveUnicodeShortcodes } from "@/lib/emoji-shortcodes";
 import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
+import { getFeaturedTestimonials } from "@/lib/testimonials";
+import { TestimonialsSection } from "@/components/testimonials/TestimonialsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -74,12 +76,13 @@ async function getAnnouncements() {
 export default async function HomePage() {
   if (!(await checkSectionAccess("home"))) return <SectionUnavailable />;
 
-  const [groupDetails, achievements, upcomingEvents, activeCompetitions, announcements] = await Promise.all([
+  const [groupDetails, achievements, upcomingEvents, activeCompetitions, announcements, featuredTestimonials] = await Promise.all([
     getGroupDetails(),
     getGroupAchievements(50),
     getUpcomingEvents(),
     getActiveCompetitions(),
     getAnnouncements(),
+    getFeaturedTestimonials(),
   ]);
 
   const memberCount = groupDetails?.memberships?.length ?? 0;
@@ -245,6 +248,13 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* What Our Members Say */}
+      {featuredTestimonials.length > 0 && (
+        <section className="py-16">
+          <TestimonialsSection testimonials={featuredTestimonials} viewAllHref="/testimonials" />
+        </section>
+      )}
 
       {/* Join Us CTA */}
       <section className="max-w-7xl mx-auto px-4 py-16">

@@ -42,6 +42,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
   { href: "/admin/staff-applications", label: "Staff Applications", permission: "manage_staff_applications", group: "Members" },
   { href: "/admin/gn0mebook", label: "Gn0meBook", permission: "manage_member_profiles", group: "Members" },
   { href: "/admin/gnomie-reviews", label: "Review a Gn0mie", permission: "manage_gnomie_reviews", group: "Members" },
+  { href: "/admin/testimonials", label: "Testimonials", permission: "manage_testimonials", group: "Members" },
 
   { href: "/admin/commands", label: "Bot Commands", permission: "manage_commands", group: "System" },
   { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions", group: "System" },
