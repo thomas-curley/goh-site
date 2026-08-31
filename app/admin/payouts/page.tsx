@@ -275,6 +275,13 @@ export default function AdminPayoutsPage() {
   const [roster, setRoster] = useState<string[]>([]);
   const [linkedRsns, setLinkedRsns] = useState<Set<string>>(new Set());
 
+  const [prizePlacements, setPrizePlacements] = useState<{ placement: number; amount: number }[]>([]);
+  const [prizeDefaultAmount, setPrizeDefaultAmount] = useState(0);
+  const [prizeDraftPlacements, setPrizeDraftPlacements] = useState<{ placement: number; amount: number }[]>([]);
+  const [prizeDraftDefaultAmount, setPrizeDraftDefaultAmount] = useState(0);
+  const [showPrizeSettings, setShowPrizeSettings] = useState(false);
+  const [savingPrizeDefaults, setSavingPrizeDefaults] = useState(false);
+
   const [batchCategory, setBatchCategory] = useState("sotw");
   const [batchSourceDetail, setBatchSourceDetail] = useState("");
   const [batchWomCompetitionId, setBatchWomCompetitionId] = useState("");
@@ -332,10 +339,22 @@ export default function AdminPayoutsPage() {
     }
   }, []);
 
+  const loadPrizeDefaults = useCallback(async () => {
+    const res = await fetch("/api/admin/payouts/prize-defaults");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setPrizePlacements(data.placements ?? []);
+      setPrizeDraftPlacements(data.placements ?? []);
+      setPrizeDefaultAmount(data.defaultAmount ?? 0);
+      setPrizeDraftDefaultAmount(data.defaultAmount ?? 0);
+    }
+  }, []);
+
   useEffect(() => {
     load();
     loadRaffles();
     loadDmTemplate();
+    loadPrizeDefaults();
     (async () => {
       const [compRes, eventRes, membersRes, linkedRes] = await Promise.all([
         fetch("/api/admin/wom-competitions"),
@@ -352,7 +371,39 @@ export default function AdminPayoutsPage() {
       if (membersRes.ok) setRoster((membersData.members ?? []).map((m: { displayName: string }) => m.displayName));
       if (linkedRes.ok) setLinkedRsns(new Set((linkedData.rsns ?? []).map((r: string) => normalizeRsn(r))));
     })();
-  }, [load, loadRaffles, loadDmTemplate]);
+  }, [load, loadRaffles, loadDmTemplate, loadPrizeDefaults]);
+
+  /** "6,500,000 GP" for a given 1-based placement, per the configured defaults (explicit per-placement amount, falling back to the flat default for anything not explicitly listed). */
+  const prizeForPlacement = useCallback(
+    (placement: number) => {
+      const amount = prizePlacements.find((p) => p.placement === placement)?.amount ?? prizeDefaultAmount;
+      return amount > 0 ? `${amount.toLocaleString("en-US")} GP` : "";
+    },
+    [prizePlacements, prizeDefaultAmount]
+  );
+
+  const addPrizePlacementRow = () =>
+    setPrizeDraftPlacements((prev) => [...prev, { placement: prev.length > 0 ? Math.max(...prev.map((p) => p.placement)) + 1 : 1, amount: 0 }]);
+  const updatePrizePlacementRow = (i: number, patch: Partial<{ placement: number; amount: number }>) =>
+    setPrizeDraftPlacements((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  const removePrizePlacementRow = (i: number) => setPrizeDraftPlacements((prev) => prev.filter((_, idx) => idx !== i));
+
+  const savePrizeDefaults = async () => {
+    setSavingPrizeDefaults(true);
+    const res = await fetch("/api/admin/payouts/prize-defaults", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ placements: prizeDraftPlacements, defaultAmount: prizeDraftDefaultAmount }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setStatus("Prize defaults saved.");
+      await loadPrizeDefaults();
+    } else {
+      setStatus(data.error ?? "Failed to save prize defaults.");
+    }
+    setSavingPrizeDefaults(false);
+  };
 
   const updateRow = (i: number, field: "recipient_rsn" | "prize", value: string) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
@@ -383,8 +434,8 @@ export default function AdminPayoutsPage() {
       return;
     }
 
-    setRows(data.leaders.map((l: { displayName: string }) => ({ recipient_rsn: l.displayName, prize: "" })));
-    setCompetitionLeadersStatus(`Filled in ${data.leaders.length} finisher${data.leaders.length === 1 ? "" : "s"} from Wise Old Man -- add prize amounts below.`);
+    setRows(data.leaders.map((l: { displayName: string }, i: number) => ({ recipient_rsn: l.displayName, prize: prizeForPlacement(i + 1) })));
+    setCompetitionLeadersStatus(`Filled in ${data.leaders.length} finisher${data.leaders.length === 1 ? "" : "s"} from Wise Old Man with default prize amounts -- adjust below if needed.`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -671,6 +722,77 @@ export default function AdminPayoutsPage() {
               </Button>
               {dmTemplateDraft !== dmTemplate && (
                 <button type="button" onClick={() => setDmTemplateDraft(dmTemplate)} className="text-xs text-iron-grey hover:underline cursor-pointer">
+                  Revert changes
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <Card hover={false} className="mb-8">
+        <button
+          type="button"
+          onClick={() => setShowPrizeSettings((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 cursor-pointer"
+        >
+          <h2 className="font-display text-lg text-bark-brown">Default Prize Structure</h2>
+          <span className="text-xs text-gnome-green">{showPrizeSettings ? "Hide" : "Edit defaults"}</span>
+        </button>
+        <p className="text-xs text-iron-grey mt-1">
+          When you link a competition above, its top finishers are pulled in with these amounts pre-filled by
+          placement -- still editable per-row before you save.
+        </p>
+
+        {showPrizeSettings && (
+          <div className="mt-4 pt-4 border-t border-parchment-dark space-y-3">
+            <div className="space-y-2">
+              {prizeDraftPlacements.map((p, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-xs text-iron-grey w-14 shrink-0">Place</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={p.placement}
+                    onChange={(e) => updatePrizePlacementRow(i, { placement: Math.max(1, Number(e.target.value) || 1) })}
+                    className={`${inputClass} w-20`}
+                  />
+                  <span className="text-xs text-iron-grey w-14 shrink-0">Amount</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={p.amount}
+                    onChange={(e) => updatePrizePlacementRow(i, { amount: Math.max(0, Number(e.target.value) || 0) })}
+                    className={`${inputClass} flex-1`}
+                  />
+                  <button type="button" onClick={() => removePrizePlacementRow(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addPrizePlacementRow} className="text-xs text-gnome-green hover:underline cursor-pointer">+ Add placement</button>
+
+            <div className="flex items-center gap-2 pt-2">
+              <label className="text-sm text-bark-brown shrink-0">Every other placement:</label>
+              <input
+                type="number"
+                min={0}
+                value={prizeDraftDefaultAmount}
+                onChange={(e) => setPrizeDraftDefaultAmount(Math.max(0, Number(e.target.value) || 0))}
+                className={`${inputClass} sm:w-48`}
+              />
+              <span className="text-xs text-iron-grey shrink-0">GP each</span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <Button size="sm" disabled={savingPrizeDefaults} onClick={savePrizeDefaults}>
+                {savingPrizeDefaults ? "Saving..." : "Save Defaults"}
+              </Button>
+              {(JSON.stringify(prizeDraftPlacements) !== JSON.stringify(prizePlacements) || prizeDraftDefaultAmount !== prizeDefaultAmount) && (
+                <button
+                  type="button"
+                  onClick={() => { setPrizeDraftPlacements(prizePlacements); setPrizeDraftDefaultAmount(prizeDefaultAmount); }}
+                  className="text-xs text-iron-grey hover:underline cursor-pointer"
+                >
                   Revert changes
                 </button>
               )}
