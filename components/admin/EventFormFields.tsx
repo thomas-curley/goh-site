@@ -2,7 +2,9 @@
 
 import { useRef } from "react";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { EVENT_TYPES, CLAN_TIMEZONE } from "@/lib/constants";
+import { randomCheckInWord } from "@/lib/checkin-words";
 import { BannerGenerator } from "@/components/admin/BannerGenerator";
 import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
@@ -267,7 +269,23 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
 
           <div>
             <label className={labelClass}>Check-in Code</label>
-            <input type="text" value={form.check_in_code} onChange={(e) => update("check_in_code", e.target.value)} className={`${inputClass} font-mono`} placeholder="Leave blank for open check-in" />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={form.check_in_code}
+                readOnly
+                placeholder="Open check-in -- no code required"
+                className={`${inputClass} font-mono cursor-default bg-parchment-dark`}
+              />
+              <Button type="button" size="sm" variant="secondary" onClick={() => update("check_in_code", randomCheckInWord())}>
+                {form.check_in_code ? "Regenerate" : "Generate"}
+              </Button>
+              {form.check_in_code && (
+                <Button type="button" size="sm" variant="secondary" onClick={() => update("check_in_code", "")}>
+                  Clear
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-bark-brown-light mt-1">
               If set, members must enter this word to check in (website or plugin) -- announce it in person/Discord
               at the event so only attendees get credit. Leave blank for the normal, code-free check-in.
