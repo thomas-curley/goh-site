@@ -10,6 +10,17 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
+interface PayoutWithSource {
+  id: string;
+  recipient_rsn: string;
+  prize: string;
+  placement: number | null;
+  source_detail: string | null;
+  wom_competitions: { title: string } | null;
+  events: { title: string } | null;
+  raffles: { title: string } | null;
+}
+
 // POST - (re)send the Discord DM notification for one payout. Same logic
 // whether this is the first attempt or a retry after a failure.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,13 +31,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
-  const { data: payout } = await supabase
+  const { data } = await supabase
     .from("prize_payouts")
     .select("id, recipient_rsn, prize, placement, source_detail, wom_competitions(title), events(title), raffles(title)")
     .eq("id", id)
     .maybeSingle();
 
-  if (!payout) return NextResponse.json({ error: "Payout not found." }, { status: 404 });
+  if (!data) return NextResponse.json({ error: "Payout not found." }, { status: 404 });
+  const payout = data as unknown as PayoutWithSource;
   if (!payout.prize.trim()) return NextResponse.json({ error: "Set a prize amount before sending a notification." }, { status: 400 });
 
   const competitionLabel =
