@@ -251,6 +251,11 @@ export default function AdminPayoutsPage() {
   const [raffleDate, setRaffleDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [creatingRaffle, setCreatingRaffle] = useState(false);
   const [expandedRaffleId, setExpandedRaffleId] = useState<string | null>(null);
+  // Whether a raffle's winners list is shown, keyed by raffle id -- only the
+  // most recent raffle starts expanded (see isRaffleExpanded below) so a
+  // growing history of past raffles doesn't turn this into an endless
+  // scroll; anything the admin manually toggles is remembered here.
+  const [raffleWinnersExpanded, setRaffleWinnersExpanded] = useState<Record<string, boolean>>({});
   const [raffleRows, setRaffleRows] = useState<{ recipient_rsn: string; prize: string }[]>([{ recipient_rsn: "", prize: "" }]);
   const [raffleSubmitting, setRaffleSubmitting] = useState(false);
 
@@ -655,15 +660,28 @@ export default function AdminPayoutsPage() {
           <p className="text-sm text-iron-grey">No raffles yet.</p>
         ) : (
           <div className="space-y-4">
-            {raffles.map((raffle) => {
+            {raffles.map((raffle, i) => {
               const winners = payouts.filter((p) => p.raffle_id === raffle.id);
+              const paidCount = winners.filter((w) => w.is_paid).length;
+              // Only the most recent raffle (i === 0) starts expanded, unless the admin has toggled this one manually.
+              const isExpanded = raffleWinnersExpanded[raffle.id] ?? i === 0;
               return (
                 <div key={raffle.id} className="border border-bark-brown-light/40 rounded-md p-3">
                   <div className="flex items-center justify-between gap-3 mb-2">
-                    <div>
-                      <p className="font-semibold text-bark-brown text-sm">{raffle.title}</p>
-                      <p className="text-xs text-iron-grey">{new Date(raffle.occurred_on).toLocaleDateString()}</p>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRaffleWinnersExpanded((prev) => ({ ...prev, [raffle.id]: !isExpanded }))}
+                      className="flex items-center gap-2 text-left cursor-pointer min-w-0"
+                    >
+                      <span className={`text-iron-grey text-[10px] shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}>▶</span>
+                      <span className="min-w-0">
+                        <p className="font-semibold text-bark-brown text-sm truncate">{raffle.title}</p>
+                        <p className="text-xs text-iron-grey">
+                          {new Date(raffle.occurred_on).toLocaleDateString()}
+                          {winners.length > 0 && ` · ${winners.length} winner${winners.length === 1 ? "" : "s"} (${paidCount} paid)`}
+                        </p>
+                      </span>
+                    </button>
                     <div className="flex items-center gap-3 shrink-0">
                       <button
                         type="button"
@@ -682,7 +700,7 @@ export default function AdminPayoutsPage() {
                     </div>
                   </div>
 
-                  {winners.length > 0 && (
+                  {isExpanded && winners.length > 0 && (
                     <ul className="space-y-1 mb-2">
                       {winners.map((p) => (
                         <li key={p.id} className="flex items-center justify-between gap-3 text-sm py-1 px-2 rounded bg-parchment-dark/40">
@@ -697,7 +715,7 @@ export default function AdminPayoutsPage() {
                       ))}
                     </ul>
                   )}
-                  {winners.length > 0 && (
+                  {isExpanded && winners.length > 0 && (
                     <p className="text-xs text-iron-grey mb-2">Manage payment status, screenshots, and roll-downs for these in the list below.</p>
                   )}
 
