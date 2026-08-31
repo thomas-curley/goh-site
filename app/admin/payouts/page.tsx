@@ -25,6 +25,11 @@ interface Payout {
   wom_competitions: { title: string } | null;
   events: { title: string } | null;
   raffles: { title: string } | null;
+  placement: number | null;
+  dm_requested: boolean;
+  dm_status: "sent" | "failed" | "skipped" | null;
+  dm_error: string | null;
+  dm_sent_at: string | null;
 }
 
 interface Raffle {
@@ -76,6 +81,8 @@ function PayoutRow({
   onCancelRollDown,
   rollDownSuggested,
   suggestingRollDown,
+  sendingDmId,
+  onSendDm,
 }: {
   payout: Payout;
   busyId: string | null;
@@ -97,10 +104,13 @@ function PayoutRow({
   onCancelRollDown: () => void;
   rollDownSuggested: boolean;
   suggestingRollDown: boolean;
+  sendingDmId: string | null;
+  onSendDm: (p: Payout) => void;
 }) {
   const linked = linkedSourceLabel(payout);
   const editingThisPrize = editingPrizeId === payout.id;
   const rollingDownThis = rollingDownId === payout.id;
+  const sendingThisDm = sendingDmId === payout.id;
 
   return (
     <Card hover={false}>
@@ -143,6 +153,33 @@ function PayoutRow({
               ? `Paid${payout.paid_by ? ` by ${payout.paid_by}` : ""}${payout.paid_at ? ` on ${new Date(payout.paid_at).toLocaleDateString()}` : ""}`
               : `Added ${new Date(payout.created_at).toLocaleDateString()}${payout.created_by ? ` by ${payout.created_by}` : ""}`}
           </p>
+
+          <div className="flex items-center gap-2 mt-1">
+            {payout.dm_status === "sent" && (
+              <span className="text-xs text-gnome-green" title={payout.dm_sent_at ? new Date(payout.dm_sent_at).toLocaleString() : undefined}>
+                ✓ DM sent
+              </span>
+            )}
+            {payout.dm_status === "failed" && (
+              <span className="text-xs text-red-accent" title={payout.dm_error ?? undefined}>
+                ✕ DM failed{payout.dm_error ? `: ${payout.dm_error}` : ""}
+              </span>
+            )}
+            {payout.dm_status === "skipped" && (
+              <span className="text-xs text-iron-grey" title={payout.dm_error ?? undefined}>
+                No linked account to DM
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => onSendDm(payout)}
+              disabled={sendingThisDm || !payout.prize.trim()}
+              title={!payout.prize.trim() ? "Set a prize amount first" : undefined}
+              className="text-xs text-gnome-green hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
+            >
+              {sendingThisDm ? "Sending..." : payout.dm_status ? "Resend DM" : "Send DM"}
+            </button>
+          </div>
 
           <button
             type="button"
@@ -224,6 +261,12 @@ export default function AdminPayoutsPage() {
   const [tab, setTab] = useState<FilterTab>("unpaid");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [sendingDmId, setSendingDmId] = useState<string | null>(null);
+  const [notifyWinners, setNotifyWinners] = useState(false);
+  const [dmTemplate, setDmTemplate] = useState("");
+  const [dmTemplateDraft, setDmTemplateDraft] = useState("");
+  const [showDmSettings, setShowDmSettings] = useState(false);
+  const [savingDmTemplate, setSavingDmTemplate] = useState(false);
 
   const [batchCategory, setBatchCategory] = useState("sotw");
   const [batchSourceDetail, setBatchSourceDetail] = useState("");
@@ -273,9 +316,19 @@ export default function AdminPayoutsPage() {
     setRaffles(res.ok ? data.raffles ?? [] : []);
   }, []);
 
+  const loadDmTemplate = useCallback(async () => {
+    const res = await fetch("/api/admin/payouts/dm-config");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setDmTemplate(data.template ?? "");
+      setDmTemplateDraft(data.template ?? "");
+    }
+  }, []);
+
   useEffect(() => {
     load();
     loadRaffles();
+    loadDmTemplate();
     (async () => {
       const [compRes, eventRes] = await Promise.all([fetch("/api/admin/wom-competitions"), fetch("/api/events")]);
       const compData = await compRes.json().catch(() => ({}));
@@ -283,7 +336,7 @@ export default function AdminPayoutsPage() {
       if (compRes.ok) setWomCompetitions((compData.competitions ?? []).map((c: { id: string; title: string }) => ({ id: c.id, title: c.title })));
       if (eventRes.ok) setEvents((eventData.events ?? []).map((e: { id: string; title: string }) => ({ id: e.id, title: e.title })));
     })();
-  }, [load, loadRaffles]);
+  }, [load, loadRaffles, loadDmTemplate]);
 
   const updateRow = (i: number, field: "recipient_rsn" | "prize", value: string) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
@@ -334,6 +387,7 @@ export default function AdminPayoutsPage() {
         entries,
         womCompetitionId: batchCategory === "sotw" || batchCategory === "botw" ? batchWomCompetitionId || undefined : undefined,
         eventId: batchCategory === "event" ? batchEventId || undefined : undefined,
+        notifyWinners,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -368,6 +422,32 @@ export default function AdminPayoutsPage() {
     const res = await fetch(`/api/admin/payouts/${payout.id}`, { method: "DELETE" });
     if (res.ok) await load();
     setBusyId(null);
+  };
+
+  const sendDm = async (payout: Payout) => {
+    setSendingDmId(payout.id);
+    const res = await fetch(`/api/admin/payouts/${payout.id}/notify`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) setStatus(data.error ?? "Failed to send DM.");
+    await load();
+    setSendingDmId(null);
+  };
+
+  const saveDmTemplate = async () => {
+    setSavingDmTemplate(true);
+    const res = await fetch("/api/admin/payouts/dm-config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ template: dmTemplateDraft }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setDmTemplate(dmTemplateDraft);
+      setStatus("DM template saved.");
+    } else {
+      setStatus(data.error ?? "Failed to save template.");
+    }
+    setSavingDmTemplate(false);
   };
 
   const startRollDown = async (payout: Payout) => {
@@ -479,7 +559,7 @@ export default function AdminPayoutsPage() {
     const res = await fetch("/api/admin/payouts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries, raffleId }),
+      body: JSON.stringify({ entries, raffleId, notifyWinners }),
     });
     if (res.ok) {
       setRaffleRows([{ recipient_rsn: "", prize: "" }]);
@@ -520,6 +600,8 @@ export default function AdminPayoutsPage() {
     onCancelRollDown: cancelRollDown,
     rollDownSuggested,
     suggestingRollDown,
+    sendingDmId,
+    onSendDm: sendDm,
   };
 
   return (
@@ -538,6 +620,48 @@ export default function AdminPayoutsPage() {
           </button>
         </div>
       )}
+
+      <Card hover={false} className="mb-8">
+        <button
+          type="button"
+          onClick={() => setShowDmSettings((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 cursor-pointer"
+        >
+          <h2 className="font-display text-lg text-bark-brown">DM Notification Settings</h2>
+          <span className="text-xs text-gnome-green">{showDmSettings ? "Hide" : "Edit template"}</span>
+        </button>
+        <p className="text-xs text-iron-grey mt-1">
+          When notifying a winner, this message is sent as a Discord DM -- only works if their RSN is linked to a
+          verified account.
+        </p>
+
+        {showDmSettings && (
+          <div className="mt-4 pt-4 border-t border-parchment-dark space-y-3">
+            <textarea
+              value={dmTemplateDraft}
+              onChange={(e) => setDmTemplateDraft(e.target.value)}
+              rows={4}
+              maxLength={1000}
+              className={inputClass}
+            />
+            <p className="text-xs text-iron-grey">
+              Variables: <span className="font-mono">{"{user}"}</span> <span className="font-mono">{"{payout}"}</span>{" "}
+              <span className="font-mono">{"{competition}"}</span> <span className="font-mono">{"{placement}"}</span> (placement is
+              only set for competition winners, e.g. &quot;1st&quot; -- blank for raffles/manual entries).
+            </p>
+            <div className="flex items-center gap-3">
+              <Button size="sm" disabled={savingDmTemplate || !dmTemplateDraft.trim()} onClick={saveDmTemplate}>
+                {savingDmTemplate ? "Saving..." : "Save Template"}
+              </Button>
+              {dmTemplateDraft !== dmTemplate && (
+                <button type="button" onClick={() => setDmTemplateDraft(dmTemplate)} className="text-xs text-iron-grey hover:underline cursor-pointer">
+                  Revert changes
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
 
       <Card hover={false} className="mb-8">
         <h2 className="font-display text-lg text-bark-brown mb-4">Add Winners</h2>
@@ -624,6 +748,11 @@ export default function AdminPayoutsPage() {
             </div>
             <Button type="button" variant="ghost" size="sm" onClick={addRow} className="mt-2">+ Add Row</Button>
           </div>
+
+          <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+            <input type="checkbox" checked={notifyWinners} onChange={(e) => setNotifyWinners(e.target.checked)} className="accent-gnome-green" />
+            Also notify winners via Discord DM (only sent to those with a linked, verified RSN)
+          </label>
 
           {status && (
             <div className="p-3 rounded-md bg-gnome-green/10 border border-gnome-green/30 text-sm text-gnome-green">
@@ -742,6 +871,10 @@ export default function AdminPayoutsPage() {
                           )}
                         </div>
                       ))}
+                      <label className="flex items-center gap-2 text-xs text-bark-brown cursor-pointer">
+                        <input type="checkbox" checked={notifyWinners} onChange={(e) => setNotifyWinners(e.target.checked)} className="accent-gnome-green" />
+                        Also notify winners via Discord DM
+                      </label>
                       <div className="flex items-center gap-3">
                         <Button type="button" variant="ghost" size="sm" onClick={addRaffleRow}>+ Add Row</Button>
                         <Button type="submit" size="sm" disabled={raffleSubmitting}>

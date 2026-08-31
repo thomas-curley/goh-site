@@ -220,6 +220,34 @@ export async function postToChannel(channelId: string, content: string, imageUrl
   return res.json();
 }
 
+/** Gets (or lazily creates) the DM channel id for a user -- Discord treats DMs as just another channel once one exists. */
+async function getOrCreateDmChannel(discordId: string): Promise<string> {
+  const res = await fetch(`${DISCORD_API}/users/@me/channels`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ recipient_id: discordId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error creating DM channel: ${res.status} ${error}`);
+  }
+
+  const data = await res.json();
+  return data.id;
+}
+
+/**
+ * Sends a direct message to a user. Throws (rather than swallowing) on
+ * failure -- e.g. the user has DMs closed, has blocked the bot, or shares no
+ * server with it -- so callers can record the specific error rather than
+ * silently treating a failed DM as sent.
+ */
+export async function sendDirectMessage(discordId: string, content: string) {
+  const channelId = await getOrCreateDmChannel(discordId);
+  return postToChannel(channelId, content);
+}
+
 /**
  * Edit an existing message in a Discord channel, optionally replacing its
  * image embed(s). Pass the full desired image set, not a diff — Discord
