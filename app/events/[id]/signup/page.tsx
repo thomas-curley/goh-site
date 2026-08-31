@@ -52,7 +52,7 @@ export default async function EventSignupPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, description, event_type, start_time, end_time, location, meet_location, prize_pool, banner_url")
+    .select("id, title, description, event_type, start_time, end_time, location, meet_location, prize_pool, banner_url, check_in_code")
     .eq("id", id)
     .single();
 
@@ -135,6 +135,7 @@ export default async function EventSignupPage({
         loggedIn={!!user}
         profile={profile}
         alreadyCheckedIn={alreadyCheckedIn}
+        requiresCode={!!event.check_in_code?.trim()}
       />
     </div>
   );

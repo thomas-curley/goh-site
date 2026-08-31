@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkInToEvent } from "@/lib/event-checkin";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -52,6 +53,7 @@ export async function POST(
 
   const body = await request.json().catch(() => ({}));
   const manualName = typeof body.manualName === "string" ? body.manualName.trim().slice(0, MAX_NAME_LENGTH) : "";
+  const code = typeof body.code === "string" ? body.code : undefined;
 
   let displayName: string;
   let source: string;
@@ -68,25 +70,17 @@ export async function POST(
     );
   }
 
-  const { error } = await supabase.from("event_attendance").upsert(
-    {
-      event_id: id,
-      discord_id: profile.discord_id,
-      discord_username: profile.discord_username,
-      discord_nickname: profile.discord_nickname,
-      rsn: displayName,
-      source,
-      signed_up: true,
-      attended: true,
-      marked_by: "self",
-      noted_at: new Date().toISOString(),
-    },
-    { onConflict: "event_id,discord_id" }
+  const result = await checkInToEvent(
+    supabase,
+    id,
+    { discordId: profile.discord_id, discordUsername: profile.discord_username, discordNickname: profile.discord_nickname, rsn: displayName },
+    source,
+    code
   );
 
-  if (error) {
-    return NextResponse.json({ error: "Failed to check in. Try again." }, { status: 500 });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  return NextResponse.json({ checkedIn: true, name: displayName, verified: source === "self_checkin" });
+  return NextResponse.json({ checkedIn: true, name: result.name, verified: source === "self_checkin" });
 }
