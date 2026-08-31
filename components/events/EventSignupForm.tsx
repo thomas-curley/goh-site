@@ -13,13 +13,18 @@ interface EventSignupFormProps {
   requiresCode: boolean;
 }
 
-export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, requiresCode }: EventSignupFormProps) {
+export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, requiresCode: initialRequiresCode }: EventSignupFormProps) {
   const [checkedIn, setCheckedIn] = useState(alreadyCheckedIn);
   const [manualName, setManualName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [code, setCode] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Starts from the server-rendered prop, but can flip true mid-session if a
+  // submit comes back saying a code is needed after all -- the page was
+  // rendered before an admin added one, so this page's own initial view of
+  // the event is stale, not just the plugin's.
+  const [requiresCode, setRequiresCode] = useState(initialRequiresCode);
 
   const hasVerifiedRsn = !!profile?.rsn_verified && !!profile?.rsn;
 
@@ -38,7 +43,12 @@ export function EventSignupForm({ eventId, loggedIn, profile, alreadyCheckedIn, 
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to check in.");
+        if (data.codeRequired && !requiresCode) {
+          setRequiresCode(true);
+          setError("This event requires a check-in code -- enter it below and try again.");
+        } else {
+          setError(data.error ?? "Failed to check in.");
+        }
         return;
       }
       setCheckedIn({ rsn: data.name, discord_username: profile?.discord_username ?? null });
