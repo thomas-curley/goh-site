@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { checkInToEvent } from "@/lib/event-checkin";
+import { checkInToEvent, removeCheckIn } from "@/lib/event-checkin";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -83,4 +83,39 @@ export async function POST(
   }
 
   return NextResponse.json({ checkedIn: true, name: result.name, verified: source === "self_checkin" });
+}
+
+// DELETE - self-service undo for an accidental check-in. Scoped to the
+// caller's own event_attendance row via removeCheckIn() -- refuses if a
+// staff member has since marked/adjusted it themselves.
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const supabase = getServiceClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  const authClient = await createSupabaseServerClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "You must be signed in." }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("discord_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile?.discord_id) {
+    return NextResponse.json({ error: "We couldn't find your Discord profile." }, { status: 400 });
+  }
+
+  const result = await removeCheckIn(supabase, id, profile.discord_id);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json({ removed: true });
 }
