@@ -17,6 +17,15 @@ interface UserProfile {
   available_weekdays: string[] | null;
 }
 
+interface ApiKey {
+  id: string;
+  label: string | null;
+  token_prefix: string;
+  created_at: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+}
+
 interface AccountFormProps {
   userId: string;
   userMeta: Record<string, string>;
@@ -34,6 +43,12 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const [weekdays, setWeekdays] = useState<string[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
   const [availabilityStatus, setAvailabilityStatus] = useState<string | null>(null);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [keysLoading, setKeysLoading] = useState(true);
+  const [newKeyLabel, setNewKeyLabel] = useState("");
+  const [generatingKey, setGeneratingKey] = useState(false);
+  const [revealedToken, setRevealedToken] = useState<string | null>(null);
+  const [keyError, setKeyError] = useState<string | null>(null);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -55,6 +70,55 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  const loadApiKeys = useCallback(async () => {
+    setKeysLoading(true);
+    try {
+      const res = await fetch("/api/account/api-keys");
+      const data = await res.json();
+      setApiKeys(res.ok ? data.keys ?? [] : []);
+    } finally {
+      setKeysLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadApiKeys();
+  }, [loadApiKeys]);
+
+  const handleGenerateKey = async () => {
+    setGeneratingKey(true);
+    setKeyError(null);
+    try {
+      const res = await fetch("/api/account/api-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: newKeyLabel.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setKeyError(data.error ?? "Failed to generate key.");
+        return;
+      }
+      setRevealedToken(data.token);
+      setNewKeyLabel("");
+      await loadApiKeys();
+    } catch {
+      setKeyError("Something went wrong. Try again.");
+    } finally {
+      setGeneratingKey(false);
+    }
+  };
+
+  const handleRevokeKey = async (id: string) => {
+    setKeyError(null);
+    const res = await fetch(`/api/account/api-keys/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setKeyError("Failed to revoke key. Try again.");
+      return;
+    }
+    await loadApiKeys();
+  };
 
   const handleLinkRsn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,6 +449,92 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
             {availabilityStatus}
           </p>
         )}
+      </Card>
+
+      {/* Plugin API Key */}
+      <Card hover={false} className="mt-6">
+        <h2 className="font-display text-xl text-bark-brown mb-2">Plugin API Key</h2>
+        <p className="text-sm text-bark-brown-light mb-4">
+          Generate a personal key to connect the Gn0me Home RuneLite plugin (private test
+          build) to your account. It lets the plugin remind you about upcoming events and,
+          if you&apos;re staff, about pending prize payouts and other backlog items -- reads
+          only, no ability to change anything on the site.
+        </p>
+
+        {revealedToken && (
+          <div className="mb-4 p-4 border border-gnome-green/40 bg-gnome-green/5 rounded-md">
+            <p className="text-sm font-semibold text-bark-brown mb-2">
+              Copy this now -- you won&apos;t be able to see it again.
+            </p>
+            <div className="flex gap-2">
+              <code className="flex-1 min-w-0 px-3 py-2 rounded-md bg-parchment border border-bark-brown-light font-mono text-xs text-gnome-green break-all">
+                {revealedToken}
+              </code>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => navigator.clipboard.writeText(revealedToken)}
+              >
+                Copy
+              </Button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRevealedToken(null)}
+              className="text-xs text-bark-brown-light hover:underline mt-3 cursor-pointer"
+            >
+              Done, hide this
+            </button>
+          </div>
+        )}
+
+        {keyError && <p className="text-sm text-red-accent mb-4">{keyError}</p>}
+
+        {!keysLoading && apiKeys.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {apiKeys.map((k) => (
+              <div
+                key={k.id}
+                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md border ${
+                  k.revoked_at ? "border-bark-brown-light/30 opacity-50" : "border-bark-brown-light"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="font-mono text-sm text-bark-brown truncate">
+                    {k.label || "Unnamed key"} <span className="text-iron-grey">({k.token_prefix}...)</span>
+                  </p>
+                  <p className="text-xs text-iron-grey">
+                    Created {new Date(k.created_at).toLocaleDateString()}
+                    {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
+                    {k.revoked_at && " · Revoked"}
+                  </p>
+                </div>
+                {!k.revoked_at && (
+                  <button
+                    type="button"
+                    onClick={() => handleRevokeKey(k.id)}
+                    className="text-xs text-red-accent hover:underline shrink-0 cursor-pointer"
+                  >
+                    Revoke
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={newKeyLabel}
+            onChange={(e) => setNewKeyLabel(e.target.value)}
+            placeholder="Label (optional, e.g. 'Home PC')"
+            className="flex-1 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green"
+          />
+          <Button type="button" onClick={handleGenerateKey} disabled={generatingKey} size="sm">
+            {generatingKey ? "Generating..." : "Generate New Key"}
+          </Button>
+        </div>
       </Card>
 
       {/* How it works */}

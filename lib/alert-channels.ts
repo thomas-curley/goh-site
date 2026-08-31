@@ -21,6 +21,8 @@ export const ALERT_CHANNEL_FEATURES: AlertChannelFeature[] = [
   { key: "bingo_completions", label: "Bingo Tile Completions" },
   { key: "weekly_competition_announcements", label: "Weekly SOTW/BotW Announcements (Results + New Week)" },
   { key: "skill_or_kill_forum", label: "Skill or Kill of the Week Forum" },
+  { key: "plugin_activity", label: "Plugin Activity (Level-ups, Quests, KC Milestones, Clues)" },
+  { key: "plugin_highlights", label: "Plugin Highlights (Pet Drops)" },
 ];
 
 /**

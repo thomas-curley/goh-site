@@ -22,6 +22,7 @@ export const SITE_SECTIONS = [
   { key: "bank", label: "Bank (Loans)", description: "Loan board, request form, My Loans." },
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
   { key: "testimonials", label: "Testimonials", description: "Public clan testimonials/reviews." },
+  { key: "points", label: "Clan Points", description: "Points leaderboard, fed by the RuneLite plugin." },
   { key: "about", label: "About", description: "About page." },
 ] as const;
 
