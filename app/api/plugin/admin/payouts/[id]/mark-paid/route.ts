@@ -55,10 +55,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (file instanceof File && file.size > 0) {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const fileName = `payout_proof_${id}_${Date.now()}.png`;
+    // Plugin sends JPEG (resized/re-encoded client-side to stay under
+    // Vercel's request size limit), but derive the extension from the
+    // actual content type rather than assuming, so this doesn't silently
+    // mislabel a file if that ever changes.
+    const extension = file.type === "image/png" ? "png" : "jpg";
+    const fileName = `payout_proof_${id}_${Date.now()}.${extension}`;
     const { error: uploadError } = await supabase.storage
       .from("banners")
-      .upload(fileName, bytes, { contentType: file.type || "image/png", cacheControl: "31536000" });
+      .upload(fileName, bytes, { contentType: file.type || "image/jpeg", cacheControl: "31536000" });
 
     if (!uploadError) {
       const { data: pub } = supabase.storage.from("banners").getPublicUrl(fileName);
