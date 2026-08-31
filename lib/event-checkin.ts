@@ -9,7 +9,7 @@ export interface CheckInIdentity {
 
 export type CheckInResult =
   | { ok: true; name: string }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; codeRequired?: boolean };
 
 /**
  * Shared self-check-in logic reused by the website check-in page and the
@@ -40,7 +40,17 @@ export async function checkInToEvent(
   if (requiredCode) {
     const submitted = code?.trim() ?? "";
     if (submitted.toLowerCase() !== requiredCode.toLowerCase()) {
-      return { ok: false, status: 403, error: "That code doesn't match. Ask the event host for the check-in code." };
+      // codeRequired is set on BOTH "none submitted" and "wrong code" -- a
+      // caller whose own cached view of the event thought no code was
+      // needed (e.g. the plugin's last poll predates an admin adding one)
+      // can react to this signal by prompting and retrying, rather than
+      // just failing based on stale local state.
+      return {
+        ok: false,
+        status: 403,
+        error: submitted ? "That code doesn't match. Ask the event host for the check-in code." : "This event requires a check-in code.",
+        codeRequired: true,
+      };
     }
   }
 

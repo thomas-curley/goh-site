@@ -79,7 +79,7 @@ export async function POST(
   );
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
+    return NextResponse.json({ error: result.error, codeRequired: result.codeRequired ?? false }, { status: result.status });
   }
 
   return NextResponse.json({ checkedIn: true, name: result.name, verified: source === "self_checkin" });
