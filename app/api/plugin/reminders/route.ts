@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { verifyPluginToken } from "@/lib/plugin-auth";
 import { hasPermission } from "@/lib/permissions";
 import { getPointsBalance } from "@/lib/clan-points";
+import { payoutLabel, type PayoutSourceRow } from "@/lib/payouts";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -15,19 +16,10 @@ function normalizeRsn(s: string): string {
   return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-interface PayoutRow {
+interface PayoutRow extends PayoutSourceRow {
   id: string;
   recipient_rsn: string;
   prize: string;
-  source_detail: string | null;
-  wom_competitions: { title: string } | { title: string }[] | null;
-  events: { title: string } | { title: string }[] | null;
-  raffles: { title: string } | { title: string }[] | null;
-}
-
-function payoutLabel(row: PayoutRow): string {
-  const pick = (rel: PayoutRow["wom_competitions"]) => (Array.isArray(rel) ? rel[0]?.title : rel?.title);
-  return pick(row.wom_competitions) ?? pick(row.events) ?? pick(row.raffles) ?? row.source_detail ?? "Gn0me Home";
 }
 
 /**
