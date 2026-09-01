@@ -1,4 +1,4 @@
-import { WOMClient, SKILLS, BOSSES, SkillProps, BossProps } from "@wise-old-man/utils";
+import { WOMClient, SKILLS, BOSSES, SkillProps, BossProps, NameChangeStatus } from "@wise-old-man/utils";
 import { WOM_GROUP_ID, WOM_BASE_URL } from "./constants";
 
 const womClient = new WOMClient({
@@ -83,6 +83,32 @@ export async function getGroupMembers(): Promise<ClanMember[]> {
     registeredAt: m.player.registeredAt.toString(),
     lastChangedAt: m.player.lastChangedAt?.toString() ?? null,
   }));
+}
+
+/**
+ * If `staleRsn` was renamed in-game (an approved WOM name change), returns
+ * the new name -- lets a linked RSN that no longer matches anyone in the
+ * live group roster be told apart from someone who actually left the clan.
+ * Returns null on no match, or on any WOM API failure (best-effort, never
+ * throws -- callers use this to opportunistically fix a stale link, not as
+ * a hard requirement).
+ */
+export async function findRenamedTo(staleRsn: string): Promise<string | null> {
+  try {
+    const changes = await womClient.nameChanges.searchNameChanges({ username: staleRsn, status: NameChangeStatus.APPROVED });
+    const normalized = normalizeRsn(staleRsn);
+    const matches = changes.filter((c) => normalizeRsn(c.oldName) === normalized);
+    if (matches.length === 0) return null;
+
+    matches.sort((a, b) => {
+      const at = a.resolvedAt ? new Date(a.resolvedAt).getTime() : 0;
+      const bt = b.resolvedAt ? new Date(b.resolvedAt).getTime() : 0;
+      return bt - at;
+    });
+    return matches[0].newName;
+  } catch {
+    return null;
+  }
 }
 
 export async function getGroupDetails(): Promise<GroupDetails | null> {

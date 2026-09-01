@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getGroupMembers } from "@/lib/wom";
 import { getRankByName } from "@/lib/constants";
 import { normalizeRole } from "@/lib/permissions";
-import type { SiteSectionKey } from "@/lib/site-sections";
+import { linkedRsns, bestMembership } from "@/lib/rank-resolution";
+import { SITE_SECTIONS, type SiteSectionKey } from "@/lib/site-sections";
 
 export type AccessLevel = "anonymous" | "verified_player" | "clan_member" | "staff";
 
@@ -18,11 +19,6 @@ export interface EligibilityResult {
   reason?: string;
   verifiedName?: string;
   discordId?: string;
-}
-
-/** WOM display names and stored RSNs vary in spacing/casing -- normalize before matching. */
-function normalizeRsn(s: string): string {
-  return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -60,8 +56,8 @@ export async function checkClanEligibility(
 
   if (accessLevel === "clan_member" || accessLevel === "staff") {
     const members = await getGroupMembers();
-    const normalized = normalizeRsn(profile.rsn);
-    const member = members.find((m) => normalizeRsn(m.displayName) === normalized);
+    const rsns = await linkedRsns(supabase, userId, profile.rsn);
+    const member = bestMembership(members, rsns);
     if (!member) {
       return { eligible: false, reason: `You must be a current clan member to access ${context}.` };
     }
@@ -101,8 +97,8 @@ export async function resolveEffectiveRole(supabase: SupabaseClient, userId: str
   if (!profile?.rsn || !profile.rsn_verified) return "guest";
 
   const members = await getGroupMembers();
-  const normalized = normalizeRsn(profile.rsn);
-  const member = members.find((m) => normalizeRsn(m.displayName) === normalized);
+  const rsns = await linkedRsns(supabase, userId, profile.rsn);
+  const member = bestMembership(members, rsns);
   return member ? normalizeRole(member.role) : "guest";
 }
 
@@ -122,4 +118,24 @@ export async function isSectionVisible(supabase: SupabaseClient, key: SiteSectio
 export async function isSectionVisibleForRole(supabase: SupabaseClient, role: string, key: SiteSectionKey): Promise<boolean> {
   const { data } = await supabase.from("section_visibility").select("visible").eq("role", role).eq("section_key", key).maybeSingle();
   return data?.visible ?? true;
+}
+
+/**
+ * Every registered section key the given viewer is NOT allowed to see --
+ * resolves their role once and checks it against every section, same as
+ * /api/site-sections/visible. Shared so the root layout can compute this
+ * server-side (for the nav's first paint -- no client-side fetch means no
+ * flash of a hidden section rendering before it's hidden a moment later)
+ * and the API route can compute the same thing for the client's later
+ * freshness re-check, without the two ever answering differently.
+ */
+export async function getHiddenSectionKeys(supabase: SupabaseClient, userId: string | null): Promise<string[]> {
+  const role = await resolveEffectiveRole(supabase, userId);
+  const results = await Promise.all(
+    SITE_SECTIONS.map(async (section) => ({
+      key: section.key,
+      visible: await isSectionVisibleForRole(supabase, role, section.key),
+    }))
+  );
+  return results.filter((r) => !r.visible).map((r) => r.key);
 }

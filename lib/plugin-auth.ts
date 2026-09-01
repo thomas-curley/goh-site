@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import type { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { resolveEffectiveRole } from "./clan-access";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,7 +47,7 @@ export async function verifyPluginToken(request: NextRequest): Promise<PluginTok
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("discord_id, discord_username, rsn, rsn_verified, clan_rank")
+    .select("discord_id, discord_username, rsn, rsn_verified")
     .eq("id", key.user_id)
     .maybeSingle();
 
@@ -58,12 +59,17 @@ export async function verifyPluginToken(request: NextRequest): Promise<PluginTok
     () => {}
   );
 
+  // Live, not the old cached user_profiles.clan_rank column (which only
+  // ever updated at RSN-link time and went stale the moment someone's
+  // actual clan rank changed) -- see lib/clan-access.ts's resolveEffectiveRole.
+  const clanRank = await resolveEffectiveRole(supabase, key.user_id);
+
   return {
     userId: key.user_id,
     discordId: profile.discord_id,
     discordUsername: profile.discord_username,
     rsn: profile.rsn,
     rsnVerified: profile.rsn_verified,
-    clanRank: profile.clan_rank,
+    clanRank,
   };
 }

@@ -200,12 +200,13 @@ function PayoutRow({
             📷 {payout.screenshot_urls.length > 0 ? `${payout.screenshot_urls.length} screenshot${payout.screenshot_urls.length === 1 ? "" : "s"}` : "Add screenshot"}
           </button>
           {expandedScreenshotsId === payout.id && (
-            <div className="mt-2 max-w-sm">
+            <div className="mt-2 max-w-md">
               <ImageUploader
                 images={payout.screenshot_urls}
                 onChange={(urls) => onScreenshotsChange(payout, urls)}
                 maxImages={4}
                 label="Proof of payment"
+                thumbnailSize="large"
               />
             </div>
           )}
@@ -287,6 +288,9 @@ export default function AdminPayoutsPage() {
   const [prizeDraftDefaultAmount, setPrizeDraftDefaultAmount] = useState(0);
   const [showPrizeSettings, setShowPrizeSettings] = useState(false);
   const [savingPrizeDefaults, setSavingPrizeDefaults] = useState(false);
+
+  const [showAddWinners, setShowAddWinners] = useState(false);
+  const [showRaffles, setShowRaffles] = useState(false);
 
   const [batchCategory, setBatchCategory] = useState("sotw");
   const [batchSourceDetail, setBatchSourceDetail] = useState("");
@@ -808,8 +812,17 @@ export default function AdminPayoutsPage() {
       </Card>
 
       <Card hover={false} className="mb-8">
-        <h2 className="font-display text-lg text-bark-brown mb-4">Add Winners</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setShowAddWinners((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 cursor-pointer"
+        >
+          <h2 className="font-display text-lg text-bark-brown">Add Winners</h2>
+          <span className="text-xs text-gnome-green">{showAddWinners ? "Hide" : "Show"}</span>
+        </button>
+
+        {showAddWinners && (
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4 pt-4 border-t border-parchment-dark">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-bark-brown mb-1">Category</label>
@@ -908,13 +921,23 @@ export default function AdminPayoutsPage() {
             {submitting ? "Saving..." : "Add Winners"}
           </Button>
         </form>
+        )}
       </Card>
 
       {/* Raffles */}
       <Card hover={false} className="mb-8">
-        <h2 className="font-display text-lg text-bark-brown mb-1">Weekly Raffles</h2>
-        <p className="text-xs text-iron-grey mb-4">Create a raffle for the week, then add its winners underneath it.</p>
+        <button
+          type="button"
+          onClick={() => setShowRaffles((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 cursor-pointer"
+        >
+          <h2 className="font-display text-lg text-bark-brown">Weekly Raffles</h2>
+          <span className="text-xs text-gnome-green">{showRaffles ? "Hide" : "Show"}</span>
+        </button>
+        <p className="text-xs text-iron-grey mt-1">Create a raffle for the week, then add its winners underneath it.</p>
 
+        {showRaffles && (
+        <div className="mt-4 pt-4 border-t border-parchment-dark">
         <form onSubmit={handleCreateRaffle} className="flex flex-col sm:flex-row gap-2 mb-6">
           <input
             type="text"
@@ -1031,6 +1054,8 @@ export default function AdminPayoutsPage() {
               );
             })}
           </div>
+        )}
+        </div>
         )}
       </Card>
 

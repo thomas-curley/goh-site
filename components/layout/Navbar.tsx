@@ -78,7 +78,12 @@ const NAV_ITEMS: NavItem[] = [
   { type: "link", href: "/about", label: "About", sectionKey: "about" },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+  /** Resolved server-side (see app/layout.tsx) so the very first paint already has the right links hidden -- no flash of a hidden section's link before a client fetch catches up. */
+  initialHiddenKeys: string[];
+}
+
+export function Navbar({ initialHiddenKeys }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   // Separate accordion state for the mobile panel's dropdown groups -- only
@@ -87,15 +92,12 @@ export function Navbar() {
   const [mobileOpenGroup, setMobileOpenGroup] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
-  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
+  // Resolved fresh server-side on every request (app/layout.tsx is now
+  // dynamic specifically so this can never be stale) -- no client-side
+  // re-fetch needed here, that would just redo the exact same work this
+  // request's SSR already did.
+  const [hiddenKeys] = useState<Set<string>>(() => new Set(initialHiddenKeys));
   const [avatarFailed, setAvatarFailed] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/site-sections/visible")
-      .then((res) => res.json())
-      .then((data) => setHiddenKeys(new Set(Array.isArray(data.hiddenKeys) ? data.hiddenKeys : [])))
-      .catch(() => {});
-  }, []);
 
   const visibleNavItems = useMemo(() => {
     return NAV_ITEMS.map((item) => {
@@ -180,7 +182,7 @@ export function Navbar() {
               )
             )}
             <ThemeToggle />
-            <UserMenu />
+            <UserMenu hiddenKeys={hiddenKeys} />
           </div>
 
           {/* Mobile: theme toggle + hamburger */}

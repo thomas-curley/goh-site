@@ -26,6 +26,13 @@ interface ApiKey {
   revoked_at: string | null;
 }
 
+interface AltRsn {
+  id: string;
+  rsn: string;
+  clan_rank: string | null;
+  linked_at: string;
+}
+
 interface AccountFormProps {
   userId: string;
   userMeta: Record<string, string>;
@@ -49,6 +56,11 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const [generatingKey, setGeneratingKey] = useState(false);
   const [revealedToken, setRevealedToken] = useState<string | null>(null);
   const [keyError, setKeyError] = useState<string | null>(null);
+  const [alts, setAlts] = useState<AltRsn[]>([]);
+  const [altsLoading, setAltsLoading] = useState(true);
+  const [newAltRsn, setNewAltRsn] = useState("");
+  const [addingAlt, setAddingAlt] = useState(false);
+  const [altError, setAltError] = useState<string | null>(null);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -85,6 +97,57 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   useEffect(() => {
     loadApiKeys();
   }, [loadApiKeys]);
+
+  const loadAlts = useCallback(async () => {
+    setAltsLoading(true);
+    try {
+      const res = await fetch("/api/account/alts");
+      const data = await res.json();
+      setAlts(res.ok ? data.alts ?? [] : []);
+    } finally {
+      setAltsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAlts();
+  }, [loadAlts]);
+
+  const handleAddAlt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAltRsn.trim()) return;
+
+    setAddingAlt(true);
+    setAltError(null);
+    try {
+      const res = await fetch("/api/account/alts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rsn: newAltRsn.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAltError(data.error ?? "Failed to link alt.");
+        return;
+      }
+      setNewAltRsn("");
+      await loadAlts();
+    } catch {
+      setAltError("Something went wrong. Try again.");
+    } finally {
+      setAddingAlt(false);
+    }
+  };
+
+  const handleRemoveAlt = async (id: string) => {
+    setAltError(null);
+    const res = await fetch(`/api/account/alts/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setAltError("Failed to unlink alt. Try again.");
+      return;
+    }
+    await loadAlts();
+  };
 
   const handleGenerateKey = async () => {
     setGeneratingKey(true);
@@ -415,6 +478,53 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
             </form>
           </div>
         )}
+      </Card>
+
+      {/* Alt RSNs */}
+      <Card hover={false} className="mt-6">
+        <h2 className="font-display text-xl text-bark-brown mb-2">Alt Accounts</h2>
+        <p className="text-sm text-bark-brown-light mb-4">
+          Link additional RSNs as alts. They won&apos;t replace your main RSN anywhere it&apos;s
+          shown, but if an alt has a clan rank your main doesn&apos;t, that rank is used for
+          permissions -- and alts show up on your Gn0meBook profile as &quot;Also plays as&quot;.
+        </p>
+
+        {altError && <p className="text-sm text-red-accent mb-4">{altError}</p>}
+
+        {!altsLoading && alts.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {alts.map((alt) => (
+              <div key={alt.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-md border border-bark-brown-light">
+                <div className="min-w-0">
+                  <p className="font-mono text-sm font-bold text-bark-brown truncate">{alt.rsn}</p>
+                  {alt.clan_rank && (
+                    <p className="text-xs text-iron-grey capitalize">{alt.clan_rank.replace(/_/g, " ")}</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveAlt(alt.id)}
+                  className="text-xs text-red-accent hover:underline shrink-0 cursor-pointer"
+                >
+                  Unlink
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={handleAddAlt} className="flex gap-3">
+          <input
+            type="text"
+            value={newAltRsn}
+            onChange={(e) => setNewAltRsn(e.target.value)}
+            placeholder="Alt RSN..."
+            className="flex-1 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-gnome-green"
+          />
+          <Button type="submit" disabled={addingAlt} size="sm">
+            {addingAlt ? "Linking..." : "Add Alt"}
+          </Button>
+        </form>
       </Card>
 
       {/* Weekly Availability */}
