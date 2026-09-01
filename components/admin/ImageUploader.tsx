@@ -10,9 +10,11 @@ interface ImageUploaderProps {
   onChange: (images: string[]) => void;
   maxImages?: number;
   label?: string;
+  /** Taller thumbnail grid for contexts where the image itself matters more than fitting many per row (e.g. reviewing a payout proof screenshot). Defaults to the compact size used everywhere else. */
+  thumbnailSize?: "default" | "large";
 }
 
-export function ImageUploader({ images, onChange, maxImages = 5, label = "Images" }: ImageUploaderProps) {
+export function ImageUploader({ images, onChange, maxImages = 5, label = "Images", thumbnailSize = "default" }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
@@ -54,14 +56,14 @@ export function ImageUploader({ images, onChange, maxImages = 5, label = "Images
 
       {/* Image previews */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+        <div className={`grid gap-2 mb-3 ${thumbnailSize === "large" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
           {images.map((url, i) => (
             <div key={i} className="relative group">
               <img
                 src={url}
                 alt={`Upload ${i + 1}`}
                 onClick={() => setLightboxUrl(url)}
-                className="w-full h-24 object-cover rounded-md border border-bark-brown-light cursor-pointer hover:opacity-90 transition-opacity"
+                className={`w-full object-cover rounded-md border border-bark-brown-light cursor-pointer hover:opacity-90 transition-opacity ${thumbnailSize === "large" ? "h-48" : "h-24"}`}
               />
               <button
                 type="button"
