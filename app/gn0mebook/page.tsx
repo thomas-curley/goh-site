@@ -45,7 +45,7 @@ export default async function Gn0meBookPage() {
           {founders.length > 0 && (
             <section className="mb-12">
               <h2 className="font-display text-2xl text-gnome-green mb-4">Founders</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {founders.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
               </div>
             </section>
@@ -54,7 +54,7 @@ export default async function Gn0meBookPage() {
           {staff.length > 0 && (
             <section className="mb-12">
               <h2 className="font-display text-2xl text-gnome-green mb-4">Staff</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {staff.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
               </div>
             </section>
@@ -63,7 +63,7 @@ export default async function Gn0meBookPage() {
           {members.length > 0 && (
             <section>
               <h2 className="font-display text-2xl text-gnome-green mb-4">Members</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {members.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
               </div>
             </section>

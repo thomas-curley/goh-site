@@ -140,7 +140,7 @@ export default function IngameEventsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-1">In-Game Events</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-1">In-Game Clan Panel</h1>
       <p className="text-bark-brown-light mb-6">
         There&apos;s no API for OSRS&apos;s in-game &quot;Clan Home: Events&quot; panel — this translates each
         upcoming event into the exact values to type into that form (Type, Subtype, Activity, Date, Time,
