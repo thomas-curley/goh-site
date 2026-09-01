@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage, urlToDataUri } from "@/lib/discord";
+import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage, urlToDataUri, getDiscordEvent, recurrenceFromRule, buildRecurrenceRule } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 import { getAlertChannel } from "@/lib/alert-channels";
@@ -34,7 +34,21 @@ export async function GET(
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
 
-  return NextResponse.json(data);
+  // Recurrence lives only on the Discord Scheduled Event -- read it back so
+  // the edit page can show (and change) it. null if there's no linked
+  // Discord event or Discord couldn't be reached, so the page can tell
+  // "not a series" apart from "couldn't check".
+  let recurrence: string | null = null;
+  if (data.discord_event_id) {
+    try {
+      const discordEvent = await getDiscordEvent(data.discord_event_id);
+      recurrence = recurrenceFromRule(discordEvent.recurrence_rule);
+    } catch (err) {
+      console.error("Failed to read Discord event recurrence:", err);
+    }
+  }
+
+  return NextResponse.json({ ...data, recurrence });
 }
 
 export async function PUT(
@@ -66,6 +80,7 @@ export async function PUT(
       extra_images,
       post_to_discord,
       create_signup_thread,
+      recurrence, // lives on the Discord series, not a column -- applied to Discord below
       ...eventFields
     } = body;
 
@@ -106,6 +121,15 @@ export async function PUT(
       try {
         const bannerDataUri = data.banner_url ? await urlToDataUri(data.banner_url) : null;
 
+        // Only touch the recurrence when the form actually sent a value the
+        // site can express -- "other" (a Discord-only pattern) and an absent
+        // field both leave whatever's set in Discord alone, so a plain edit
+        // can never silently flatten a pattern the site doesn't model.
+        const recurrenceUpdate =
+          recurrence === "none" || recurrence === "weekly" || recurrence === "biweekly"
+            ? { recurrence_rule: buildRecurrenceRule(data.start_time, recurrence) }
+            : {};
+
         await updateDiscordEvent(data.discord_event_id, {
           name: data.title,
           description: data.description ?? undefined,
@@ -117,6 +141,7 @@ export async function PUT(
           },
           privacy_level: 2,
           image: bannerDataUri,
+          ...recurrenceUpdate,
         });
       } catch (discordErr) {
         console.error("Discord event update failed:", discordErr);
