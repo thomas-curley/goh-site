@@ -16,6 +16,7 @@ const CONTENT_TYPES: { key: ContentType; label: string }[] = [
   { key: "event_post", label: "Event Posts" },
   { key: "event_recap", label: "Event Recaps" },
   { key: "signup_thread", label: "Signup Threads" },
+  { key: "series_update", label: "Series Updates" },
 ];
 
 export default function AdminTemplatesPage() {

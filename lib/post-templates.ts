@@ -7,7 +7,7 @@
  */
 
 export type BlockType = "role_ping_prefix" | "line" | "paragraph" | "list" | "static_text";
-export type ContentType = "announcement" | "event_post" | "event_recap" | "signup_thread";
+export type ContentType = "announcement" | "event_post" | "event_recap" | "signup_thread" | "series_update";
 
 export interface RolePingPrefixConfig {
   [key: string]: never;
