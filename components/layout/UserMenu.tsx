@@ -5,20 +5,17 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 
-export function UserMenu() {
+interface UserMenuProps {
+  /** Resolved once by the Navbar (itself seeded server-side, see app/layout.tsx) -- avoids this menu independently re-fetching the same thing. */
+  hiddenKeys: Set<string>;
+}
+
+export function UserMenu({ hiddenKeys }: UserMenuProps) {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [avatarFailed, setAvatarFailed] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/site-sections/visible")
-      .then((res) => res.json())
-      .then((data) => setHiddenKeys(new Set(Array.isArray(data.hiddenKeys) ? data.hiddenKeys : [])))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     let mounted = true;

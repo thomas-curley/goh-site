@@ -1,4 +1,6 @@
 import { requireAuth } from "@/lib/auth";
+import { checkSectionAccess } from "@/lib/section-gate";
+import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import { MyLoansView } from "@/components/loans/MyLoansView";
 import type { Metadata } from "next";
 
@@ -9,6 +11,7 @@ export const metadata: Metadata = {
 
 export default async function MyLoansPage() {
   await requireAuth("/loans/mine");
+  if (!(await checkSectionAccess("bank"))) return <SectionUnavailable />;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">

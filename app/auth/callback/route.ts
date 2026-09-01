@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { reconcileRenamedRsns } from "@/lib/rsn-reconciliation";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -96,6 +97,12 @@ export async function GET(request: NextRequest) {
         // already queued on `response` via setAll are preserved since we're
         // only swapping the Location header, not building a new response.
         response.headers.set("location", `${origin}/onboarding?redirect=${encodeURIComponent(redirect)}`);
+      } else if (profile?.rsn) {
+        // Already linked -- opportunistically fix up their RSN (and any
+        // alts) if they renamed in-game since last login, so an in-game
+        // name change doesn't silently read as having left the clan. See
+        // lib/rsn-reconciliation.ts; best-effort and never throws.
+        await reconcileRenamedRsns(serviceClient, user.id);
       }
     } catch (err) {
       console.error("Profile creation error:", err);

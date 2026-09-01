@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { isSectionVisible } from "@/lib/clan-access";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,6 +18,13 @@ export async function GET() {
 
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  // Same section-visibility gate every other /api/loans route already
+  // enforces -- this one was missing it, letting a rank with Bank hidden
+  // still read their own loan history directly.
+  if (!(await isSectionVisible(supabase, "bank", user.id))) {
+    return NextResponse.json({ error: "This section isn't available to you right now." }, { status: 403 });
+  }
 
   const { data, error } = await supabase
     .from("loan_requests")

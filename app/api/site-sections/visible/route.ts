@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { resolveEffectiveRole, isSectionVisibleForRole } from "@/lib/clan-access";
-import { SITE_SECTIONS } from "@/lib/site-sections";
+import { getHiddenSectionKeys } from "@/lib/clan-access";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,30 +12,19 @@ function getServiceClient() {
 
 // GET - public: every registered section key the *current viewer* (resolved
 // server-side from their own session, same role resolution isSectionVisible
-// uses elsewhere) is NOT allowed to see -- for the Navbar to hide the right
-// links. No sensitive data here, just which nav items should render.
-//
-// Resolves the viewer's role once (a WOM API call) and reuses it across all
-// registered sections, rather than each section independently re-resolving
-// it -- this route used to fire one WOM call per section (16, at last
-// count) on every page load from both Navbar and UserMenu, which reliably
-// tripped WOM's rate limit and broke role resolution for every other
-// feature sharing that quota.
+// uses elsewhere) is NOT allowed to see -- the Navbar's ongoing freshness
+// check after its first paint, which is now seeded server-side (see
+// app/layout.tsx) from this same getHiddenSectionKeys so there's no flash of
+// a hidden link rendering before this client-side check catches up to hide
+// it moments later. No sensitive data here, just which nav items should
+// render.
 export async function GET() {
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ hiddenKeys: [] });
 
   const authClient = await createSupabaseServerClient();
   const { data: { user } } = await authClient.auth.getUser();
-  const role = await resolveEffectiveRole(supabase, user?.id ?? null);
+  const hiddenKeys = await getHiddenSectionKeys(supabase, user?.id ?? null);
 
-  const results = await Promise.all(
-    SITE_SECTIONS.map(async (section) => ({
-      key: section.key,
-      visible: await isSectionVisibleForRole(supabase, role, section.key),
-    }))
-  );
-
-  const hiddenKeys = results.filter((r) => !r.visible).map((r) => r.key);
   return NextResponse.json({ hiddenKeys });
 }

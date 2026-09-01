@@ -38,6 +38,11 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
     ? await checkClanEligibility(serviceClient, profile.visibility, user?.id ?? null, "this profile")
     : { eligible: true };
 
+  const { data: altRows } = serviceClient
+    ? await serviceClient.from("user_alt_rsns").select("rsn").eq("user_id", profile.user_id).order("linked_at", { ascending: true })
+    : { data: null };
+  const alts = (altRows ?? []).map((a) => a.rsn);
+
   const avatarUrl = profile.avatar_url || profile.discord_avatar;
   const name = profile.rsn || profile.discord_username;
 
@@ -68,6 +73,11 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
           <div className="flex items-center gap-2 mt-1">
             {profile.clan_rank && <RankBadge rank={profile.clan_rank} />}
           </div>
+          {alts.length > 0 && (
+            <p className={`text-xs mt-1 ${profile.banner_url ? "text-white/80" : "text-iron-grey"}`}>
+              Also plays as: <span className="font-mono">{alts.join(", ")}</span>
+            </p>
+          )}
         </div>
       </div>
 
