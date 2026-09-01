@@ -37,6 +37,13 @@ export interface EventForm {
   post_to_discord: boolean;
   create_signup_thread: boolean;
   show_on_calendar: boolean;
+  /**
+   * Create-only. Recurrence lives on the Discord Scheduled Event (the site
+   * has no series concept of its own -- occurrences are materialized by the
+   * daily import, exactly like a series created in Discord), so this only
+   * takes effect when the event is posted to Discord with Show on Calendar.
+   */
+  recurrence: "none" | "weekly" | "biweekly" | "other";
 }
 
 export const EMPTY_FORM: EventForm = {
@@ -64,6 +71,7 @@ export const EMPTY_FORM: EventForm = {
   post_to_discord: true,
   create_signup_thread: false,
   show_on_calendar: true,
+  recurrence: "none",
 };
 
 export const SIGNUP_TYPES = [
@@ -103,6 +111,12 @@ export function eventTemplateData(form: EventForm): Record<string, unknown> {
 interface EventFormFieldsProps {
   form: EventForm;
   update: (field: keyof EventForm, value: string | boolean) => void;
+  /**
+   * Edit page only: whether this event has a linked Discord event to carry a
+   * repeat pattern. Left undefined on the create page, where it's derived
+   * from Post to Discord + Show on Calendar instead.
+   */
+  recurrenceEnabled?: boolean;
   setForm: React.Dispatch<React.SetStateAction<EventForm>>;
   /**
    * Data-object keys the currently selected post template actually
@@ -124,7 +138,10 @@ interface EventFormFieldsProps {
  * page — everything except the Discord posting/sync options, which differ
  * enough between create and edit that each page owns its own card.
  */
-export function EventFormFields({ form, update, setForm, visibleFields = null }: EventFormFieldsProps) {
+export function EventFormFields({ form, update, setForm, visibleFields = null, recurrenceEnabled }: EventFormFieldsProps) {
+  const isEditing = recurrenceEnabled !== undefined;
+  const recurrenceLocked = isEditing ? !recurrenceEnabled : (!form.post_to_discord || !form.show_on_calendar);
+  const recurrenceIsCustom = form.recurrence === "other";
   const shows = (key: string) => !visibleFields || visibleFields.has(key);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const requirementsListRef = useRef<HTMLTextAreaElement>(null);
@@ -195,6 +212,31 @@ export function EventFormFields({ form, update, setForm, visibleFields = null }:
             <label className={labelClass}>End Time</label>
             <input type="datetime-local" value={form.end_time} onChange={(e) => update("end_time", e.target.value)} className={inputClass} />
           </div>
+        </div>
+        <div className="mb-4">
+          <label className={labelClass}>Repeats</label>
+          <select
+            value={form.recurrence}
+            onChange={(e) => update("recurrence", e.target.value)}
+            disabled={recurrenceLocked || recurrenceIsCustom}
+            className={`${inputClass} cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <option value="none">Does not repeat</option>
+            <option value="weekly">Every week (same day &amp; time)</option>
+            <option value="biweekly">Every other week (same day &amp; time)</option>
+            {recurrenceIsCustom && <option value="other">Custom pattern (set in Discord)</option>}
+          </select>
+          <p className="text-xs text-bark-brown-light mt-1">
+            {recurrenceIsCustom
+              ? "This series uses a repeat pattern set directly in Discord that the site can't express (e.g. monthly). Change it in Discord — saving here leaves it untouched."
+              : recurrenceLocked
+                ? isEditing
+                  ? "This event has no linked Discord Scheduled Event, so there's nothing to carry a repeat pattern."
+                  : "Repeating needs Post to Discord and Show on Calendar on — the series lives on the Discord Scheduled Event, and future occurrences show up here via the daily import."
+                : isEditing
+                  ? "Changes the Discord Scheduled Event's repeat pattern on save (choose \"Does not repeat\" to stop it recurring). Upcoming occurrences already imported to the site aren't removed automatically — delete any that no longer apply from the Event List."
+                  : "Creates a recurring Discord Scheduled Event; each future occurrence appears on the site automatically via the daily import, same as a series created in Discord."}
+          </p>
         </div>
         <label className="flex items-start gap-2 text-sm cursor-pointer">
           <input type="checkbox" checked={form.show_on_calendar} onChange={(e) => update("show_on_calendar", e.target.checked)} className="mt-0.5 accent-gnome-green" />

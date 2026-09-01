@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination, urlToDataUri } from "@/lib/discord";
+import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination, urlToDataUri, buildRecurrenceRule } from "@/lib/discord";
 import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
@@ -92,6 +92,12 @@ export async function POST(request: NextRequest) {
 
           const bannerDataUri = body.banner_url ? await urlToDataUri(body.banner_url) : null;
 
+          // Recurrence is a property of the Discord Scheduled Event, not a
+          // site column -- the daily import then materializes each future
+          // occurrence as its own row sharing this discord_event_id, exactly
+          // as it already does for a series created in Discord directly.
+          const recurrenceRule = buildRecurrenceRule(eventRow.start_time, body.recurrence);
+
           const discordEvent = await createDiscordEvent({
             name: eventRow.title,
             description: formatDiscordEventDescription(eventRow),
@@ -103,6 +109,7 @@ export async function POST(request: NextRequest) {
             },
             privacy_level: 2,
             ...(bannerDataUri ? { image: bannerDataUri } : {}),
+            ...(recurrenceRule ? { recurrence_rule: recurrenceRule } : {}),
           });
 
           discordEventId = discordEvent.id;

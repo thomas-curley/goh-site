@@ -31,6 +31,13 @@ export default function EditEventPage() {
 
   const [discordMessageId, setDiscordMessageId] = useState<string | null>(null);
   const [signupThreadMessageId, setSignupThreadMessageId] = useState<string | null>(null);
+  // Non-null when this event is one occurrence of a recurring Discord series
+  // -- unlocks renaming the whole series (this and every upcoming occurrence,
+  // the Discord event, and the series-update posts) in one go.
+  const [discordEventId, setDiscordEventId] = useState<string | null>(null);
+  const [seriesTitle, setSeriesTitle] = useState("");
+  const [renamingSeries, setRenamingSeries] = useState(false);
+  const [seriesStatus, setSeriesStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [syncDiscordPost, setSyncDiscordPost] = useState(true);
   const [syncSignupThread, setSyncSignupThread] = useState(true);
@@ -77,11 +84,47 @@ export default function EditEventPage() {
       post_to_discord: false,
       create_signup_thread: false,
       show_on_calendar: data.show_on_calendar ?? true,
+      // Read back from Discord by the API; "other" = a pattern set in
+      // Discord the site can't express, shown read-only.
+      recurrence: data.recurrence ?? "none",
     });
     setDiscordMessageId(data.discord_message_id ?? null);
     setSignupThreadMessageId(data.signup_thread_message_id ?? null);
+    setDiscordEventId(data.discord_event_id ?? null);
+    setSeriesTitle(data.title ?? "");
     setLoading(false);
   }, [eventId]);
+
+  const handleRenameSeries = async () => {
+    if (!seriesTitle.trim()) return;
+    if (!window.confirm(`Rename this series to "${seriesTitle.trim()}"?\n\nThis renames this and every upcoming occurrence, the Discord event, and any series-update posts. Past occurrences keep their current name.`)) return;
+
+    setRenamingSeries(true);
+    setSeriesStatus(null);
+    try {
+      const res = await fetch(`/api/events/${eventId}/rename-series`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: seriesTitle.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSeriesStatus({ type: "error", message: data.error ?? "Failed to rename series." });
+        return;
+      }
+      setForm((prev) => ({ ...prev, title: seriesTitle.trim() }));
+      setSeriesStatus({
+        type: data.discordRenamed ? "success" : "error",
+        message: data.discordRenamed
+          ? `Renamed ${data.renamed} occurrence${data.renamed === 1 ? "" : "s"} and the Discord event.`
+          : `Renamed ${data.renamed} occurrence${data.renamed === 1 ? "" : "s"}, but the Discord event couldn't be updated — rename it in Discord too, or the next imported occurrence will still use the old name.`,
+      });
+    } catch {
+      setSeriesStatus({ type: "error", message: "Something went wrong." });
+    } finally {
+      setRenamingSeries(false);
+    }
+  };
 
   useEffect(() => { loadEvent(); }, [loadEvent]);
 
@@ -159,7 +202,7 @@ export default function EditEventPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <EventFormFields form={form} update={update} setForm={setForm} />
+          <EventFormFields form={form} update={update} setForm={setForm} recurrenceEnabled={!!discordEventId} />
 
           {/* Discord sync — only shown if this event has something postable and the user has permission */}
           {!permLoading && canSyncDiscord && (discordMessageId || signupThreadMessageId) && (
@@ -192,6 +235,34 @@ export default function EditEventPage() {
                     </div>
                   )}
                 </>
+              )}
+            </Card>
+          )}
+
+          {discordEventId && (
+            <Card hover={false}>
+              <h2 className="font-display text-lg text-bark-brown mb-1">Rename Entire Series</h2>
+              <p className="text-xs text-bark-brown-light mb-3">
+                This event is one occurrence of a recurring series. Saving above only renames this occurrence;
+                use this to rename this and every upcoming occurrence, the Discord event, and any series-update
+                posts at once. Past occurrences keep the name they had when they happened.
+              </p>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={seriesTitle}
+                  onChange={(e) => setSeriesTitle(e.target.value)}
+                  maxLength={100}
+                  className="flex-1 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary focus:outline-none focus:ring-2 focus:ring-gnome-green"
+                />
+                <Button type="button" size="sm" variant="secondary" disabled={renamingSeries || !seriesTitle.trim()} onClick={handleRenameSeries}>
+                  {renamingSeries ? "Renaming..." : "Rename Series"}
+                </Button>
+              </div>
+              {seriesStatus && (
+                <p className={`text-sm mt-3 ${seriesStatus.type === "error" ? "text-red-accent" : "text-gnome-green"}`}>
+                  {seriesStatus.message}
+                </p>
               )}
             </Card>
           )}

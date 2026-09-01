@@ -95,6 +95,20 @@ async function resolveEmoteShorthand(content: string): Promise<string> {
   return resolveUnicodeShortcodes(withCustomEmotes);
 }
 
+/**
+ * Discord's recurrence rule for a scheduled event. Only the subset the site
+ * actually uses is modelled: weekly on one weekday (Discord currently
+ * requires by_weekday to be exactly one entry for WEEKLY), with interval 1
+ * (every week) or 2 (every other week -- the only frequency that permits an
+ * interval other than 1). `start` must match the event's start time.
+ */
+export interface DiscordRecurrenceRule {
+  start: string;
+  frequency: 2; // WEEKLY
+  interval: 1 | 2;
+  by_weekday: number[]; // 0 = Monday ... 6 = Sunday, exactly one entry
+}
+
 interface DiscordScheduledEvent {
   name: string;
   description?: string;
@@ -104,6 +118,60 @@ interface DiscordScheduledEvent {
   entity_metadata?: { location?: string };
   privacy_level: 2; // Guild only
   image?: string | null; // base64 data URI -- Discord's scheduled-event cover doesn't accept a plain URL
+  recurrence_rule?: DiscordRecurrenceRule | null;
+}
+
+/** Discord's weekday numbering (Monday = 0 ... Sunday = 6) for the given instant, vs JS's Sunday = 0. */
+export function discordWeekday(iso: string): number {
+  const jsDay = new Date(iso).getUTCDay(); // 0 = Sunday
+  return (jsDay + 6) % 7;
+}
+
+/**
+ * The site's own vocabulary for a series' repeat pattern. "other" is a
+ * pattern set in Discord directly that the site can't express (monthly,
+ * multi-weekday daily, ...) -- surfaced read-only so an edit never silently
+ * overwrites it with something narrower.
+ */
+export type SiteRecurrence = "none" | "weekly" | "biweekly" | "other";
+
+/** Builds Discord's recurrence_rule for a site pattern; null means "no recurrence" (which PATCH accepts to remove one). */
+export function buildRecurrenceRule(startIso: string, recurrence: SiteRecurrence): DiscordRecurrenceRule | null {
+  if (recurrence !== "weekly" && recurrence !== "biweekly") return null;
+  return {
+    start: startIso,
+    frequency: 2,
+    interval: recurrence === "biweekly" ? 2 : 1,
+    by_weekday: [discordWeekday(startIso)],
+  };
+}
+
+/** Reads a Discord recurrence_rule back into the site's vocabulary. */
+export function recurrenceFromRule(rule: { frequency?: number; interval?: number; by_weekday?: number[] | null } | null | undefined): SiteRecurrence {
+  if (!rule) return "none";
+  const singleWeekday = Array.isArray(rule.by_weekday) && rule.by_weekday.length === 1;
+  if (rule.frequency === 2 && singleWeekday) {
+    if (rule.interval === 2) return "biweekly";
+    if (!rule.interval || rule.interval === 1) return "weekly";
+  }
+  return "other";
+}
+
+/** One scheduled event, including its recurrence_rule -- the site stores no recurrence itself, Discord is the source of truth. */
+export async function getDiscordEvent(eventId: string): Promise<{ recurrence_rule: DiscordRecurrenceRule | null } & Record<string, unknown>> {
+  const guildId = process.env.DISCORD_GUILD_ID;
+  if (!guildId) throw new Error("DISCORD_GUILD_ID not set");
+
+  const res = await fetch(`${DISCORD_API}/guilds/${guildId}/scheduled-events/${eventId}`, {
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Discord API error: ${res.status} ${error}`);
+  }
+
+  return res.json();
 }
 
 /**
