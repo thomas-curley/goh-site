@@ -56,6 +56,12 @@ const MOCK_DATA: Record<ContentType, Record<string, unknown>> = {
     host_rsn: "Tmansim21",
     spots: "10",
   },
+  series_update: {
+    series_title: "PVM Thursday",
+    description: "Tonight we're farming Vorkath — meet at GE 8pm, bring anti-dragon fire shield.",
+    author: "Tmansim21",
+    pingRoles: ["@everyone"],
+  },
 };
 
 const BLANK_BLOCK_TYPES: { key: BlockType; label: string }[] = [
