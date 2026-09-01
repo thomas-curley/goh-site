@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -27,6 +27,7 @@ interface CalendarEvent {
     prizePool?: string;
     requirements?: string;
     requirementsList?: string;
+    requiresCode?: boolean;
     isCompetition?: boolean;
     metric?: string;
     competitionType?: string;
@@ -60,6 +61,9 @@ const FILTER_TYPES: { key: string; label: string; color: string }[] = [
 export function EventCalendar({ events }: EventCalendarProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [checkInCode, setCheckInCode] = useState<string | null>(null);
+  const [loadingCode, setLoadingCode] = useState(false);
   const isStaff = useIsStaff();
   // Empty = nothing hidden = every type shown by default; clicking a legend
   // chip toggles that type out (or back in) rather than the other way
@@ -81,6 +85,39 @@ export function EventCalendar({ events }: EventCalendarProps) {
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
+
+  const handleCopyCode = async () => {
+    if (!checkInCode) return;
+    await navigator.clipboard.writeText(checkInCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  // Staff-only, on-demand -- the code itself is never in the public
+  // calendar payload (see app/events/page.tsx), only whether one's set.
+  useEffect(() => {
+    setCheckInCode(null);
+    setCodeCopied(false);
+    if (!selectedEvent || selectedEvent.extendedProps?.isCompetition || !selectedEvent.extendedProps?.requiresCode || !isStaff) {
+      return;
+    }
+    let cancelled = false;
+    setLoadingCode(true);
+    fetch(`/api/events/${selectedEvent.id}/check-in-code`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setCheckInCode(data.code ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setCheckInCode(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingCode(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedEvent, isStaff]);
 
   const visibleEvents = events.filter(
     (e) => !hiddenTypes.has(e.extendedProps?.eventType ?? "other")
@@ -280,6 +317,29 @@ export function EventCalendar({ events }: EventCalendarProps) {
                   >
                     {linkCopied ? "Copied!" : "Copy Check-In Link"}
                   </Button>
+                )}
+                {isStaff && selectedEvent.extendedProps?.requiresCode && (
+                  <div className="mt-2 p-2.5 rounded-md bg-parchment-dark/40 border border-parchment-dark flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-iron-grey uppercase tracking-wide">Check-In Code</p>
+                      {loadingCode ? (
+                        <p className="text-sm text-iron-grey">Loading...</p>
+                      ) : checkInCode ? (
+                        <p className="font-mono text-gnome-green truncate">{checkInCode}</p>
+                      ) : (
+                        <p className="text-sm text-iron-grey">Couldn&apos;t load the code.</p>
+                      )}
+                    </div>
+                    {checkInCode && (
+                      <button
+                        type="button"
+                        onClick={handleCopyCode}
+                        className="text-xs text-gnome-green hover:underline cursor-pointer shrink-0"
+                      >
+                        {codeCopied ? "Copied!" : "Copy"}
+                      </button>
+                    )}
+                  </div>
                 )}
               </>
             )}

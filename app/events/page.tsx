@@ -66,6 +66,10 @@ export default async function EventsPage() {
       prizePool: e.prize_pool,
       requirements: e.requirements,
       requirementsList: e.requirements_list,
+      // Whether a code is required isn't sensitive (the signup page already
+      // reveals this) -- the code's actual value is, and is deliberately
+      // left out here; see /api/events/[id]/check-in-code for that.
+      requiresCode: !!e.check_in_code?.trim(),
     },
   }));
 
