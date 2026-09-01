@@ -21,7 +21,7 @@ const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group
   { href: "/admin/attendance-export", label: "Attendance Export", permission: "manage_events", group: "Events" },
   { href: "/admin/announcements", label: "Announcements", permission: "manage_events", group: "Events" },
   { href: "/admin/series-updates", label: "Series Update", permission: "manage_events", group: "Events" },
-  { href: "/admin/ingame-events", label: "In-Game Events", permission: "manage_events", group: "Events" },
+  { href: "/admin/ingame-events", label: "In-Game Clan Panel", permission: "manage_events", group: "Events" },
 
   { href: "/admin/polls", label: "Polls", permission: "manage_polls", group: "Engagement" },
   { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys", group: "Engagement" },

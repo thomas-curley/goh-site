@@ -33,6 +33,10 @@ const NAV_ITEMS: NavItem[] = [
     items: [
       { href: "/events", label: "Calendar", sectionKey: "events" },
       { href: "/bingo", label: "Bingo", sectionKey: "bingo" },
+      { href: "/competitions", label: "Competitions", sectionKey: "competitions" },
+      { href: "/hiscores", label: "Hiscores", sectionKey: "hiscores" },
+      { href: "/leaderboard", label: "Attendance Leaderboard", sectionKey: "leaderboard" },
+      { href: "/points", label: "Clan Points", sectionKey: "points" },
     ],
   },
   {
@@ -40,11 +44,10 @@ const NAV_ITEMS: NavItem[] = [
     label: "Members",
     items: [
       { href: "/gn0mebook", label: "Gn0meBook", sectionKey: "gn0mebook" },
-      { href: "/staff-handbook", label: "Staff Handbook", sectionKey: "staff_handbook" },
       { href: "/members", label: "Member List", sectionKey: "members_list" },
-      { href: "/leaderboard", label: "Leaderboard", sectionKey: "leaderboard" },
-      { href: "/competitions", label: "Competitions", sectionKey: "competitions" },
-      { href: "/hiscores", label: "Hiscores", sectionKey: "hiscores" },
+      { href: "/review-a-gnomie", label: "Review a Gn0mie", sectionKey: "gnomie_reviews" },
+      { href: "/testimonials", label: "Testimonials", sectionKey: "testimonials" },
+      { href: "/staff-handbook", label: "Staff Handbook", sectionKey: "staff_handbook" },
     ],
   },
   {
@@ -62,8 +65,6 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/feedback", label: "Submit Feedback", sectionKey: "feedback" },
       { href: "/surveys", label: "Surveys", sectionKey: "surveys" },
       { href: "/availability", label: "Availability", sectionKey: "availability" },
-      { href: "/review-a-gnomie", label: "Review a Gn0mie", sectionKey: "gnomie_reviews" },
-      { href: "/testimonials", label: "Testimonials", sectionKey: "testimonials" },
     ],
   },
   {
