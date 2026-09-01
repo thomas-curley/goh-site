@@ -4,10 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EVENT_TYPES } from "@/lib/constants";
-
-const OSRS_TYPES = ["Bossing", "Skilling", "PvP", "Social"] as const;
-const OSRS_SUBTYPES = ["None", "Mass", "Wilderness", "Risky", "Serious", "Chill", "Meta", "Competition", "Rewards", "Bingo"] as const;
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+import { OSRS_TYPES, OSRS_SUBTYPES, formatUtcDate, formatUtcTime, defaultOsrsType, defaultDurationDays } from "@/lib/ingame-event-translation";
 
 interface SiteEvent {
   id: string;
@@ -34,35 +31,13 @@ interface TranslationForm {
   osrsAddedIngame: boolean;
 }
 
-function formatUtcDate(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getUTCDate()).padStart(2, "0")}-${MONTHS[d.getUTCMonth()]}-${d.getUTCFullYear()}`;
-}
-
-function formatUtcTime(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-}
-
-function defaultOsrsType(eventType: string): string {
-  if (eventType === "pvm") return "Bossing";
-  if (eventType === "skilling") return "Skilling";
-  return "Social";
-}
-
-function defaultDuration(ev: SiteEvent): number {
-  if (!ev.end_time) return 1;
-  const ms = new Date(ev.end_time).getTime() - new Date(ev.start_time).getTime();
-  return Math.max(1, Math.round(ms / 86400000));
-}
-
 function defaultForm(ev: SiteEvent): TranslationForm {
   return {
     osrsType: ev.osrs_type ?? defaultOsrsType(ev.event_type),
     osrsSubtype: ev.osrs_subtype ?? "None",
     osrsActivity: ev.osrs_activity ?? "",
     osrsJoinRank: ev.osrs_join_rank ?? "",
-    osrsDurationDays: ev.osrs_duration_days ?? defaultDuration(ev),
+    osrsDurationDays: ev.osrs_duration_days ?? defaultDurationDays(ev),
     osrsAddedIngame: ev.osrs_added_ingame,
   };
 }
