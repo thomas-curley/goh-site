@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/Button";
+import { ImageLightbox } from "@/components/ui/ImageLightbox";
 
 interface ImageUploaderProps {
   images: string[];
@@ -13,6 +14,7 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ images, onChange, maxImages = 5, label = "Images" }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +57,12 @@ export function ImageUploader({ images, onChange, maxImages = 5, label = "Images
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
           {images.map((url, i) => (
             <div key={i} className="relative group">
-              <img src={url} alt={`Upload ${i + 1}`} className="w-full h-24 object-cover rounded-md border border-bark-brown-light" />
+              <img
+                src={url}
+                alt={`Upload ${i + 1}`}
+                onClick={() => setLightboxUrl(url)}
+                className="w-full h-24 object-cover rounded-md border border-bark-brown-light cursor-pointer hover:opacity-90 transition-opacity"
+              />
               <button
                 type="button"
                 onClick={() => removeImage(i)}
@@ -83,6 +90,8 @@ export function ImageUploader({ images, onChange, maxImages = 5, label = "Images
           <p className="text-xs text-iron-grey mt-1">{images.length}/{maxImages} images</p>
         </label>
       )}
+
+      {lightboxUrl && <ImageLightbox src={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </div>
   );
 }
