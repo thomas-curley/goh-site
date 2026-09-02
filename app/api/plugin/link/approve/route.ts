@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { durableRateLimit } from "@/lib/rate-limit";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,6 +24,14 @@ export async function POST(request: NextRequest) {
 
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  // Keyed by account, not IP: this route is signed-in only, and the thing
+  // to stop is one account enumerating codes to bind someone else's client
+  // to itself. A real person approves a code once or twice.
+  const limit = await durableRateLimit(supabase, `plugin-link-approve:${user.id}`, { limit: 10, windowSeconds: 600 });
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";

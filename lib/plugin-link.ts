@@ -4,6 +4,25 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 /** Pairing codes expire quickly -- they're meant to be approved within the minute. */
 export const LINK_CODE_TTL_MS = 10 * 60 * 1000;
 
+/** The plugin sends two UUIDs (72 chars); anything far beyond that is not a real client. */
+export const MAX_SECRET_LENGTH = 256;
+
+/**
+ * Hard ceiling on unapproved codes outstanding site-wide. Per-IP limits
+ * stop one source; this stops a distributed flood from filling the table
+ * regardless of source. Legit use is a handful at a time.
+ */
+export const MAX_PENDING_LINK_CODES = 500;
+
+export async function pendingLinkCodeCount(supabase: SupabaseClient): Promise<number> {
+  const { count } = await supabase
+    .from("plugin_link_codes")
+    .select("code", { count: "exact", head: true })
+    .is("approved_at", null)
+    .gt("expires_at", new Date().toISOString());
+  return count ?? 0;
+}
+
 // No 0/O/1/I -- the member may read this off a game-client panel and type
 // nothing, but it's also shown on the approval page, so keep it unambiguous.
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

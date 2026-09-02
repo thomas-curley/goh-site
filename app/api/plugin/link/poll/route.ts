@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { secretMatches, mintApiKey } from "@/lib/plugin-link";
+import { getRequestIp, isIpBanned } from "@/lib/ip-ban";
+import { layeredRateLimit } from "@/lib/rate-limit";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,6 +25,21 @@ function getServiceClient() {
 export async function GET(request: NextRequest) {
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  // Sized for legit use: one client polls every 3s for up to the 10-minute
+  // code lifetime (~200 requests). Guessing is hopeless anyway (32^8 codes
+  // x a ~240-bit secret), this just stops hammering.
+  const ip = getRequestIp(request);
+  if (await isIpBanned(supabase, ip)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const limit = await layeredRateLimit(supabase, ip, "plugin-link-poll", {
+    burst: { limit: 60, windowMs: 60_000 },
+    sustained: { limit: 400, windowSeconds: 600 },
+  });
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  }
 
   const code = request.nextUrl.searchParams.get("code")?.trim().toUpperCase() ?? "";
   const clientSecret = request.headers.get("x-client-secret")?.trim() ?? "";
