@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { postToDestination, editChannelMessage } from "@/lib/discord";
+import { parseThreadAutoArchive } from "@/lib/thread-archive";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 import { getAlertChannel } from "@/lib/alert-channels";
@@ -47,7 +48,7 @@ export async function POST(
       return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
     }
 
-    const { images, pingRoles, templateId, signAsAuthor } = await request.json().catch(() => ({}));
+    const { images, pingRoles, templateId, signAsAuthor, autoArchiveDuration } = await request.json().catch(() => ({}));
 
     const template = await resolveTemplate(supabase, "announcement", templateId);
     if (!template) {
@@ -94,7 +95,7 @@ export async function POST(
       return NextResponse.json({ posted: true, edited: true, message_id: row.discord_message_id });
     }
 
-    const posted = await postToDestination(channelId, row.title, message, imagePayload);
+    const posted = await postToDestination(channelId, row.title, message, imagePayload, parseThreadAutoArchive(autoArchiveDuration));
     await supabase
       .from("announcements")
       .update({ discord_message_id: posted.messageId, discord_channel_id: posted.channelId })

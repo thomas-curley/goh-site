@@ -10,6 +10,8 @@ import { ReformatButton } from "@/components/admin/ReformatButton";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
+import { ThreadInactivitySelector } from "@/components/admin/ThreadInactivitySelector";
+import { DEFAULT_THREAD_AUTO_ARCHIVE, type ThreadAutoArchive } from "@/lib/thread-archive";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 import { PageTour } from "@/components/admin/tour/PageTour";
@@ -60,6 +62,7 @@ export default function AdminAnnouncementsPage() {
   const [editingDiscordMessageId, setEditingDiscordMessageId] = useState<string | null>(null);
   const [syncDiscord, setSyncDiscord] = useState(true);
   const [signAsAuthor, setSignAsAuthor] = useState(false);
+  const [autoArchive, setAutoArchive] = useState<ThreadAutoArchive>(DEFAULT_THREAD_AUTO_ARCHIVE);
   const [status, setStatus] = useState<string | null>(null);
   const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
   const [showPreview, setShowPreview] = useState(true);
@@ -132,7 +135,7 @@ export default function AdminAnnouncementsPage() {
           const res = await fetch(`/api/announcements/${editingId}/sync-discord`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ images: extraImages, pingRoles, templateId, signAsAuthor }),
+            body: JSON.stringify({ images: extraImages, pingRoles, templateId, signAsAuthor, autoArchiveDuration: autoArchive }),
           });
           const data = await res.json();
           setStatus(res.ok ? "Announcement updated and Discord message synced!" : `Announcement updated, but Discord sync failed: ${data.error}`);
@@ -161,7 +164,7 @@ export default function AdminAnnouncementsPage() {
           const res = await fetch(`/api/announcements/${inserted.id}/sync-discord`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ images: extraImages, pingRoles, templateId, signAsAuthor }),
+            body: JSON.stringify({ images: extraImages, pingRoles, templateId, signAsAuthor, autoArchiveDuration: autoArchive }),
           });
           const data = await res.json().catch(() => ({}));
           setStatus(res.ok ? "Announcement published and posted to Discord!" : `Announcement published, but Discord post failed: ${data.error ?? "unknown error"}`);
@@ -353,6 +356,9 @@ export default function AdminAnnouncementsPage() {
             <input type="checkbox" checked={signAsAuthor} onChange={(e) => setSignAsAuthor(e.target.checked)} className="accent-gnome-green" />
             Sign the Discord post with my name
           </label>
+          <div className="max-w-xs">
+            <ThreadInactivitySelector value={autoArchive} onChange={setAutoArchive} hint="Matters only if the announcements channel is a forum; ignored when updating an existing post." />
+          </div>
           {/* Banner Generator */}
           <div data-tour="announcement-banner">
             <BannerGenerator

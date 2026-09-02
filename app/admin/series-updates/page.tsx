@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { ChannelSelector } from "@/components/admin/ChannelSelector";
+import { ThreadInactivitySelector } from "@/components/admin/ThreadInactivitySelector";
+import { DEFAULT_THREAD_AUTO_ARCHIVE, type ThreadAutoArchive } from "@/lib/thread-archive";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 import { renderTemplate } from "@/lib/post-templates";
@@ -36,6 +38,7 @@ export default function SeriesUpdatesPage() {
   const [selectedSeries, setSelectedSeries] = useState<string>("");
   const [seriesTitle, setSeriesTitle] = useState("");
   const [destination, setDestination] = useState("");
+  const [autoArchive, setAutoArchive] = useState<ThreadAutoArchive>(DEFAULT_THREAD_AUTO_ARCHIVE);
   const [description, setDescription] = useState("");
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const [pingRoles, setPingRoles] = useState<string[]>([]);
@@ -164,6 +167,7 @@ export default function SeriesUpdatesPage() {
           destination,
           templateId,
           postId: editingPostId || undefined,
+          autoArchiveDuration: autoArchive,
         }),
       });
 
@@ -264,6 +268,7 @@ export default function SeriesUpdatesPage() {
                   placeholder="Or paste a channel/message link or ID manually"
                 />
               </div>
+              <ThreadInactivitySelector value={autoArchive} onChange={setAutoArchive} hint="Ignored when editing an existing update." />
             </div>
           </Card>
 

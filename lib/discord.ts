@@ -359,7 +359,8 @@ export async function createForumPost(
   channelId: string,
   title: string,
   content: string,
-  imageUrl?: string | string[]
+  imageUrl?: string | string[],
+  autoArchiveDuration?: number
 ): Promise<{ threadId: string; messageId: string }> {
   const message: Record<string, unknown> = { content: await resolveEmoteShorthand(content) };
 
@@ -376,6 +377,11 @@ export async function createForumPost(
     body: JSON.stringify({
       name: title.slice(0, 100),
       message,
+      // Discord's "inactivity" window in minutes (60 / 1440 / 4320 / 10080,
+      // see lib/thread-archive.ts). Left out, Discord applies the forum's
+      // own default -- usually 3 days -- which is what admins used to get
+      // with no say in it.
+      ...(autoArchiveDuration ? { auto_archive_duration: autoArchiveDuration } : {}),
     }),
   });
 
@@ -401,13 +407,17 @@ export async function postToDestination(
   channelId: string,
   title: string,
   content: string,
-  imageUrl?: string | string[]
+  imageUrl?: string | string[],
+  autoArchiveDuration?: number
 ): Promise<{ channelId: string; messageId: string }> {
   const type = await getChannelType(channelId);
   if (type === GUILD_FORUM || type === GUILD_MEDIA) {
-    const { threadId, messageId } = await createForumPost(channelId, title, content, imageUrl);
+    const { threadId, messageId } = await createForumPost(channelId, title, content, imageUrl, autoArchiveDuration);
     return { channelId: threadId, messageId };
   }
+  // A plain channel has nothing to archive -- autoArchiveDuration is
+  // deliberately ignored here rather than rejected, so one form can serve
+  // both kinds of destination.
 
   const result = await postToChannel(channelId, content, imageUrl);
   return { channelId, messageId: result.id };
@@ -443,13 +453,14 @@ export async function closeForumThread(threadId: string): Promise<boolean> {
 export async function createSignupThread(
   channelId: string,
   eventTitle: string,
-  initialMessage: string
+  initialMessage: string,
+  autoArchiveDuration?: number
 ): Promise<{ threadId: string; messageId: string }> {
   const threadName = `Sign-ups: ${eventTitle}`;
 
   const type = await getChannelType(channelId);
   if (type === GUILD_FORUM || type === GUILD_MEDIA) {
-    return createForumPost(channelId, threadName, initialMessage);
+    return createForumPost(channelId, threadName, initialMessage, undefined, autoArchiveDuration);
   }
 
   // Post the initial message
@@ -461,7 +472,7 @@ export async function createSignupThread(
     headers: getHeaders(),
     body: JSON.stringify({
       name: threadName.slice(0, 100),
-      auto_archive_duration: 10080, // 7 days
+      auto_archive_duration: autoArchiveDuration ?? 10080, // admin's pick, else the 7 days sign-ups always had
     }),
   });
 

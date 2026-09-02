@@ -9,6 +9,8 @@ import { RolePingSelector } from "@/components/admin/RolePingSelector";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { ChannelSelector } from "@/components/admin/ChannelSelector";
+import { ThreadInactivitySelector } from "@/components/admin/ThreadInactivitySelector";
+import { DEFAULT_THREAD_AUTO_ARCHIVE, type ThreadAutoArchive } from "@/lib/thread-archive";
 import { EmojiPickerButton } from "@/components/admin/EmojiPickerButton";
 import { TextFormatToolbar } from "@/components/admin/TextFormatToolbar";
 import { PageTour } from "@/components/admin/tour/PageTour";
@@ -50,6 +52,7 @@ export default function EventRecapPage() {
   const [events, setEvents] = useState<PastEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [destination, setDestination] = useState("");
+  const [autoArchive, setAutoArchive] = useState<ThreadAutoArchive>(DEFAULT_THREAD_AUTO_ARCHIVE);
   const [closeForumPost, setCloseForumPost] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -234,6 +237,7 @@ export default function EventRecapPage() {
           dateStr,
           recapId: editingRecapId || undefined,
           closeForumPost,
+          autoArchiveDuration: autoArchive,
         }),
       });
 
@@ -342,6 +346,7 @@ export default function EventRecapPage() {
                   placeholder="Or paste a link/ID manually (for an archived thread)"
                 />
               </div>
+              <ThreadInactivitySelector value={autoArchive} onChange={setAutoArchive} hint="Ignored when editing an existing recap." />
               <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
                 <input
                   type="checkbox"
