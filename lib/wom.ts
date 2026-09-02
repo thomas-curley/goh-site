@@ -177,6 +177,47 @@ export async function getCompetitionLeaders(id: number, limit: number = 3): Prom
   }
 }
 
+export interface CompetitionStanding {
+  rank: number;
+  displayName: string;
+  gained: number;
+}
+
+// Full standings for a competition, cached briefly with in-flight
+// de-duplication -- the plugin's reminders digest asks for this on every
+// member's poll, and WOM's rate limit has been tripped by exactly that kind
+// of fan-out before (see /api/site-sections/visible's history). 60s is
+// plenty: standings only move as WOM re-tracks players.
+const standingsCache = new Map<number, { data: CompetitionStanding[]; expiresAt: number }>();
+const standingsInFlight = new Map<number, Promise<CompetitionStanding[]>>();
+const STANDINGS_TTL_MS = 60_000;
+
+/** Every participant ranked by progress gained (1 = leading), cached ~60s. Empty on any WOM failure. */
+export async function getCompetitionStandings(id: number): Promise<CompetitionStanding[]> {
+  const cached = standingsCache.get(id);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+  const inFlight = standingsInFlight.get(id);
+  if (inFlight) return inFlight;
+
+  const promise = (async () => {
+    try {
+      const details = await womClient.competitions.getCompetitionDetails(id);
+      const ranked = [...details.participations]
+        .sort((a, b) => b.progress.gained - a.progress.gained)
+        .map((p, i) => ({ rank: i + 1, displayName: p.player.displayName, gained: p.progress.gained }));
+      standingsCache.set(id, { data: ranked, expiresAt: Date.now() + STANDINGS_TTL_MS });
+      return ranked;
+    } catch (error) {
+      console.error(`Failed to fetch competition ${id} standings from WOM:`, error);
+      return [];
+    } finally {
+      standingsInFlight.delete(id);
+    }
+  })();
+  standingsInFlight.set(id, promise);
+  return promise;
+}
+
 export interface TeamProgress {
   teamName: string;
   gained: number;

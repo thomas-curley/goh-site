@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { verifyPluginToken } from "@/lib/plugin-auth";
 import { hasPermission } from "@/lib/permissions";
 import { payoutLabel, type PayoutSourceRow } from "@/lib/payouts";
+import { pluginPlainText } from "@/lib/plugin-text";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -49,12 +50,17 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: "Failed to load payouts." }, { status: 500 });
 
   const typed = (data ?? []) as unknown as PayoutRow[];
-  const payouts = typed.map((p) => ({
-    id: p.id,
-    recipientRsn: p.recipient_rsn,
-    prize: p.prize,
-    competition: payoutLabel(p),
-  }));
+  // Scrubbed of Discord formatting/emoji like everything else the plugin
+  // renders (lib/plugin-text.ts); the RSN is left as-is -- it's an identity.
+  const payouts = typed.map((p) => {
+    const label = payoutLabel(p);
+    return {
+      id: p.id,
+      recipientRsn: p.recipient_rsn,
+      prize: pluginPlainText(p.prize) || p.prize,
+      competition: pluginPlainText(label) || label,
+    };
+  });
 
   return NextResponse.json({ payouts });
 }

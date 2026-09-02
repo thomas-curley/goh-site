@@ -5,6 +5,9 @@ import { hasPermission } from "@/lib/permissions";
 import { getPointsBalance } from "@/lib/clan-points";
 import { payoutLabel, type PayoutSourceRow } from "@/lib/payouts";
 import { getPluginBranding } from "@/lib/plugin-settings";
+import { getCompetitionStandings, classifyMetric, normalizeRsn as normalizeWomRsn } from "@/lib/wom";
+import { linkedRsns } from "@/lib/rank-resolution";
+import { pluginPlainText, pluginPlainTextOrNull } from "@/lib/plugin-text";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -141,11 +144,85 @@ export async function GET(request: NextRequest) {
   ]);
   const canConfigure = hasPermission(settingsPerms.data ?? [], identity.clanRank, "manage_plugin_settings");
 
+  // Recent published announcements -- pinned first, then newest. Content is
+  // trimmed to a snippet: the panel is a glance view, the site has the rest.
+  const { data: announcementRows } = await supabase
+    .from("announcements")
+    .select("id, title, content, pinned, created_at")
+    .eq("published", true)
+    .order("pinned", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(3);
+  // Everything the plugin shows is scrubbed of Discord formatting and emoji
+  // (see lib/plugin-text.ts) -- announcements here, events/prizes/
+  // competitions just before the response below.
+  const announcements = (announcementRows ?? []).map((a) => {
+    const plain = pluginPlainText(a.content);
+    return {
+      id: a.id,
+      title: pluginPlainText(a.title) || a.title,
+      snippet: plain.length > 160 ? `${plain.slice(0, 157)}...` : plain,
+      pinned: a.pinned,
+      createdAt: a.created_at,
+    };
+  });
+
+  // Live SOTW/BOTW: the clan's own active competitions, with the top of the
+  // table plus this member's own placement (matched against their main RSN
+  // and any linked alts) so they always see where they stand even outside
+  // the top few. Standings are cached in lib/wom.ts -- every member polls.
+  const nowIso = now.toISOString();
+  const { data: activeComps } = await supabase
+    .from("wom_competitions")
+    .select("wom_id, title, metric, type, ends_at")
+    .lte("starts_at", nowIso)
+    .gte("ends_at", nowIso)
+    .order("ends_at", { ascending: true })
+    .limit(2);
+  const myRsns = new Set((await linkedRsns(supabase, identity.userId, identity.rsn)).map(normalizeWomRsn));
+  const TOP_N = 5;
+  const competitions = await Promise.all(
+    (activeComps ?? []).map(async (c) => {
+      const standings = await getCompetitionStandings(c.wom_id);
+      const mine = standings.find((s) => myRsns.has(normalizeWomRsn(s.displayName))) ?? null;
+      const metricKind = classifyMetric(c.metric);
+      return {
+        womId: c.wom_id,
+        title: c.title,
+        metric: c.metric,
+        kind: metricKind === "skill" ? "sotw" : metricKind === "boss" ? "botw" : "other",
+        endsAt: c.ends_at,
+        participantCount: standings.length,
+        standings: standings.slice(0, TOP_N).map((s) => ({
+          rank: s.rank,
+          rsn: s.displayName,
+          gained: s.gained,
+          isMe: myRsns.has(normalizeWomRsn(s.displayName)),
+        })),
+        myPlacement: mine ? { rank: mine.rank, rsn: mine.displayName, gained: mine.gained } : null,
+      };
+    })
+  );
+
   return NextResponse.json({
     member: { rsn: identity.rsn, clanRank: identity.clanRank, points },
-    events,
-    myPendingPrizes,
+    events: events.map((e) => ({
+      ...e,
+      title: pluginPlainText(e.title) || e.title,
+      description: pluginPlainTextOrNull(e.description),
+      requirements: pluginPlainTextOrNull(e.requirements),
+      prizePool: pluginPlainTextOrNull(e.prizePool),
+      hostRsn: pluginPlainTextOrNull(e.hostRsn),
+      meetLocation: pluginPlainTextOrNull(e.meetLocation),
+    })),
+    myPendingPrizes: myPendingPrizes.map((p) => ({
+      ...p,
+      prize: pluginPlainText(p.prize) || p.prize,
+      competition: pluginPlainText(p.competition) || p.competition,
+    })),
     admin,
     branding: { ...branding, canConfigure },
+    announcements,
+    competitions: competitions.map((c) => ({ ...c, title: pluginPlainText(c.title) || c.title })),
   });
 }
