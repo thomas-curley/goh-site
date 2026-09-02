@@ -52,9 +52,6 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
   const [availabilityStatus, setAvailabilityStatus] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [keysLoading, setKeysLoading] = useState(true);
-  const [newKeyLabel, setNewKeyLabel] = useState("");
-  const [generatingKey, setGeneratingKey] = useState(false);
-  const [revealedToken, setRevealedToken] = useState<string | null>(null);
   const [keyError, setKeyError] = useState<string | null>(null);
   const [alts, setAlts] = useState<AltRsn[]>([]);
   const [altsLoading, setAltsLoading] = useState(true);
@@ -147,30 +144,6 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
       return;
     }
     await loadAlts();
-  };
-
-  const handleGenerateKey = async () => {
-    setGeneratingKey(true);
-    setKeyError(null);
-    try {
-      const res = await fetch("/api/account/api-keys", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: newKeyLabel.trim() || undefined }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setKeyError(data.error ?? "Failed to generate key.");
-        return;
-      }
-      setRevealedToken(data.token);
-      setNewKeyLabel("");
-      await loadApiKeys();
-    } catch {
-      setKeyError("Something went wrong. Try again.");
-    } finally {
-      setGeneratingKey(false);
-    }
   };
 
   const handleRevokeKey = async (id: string) => {
@@ -561,44 +534,21 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
         )}
       </Card>
 
-      {/* Plugin API Key */}
+      {/* Linked plugin clients */}
       <Card hover={false} className="mt-6">
-        <h2 className="font-display text-xl text-bark-brown mb-2">Plugin API Key</h2>
+        <h2 className="font-display text-xl text-bark-brown mb-2">Linked Clients</h2>
         <p className="text-sm text-bark-brown-light mb-4">
-          Generate a personal key to connect the Gn0me Home RuneLite plugin (private test
-          build) to your account. It lets the plugin remind you about upcoming events and,
-          if you&apos;re staff, about pending prize payouts and other backlog items -- reads
-          only, no ability to change anything on the site.
+          RuneLite clients connected to your account through the clan plugin. Linking happens
+          from inside the plugin -- click &ldquo;Link this client&rdquo; there and approve it here
+          when your browser opens. Revoke any client you don&apos;t recognise or no longer use,
+          such as a shared or lost computer, and it&apos;s disconnected immediately.
         </p>
 
-        {revealedToken && (
-          <div className="mb-4 p-4 border border-gnome-green/40 bg-gnome-green/5 rounded-md">
-            <p className="text-sm font-semibold text-bark-brown mb-2">
-              Copy this now -- you won&apos;t be able to see it again.
-            </p>
-            <div className="flex gap-2">
-              <code className="flex-1 min-w-0 px-3 py-2 rounded-md bg-parchment border border-bark-brown-light font-mono text-xs text-gnome-green break-all">
-                {revealedToken}
-              </code>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => navigator.clipboard.writeText(revealedToken)}
-              >
-                Copy
-              </Button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRevealedToken(null)}
-              className="text-xs text-bark-brown-light hover:underline mt-3 cursor-pointer"
-            >
-              Done, hide this
-            </button>
-          </div>
-        )}
-
         {keyError && <p className="text-sm text-red-accent mb-4">{keyError}</p>}
+
+        {!keysLoading && apiKeys.length === 0 && (
+          <p className="text-sm text-iron-grey">No clients linked yet.</p>
+        )}
 
         {!keysLoading && apiKeys.length > 0 && (
           <div className="space-y-2 mb-4">
@@ -611,11 +561,11 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
               >
                 <div className="min-w-0">
                   <p className="font-mono text-sm text-bark-brown truncate">
-                    {k.label || "Unnamed key"} <span className="text-iron-grey">({k.token_prefix}...)</span>
+                    {k.label || "Linked client"} <span className="text-iron-grey">({k.token_prefix}...)</span>
                   </p>
                   <p className="text-xs text-iron-grey">
-                    Created {new Date(k.created_at).toLocaleDateString()}
-                    {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
+                    Linked {new Date(k.created_at).toLocaleDateString()}
+                    {k.last_used_at && ` · Last active ${new Date(k.last_used_at).toLocaleDateString()}`}
                     {k.revoked_at && " · Revoked"}
                   </p>
                 </div>
@@ -632,19 +582,6 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
             ))}
           </div>
         )}
-
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={newKeyLabel}
-            onChange={(e) => setNewKeyLabel(e.target.value)}
-            placeholder="Label (optional, e.g. 'Home PC')"
-            className="flex-1 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green"
-          />
-          <Button type="button" onClick={handleGenerateKey} disabled={generatingKey} size="sm">
-            {generatingKey ? "Generating..." : "Generate New Key"}
-          </Button>
-        </div>
       </Card>
 
       {/* How it works */}
