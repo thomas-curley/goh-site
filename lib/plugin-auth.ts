@@ -2,6 +2,8 @@ import { createHash } from "crypto";
 import type { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveEffectiveRole } from "./clan-access";
+import { getRequestIp, isIpBanned } from "./ip-ban";
+import { layeredRateLimit, durableRateLimit } from "./rate-limit";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,6 +37,20 @@ export async function verifyPluginToken(request: NextRequest): Promise<PluginTok
   const supabase = getServiceClient();
   if (!supabase) return null;
 
+  // Every authenticated plugin route funnels through here, so this is the
+  // one place to apply the ban list and a per-IP ceiling to all of them
+  // at once. The ceiling is generous for a real client (a poll every few
+  // minutes plus occasional actions) and only bites on hammering. Tokens
+  // are 256-bit, so guessing is not a realistic path -- but each guess
+  // still costs a DB lookup, and failures get their own tighter budget.
+  const ip = getRequestIp(request);
+  if (await isIpBanned(supabase, ip)) return null;
+  const overall = await layeredRateLimit(supabase, ip, "plugin-api", {
+    burst: { limit: 120, windowMs: 60_000 },
+    sustained: { limit: 1000, windowSeconds: 600 },
+  });
+  if (!overall.allowed) return null;
+
   const tokenHash = createHash("sha256").update(token).digest("hex");
 
   const { data: key } = await supabase
@@ -43,7 +59,15 @@ export async function verifyPluginToken(request: NextRequest): Promise<PluginTok
     .eq("token_hash", tokenHash)
     .maybeSingle();
 
-  if (!key || key.revoked_at) return null;
+  if (!key || key.revoked_at) {
+    // Invalid-token attempts are counted separately (visible in
+    // rate_limits as plugin-auth-fail:<ip>) so a guessing source stands out
+    // in the data even though the overall ceiling above already bounds it.
+    // Only failures touch this counter -- a valid client must never be
+    // penalised for someone else's noise.
+    if (ip) await durableRateLimit(supabase, `plugin-auth-fail:${ip}`, { limit: 30, windowSeconds: 600 });
+    return null;
+  }
 
   const { data: profile } = await supabase
     .from("user_profiles")
