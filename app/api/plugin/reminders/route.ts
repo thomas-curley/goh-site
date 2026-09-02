@@ -167,10 +167,10 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  // Live SOTW/BOTW: the clan's own active competitions, with the top of the
-  // table plus this member's own placement (matched against their main RSN
-  // and any linked alts) so they always see where they stand even outside
-  // the top few. Standings are cached in lib/wom.ts -- every member polls.
+  // Live SOTW/BOTW: the clan's own active competitions, with the paying
+  // places (top 10) plus this member's own placement (matched against their
+  // main RSN and any linked alts) so they always see where they stand even
+  // outside them. Standings are cached in lib/wom.ts -- every member polls.
   const nowIso = now.toISOString();
   const { data: activeComps } = await supabase
     .from("wom_competitions")
@@ -180,7 +180,8 @@ export async function GET(request: NextRequest) {
     .order("ends_at", { ascending: true })
     .limit(2);
   const myRsns = new Set((await linkedRsns(supabase, identity.userId, identity.rsn)).map(normalizeWomRsn));
-  const TOP_N = 5;
+  // Placements pay out to 10th, so the board shows every paying spot.
+  const TOP_N = 10;
   const competitions = await Promise.all(
     (activeComps ?? []).map(async (c) => {
       const standings = await getCompetitionStandings(c.wom_id);
