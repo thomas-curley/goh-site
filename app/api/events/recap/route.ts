@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { postToDestination, editChannelMessage, resolvePostDestination, closeForumThread } from "@/lib/discord";
+import { parseThreadAutoArchive } from "@/lib/thread-archive";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
 
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     const {
       title, description, highlights, winners, lootItems, images, author, signAsAuthor, pingRoles,
-      destination, templateId, dateStr, eventId, recapId, closeForumPost,
+      destination, templateId, dateStr, eventId, recapId, closeForumPost, autoArchiveDuration,
     } = await request.json();
 
     if (!title) {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       messageId = existing.discord_message_id;
       edited = true;
     } else {
-      const posted = await postToDestination(channelId, title, message, imagePayload);
+      const posted = await postToDestination(channelId, title, message, imagePayload, parseThreadAutoArchive(autoArchiveDuration));
       messageId = posted.messageId;
       actualChannelId = posted.channelId;
     }

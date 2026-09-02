@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { postToDestination } from "@/lib/discord";
+import { parseThreadAutoArchive } from "@/lib/thread-archive";
 import { CLAN_TIMEZONE } from "@/lib/constants";
 
 function getServiceClient() {
@@ -19,7 +20,7 @@ export async function POST(
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
-  const { channelId } = await request.json().catch(() => ({}));
+  const { channelId, autoArchiveDuration } = await request.json().catch(() => ({}));
   if (!channelId) {
     return NextResponse.json({ error: "channelId required" }, { status: 400 });
   }
@@ -63,7 +64,7 @@ export async function POST(
   ].filter((line) => line !== null).join("\n");
 
   try {
-    const result = await postToDestination(channelId, `Attendance Report — ${event.title}`, message);
+    const result = await postToDestination(channelId, `Attendance Report — ${event.title}`, message, undefined, parseThreadAutoArchive(autoArchiveDuration));
     return NextResponse.json({ posted: true, message_id: result.messageId, count: names.length });
   } catch (err) {
     console.error("Attendance report post error:", err);

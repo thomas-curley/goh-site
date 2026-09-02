@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TemplateSelector } from "@/components/admin/TemplateSelector";
 import { ChannelSelector } from "@/components/admin/ChannelSelector";
+import { ThreadInactivitySelector } from "@/components/admin/ThreadInactivitySelector";
+import type { ThreadAutoArchive } from "@/lib/thread-archive";
 import { EventFormFields, EMPTY_FORM, eventTemplateData } from "@/components/admin/EventFormFields";
 import type { EventForm } from "@/components/admin/EventFormFields";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -20,6 +22,9 @@ export default function AdminEventsPage() {
   const [templateSections, setTemplateSections] = useState<SectionInstance[]>([]);
   const [sectionsLoaded, setSectionsLoaded] = useState(false);
   const [destination, setDestination] = useState("");
+  // Defaults to a week: sign-up threads always got 7 days, and an event
+  // post that dies after 3 quiet days is the complaint this setting fixes.
+  const [autoArchive, setAutoArchive] = useState<ThreadAutoArchive>(10080);
 
   const update = (field: keyof EventForm, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -69,6 +74,7 @@ export default function AdminEventsPage() {
           templateId,
           signupThreadTemplateId,
           destination,
+          autoArchiveDuration: autoArchive,
         }),
       });
 
@@ -150,6 +156,7 @@ export default function AdminEventsPage() {
                     placeholder="Or paste a link/ID manually (leave blank to use the default events channel)"
                   />
                 </div>
+                <ThreadInactivitySelector value={autoArchive} onChange={setAutoArchive} hint="The sign-up thread uses the same setting." />
               </div>
             )}
           </Card>

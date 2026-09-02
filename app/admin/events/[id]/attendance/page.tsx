@@ -6,6 +6,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ChannelSelector } from "@/components/admin/ChannelSelector";
+import { ThreadInactivitySelector } from "@/components/admin/ThreadInactivitySelector";
+import { DEFAULT_THREAD_AUTO_ARCHIVE, type ThreadAutoArchive } from "@/lib/thread-archive";
 
 interface AttendanceRecord {
   id: string;
@@ -49,6 +51,7 @@ export default function EventAttendancePage() {
   const [uploading, setUploading] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState("");
   const [reportChannelId, setReportChannelId] = useState("");
+  const [reportAutoArchive, setReportAutoArchive] = useState<ThreadAutoArchive>(DEFAULT_THREAD_AUTO_ARCHIVE);
   const [postingReport, setPostingReport] = useState(false);
   const [signupMessageRef, setSignupMessageRef] = useState("");
   const [signupEmoji, setSignupEmoji] = useState("✅");
@@ -135,7 +138,7 @@ export default function EventAttendancePage() {
       const res = await fetch(`/api/events/${eventId}/attendance/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channelId: reportChannelId }),
+        body: JSON.stringify({ channelId: reportChannelId, autoArchiveDuration: reportAutoArchive }),
       });
       const data = await res.json();
       setStatus(res.ok ? `Report posted (${data.count} attendee${data.count === 1 ? "" : "s"}).` : data.error ?? "Failed to post report.");
@@ -256,8 +259,9 @@ export default function EventAttendancePage() {
           Posts the list of attendees ({attendedCount}) to a Discord channel of your choice.
         </p>
         <div className="flex items-end gap-3">
-          <div className="flex-1">
+          <div className="flex-1 space-y-3">
             <ChannelSelector value={reportChannelId} onChange={setReportChannelId} label="Channel" />
+            <ThreadInactivitySelector value={reportAutoArchive} onChange={setReportAutoArchive} />
           </div>
           <Button size="sm" disabled={!reportChannelId || postingReport} onClick={handlePostReport}>
             {postingReport ? "Posting..." : "Post Report"}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination, urlToDataUri, buildRecurrenceRule } from "@/lib/discord";
+import { parseThreadAutoArchive } from "@/lib/thread-archive";
 import { formatDiscordEventDescription } from "@/lib/discord-format";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
@@ -39,6 +40,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    // Forum-post inactivity window, admin-chosen; applies to both the event
+    // post and the sign-up thread. Invalid/missing -> Discord's own default.
+    const autoArchive = parseThreadAutoArchive(body.autoArchiveDuration);
 
     // Validate required fields
     if (!body.title || !body.start_time) {
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
             // deliberately excluded here so it doesn't also show up as an
             // image in the channel message itself.
             const allImages: string[] = Array.isArray(body.extra_images) ? body.extra_images.filter(Boolean) : [];
-            const posted = await postToDestination(channelId, eventRow.title, message, allImages.length > 0 ? allImages : undefined);
+            const posted = await postToDestination(channelId, eventRow.title, message, allImages.length > 0 ? allImages : undefined, autoArchive);
             discordMessageId = posted.messageId;
             discordChannelId = posted.channelId;
           }
@@ -183,7 +187,8 @@ export async function POST(request: NextRequest) {
             const { threadId, messageId } = await createSignupThread(
               signupsChannelId,
               eventRow.title,
-              threadMessage
+              threadMessage,
+              autoArchive
             );
             signupThreadId = threadId;
             signupThreadMessageId = messageId;
