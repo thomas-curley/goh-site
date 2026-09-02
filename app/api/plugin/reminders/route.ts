@@ -4,6 +4,7 @@ import { verifyPluginToken } from "@/lib/plugin-auth";
 import { hasPermission } from "@/lib/permissions";
 import { getPointsBalance } from "@/lib/clan-points";
 import { payoutLabel, type PayoutSourceRow } from "@/lib/payouts";
+import { getPluginBranding } from "@/lib/plugin-settings";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -129,10 +130,22 @@ export async function GET(request: NextRequest) {
 
   const points = await getPointsBalance(supabase, identity.userId);
 
+  // Clan-wide plugin branding (name + theme) rides along with every poll so
+  // the plugin needs nothing compiled in -- see lib/plugin-settings.ts.
+  // canConfigure tells the plugin whether to offer this member the setup
+  // card; the actual save is gated again server-side in
+  // /api/plugin/admin/settings, this is only for the UI.
+  const [branding, settingsPerms] = await Promise.all([
+    getPluginBranding(supabase),
+    supabase.from("role_permissions").select("role, permission, granted").eq("permission", "manage_plugin_settings"),
+  ]);
+  const canConfigure = hasPermission(settingsPerms.data ?? [], identity.clanRank, "manage_plugin_settings");
+
   return NextResponse.json({
     member: { rsn: identity.rsn, clanRank: identity.clanRank, points },
     events,
     myPendingPrizes,
     admin,
+    branding: { ...branding, canConfigure },
   });
 }

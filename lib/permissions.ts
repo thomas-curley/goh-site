@@ -122,6 +122,11 @@ export const PERMISSIONS = {
     label: "Manage Clan Points",
     description: "Configure how many points each plugin-reported event is worth",
   },
+  manage_plugin_settings: {
+    key: "manage_plugin_settings",
+    label: "Configure RuneLite Plugin",
+    description: "Set the clan name and colour theme every member's companion plugin uses",
+  },
   view_admin: {
     key: "view_admin",
     label: "View Admin Panel",
