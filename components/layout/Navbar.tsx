@@ -6,6 +6,7 @@ import { CLAN_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
+import { WhatsNewMenuLink } from "@/components/whats-new/WhatsNewMenuLink";
 import { NavDropdown } from "./NavDropdown";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import type { SiteSectionKey } from "@/lib/site-sections";
@@ -325,6 +326,10 @@ export function Navbar({ initialHiddenKeys }: NavbarProps) {
                   >
                     My Gn0meBook Profile
                   </Link>
+                  <WhatsNewMenuLink
+                    onClick={closeMobileMenu}
+                    className="px-3 py-2 rounded-md text-base font-body text-parchment hover:text-gold-light hover:bg-bark-brown-light transition-colors"
+                  />
                   <Link
                     href="/admin"
                     onClick={closeMobileMenu}

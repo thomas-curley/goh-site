@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { createClient } from "@supabase/supabase-js";
 import { MedievalSharp, Merriweather, JetBrains_Mono } from "next/font/google";
+import { WalkthroughBar } from "@/components/whats-new/WalkthroughBar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AdBanner } from "@/components/ads/AdBanner";
@@ -108,6 +109,7 @@ export default async function RootLayout({
         )}
         <Navbar initialHiddenKeys={initialHiddenKeys} />
         <main className="flex-1">{children}</main>
+        <WalkthroughBar />
         <AdBanner />
         <Footer />
       </body>
