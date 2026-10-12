@@ -38,6 +38,8 @@ interface CalendarEvent {
 
 interface EventCalendarProps {
   events: CalendarEvent[];
+  /** Opens this event's details on load and shows its month (from /events?event=<id>). */
+  initialEventId?: string;
 }
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
@@ -59,8 +61,9 @@ const FILTER_TYPES: { key: string; label: string; color: string }[] = [
   { key: "competition", label: "Competitions", color: "#5D3A9E" },
 ];
 
-export function EventCalendar({ events }: EventCalendarProps) {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+export function EventCalendar({ events, initialEventId }: EventCalendarProps) {
+  const initialEvent = initialEventId ? events.find((e) => e.id === initialEventId) ?? null : null;
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(initialEvent);
   const [linkCopied, setLinkCopied] = useState(false);
   const isStaff = useIsStaff();
   // Empty = nothing hidden = every type shown by default; clicking a legend
@@ -82,6 +85,16 @@ export function EventCalendar({ events }: EventCalendarProps) {
     await navigator.clipboard.writeText(url);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  const closeEvent = () => {
+    setSelectedEvent(null);
+    // Drop ?event= so a refresh doesn't pop the same event open again.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("event")) {
+      url.searchParams.delete("event");
+      window.history.replaceState(null, "", url);
+    }
   };
 
   const visibleEvents = events.filter(
@@ -124,6 +137,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
           initialView="dayGridMonth"
+          initialDate={initialEvent?.start}
           headerToolbar={{
             left: "prev,next today",
             center: "title",
@@ -146,7 +160,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
       {selectedEvent && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedEvent(null)}
+          onClick={closeEvent}
         >
           <div
             className="card-wood max-w-md w-full p-6"
@@ -157,7 +171,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
                 {selectedEvent.title}
               </h3>
               <button
-                onClick={() => setSelectedEvent(null)}
+                onClick={closeEvent}
                 className="text-iron-grey hover:text-bark-brown cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

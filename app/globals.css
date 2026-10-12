@@ -186,3 +186,18 @@ h1, h2, h3 {
   font-size: 0.8rem;
   padding: 2px 4px;
 }
+
+/* FullCalendar only gives events with a url a pointer cursor; ours open the
+   detail pop-up on click, so show them as clickable everywhere (the text
+   inside otherwise gets the I-beam). */
+.fc-gnome .fc .fc-event,
+.fc-gnome .fc .fc-event *,
+.fc-gnome .fc .fc-list-event,
+.fc-gnome .fc .fc-list-event *,
+.fc-gnome .fc .fc-button {
+  cursor: pointer;
+}
+
+.fc-gnome .fc .fc-event:hover {
+  filter: brightness(1.1);
+}
