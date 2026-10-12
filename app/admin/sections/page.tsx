@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminTabs } from "@/components/admin/AdminTabs";
+import { ROLES_ACCESS_TABS } from "@/lib/admin-tabs";
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { SITE_SECTIONS } from "@/lib/site-sections";
@@ -61,7 +63,8 @@ export default function AdminSectionsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-2">Section Visibility</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-4">Roles &amp; Access</h1>
+      <AdminTabs tabs={ROLES_ACCESS_TABS} />
       <p className="text-sm text-bark-brown-light mb-6">
         Control which ranks (and Guests -- anyone not registered or not signed in) can see each part of the
         public site. Everything is visible by default until you uncheck it here.

@@ -34,7 +34,7 @@ export async function POST(
 
   const channelId = await getAlertChannel(supabase, "announcements");
   if (!channelId) {
-    return NextResponse.json({ error: "No announcements alert channel configured (Admin > Alert Channels, or DISCORD_ANNOUNCEMENTS_CHANNEL_ID)" }, { status: 503 });
+    return NextResponse.json({ error: "No announcements alert channel configured (Admin > Settings > Discord Channels, or DISCORD_ANNOUNCEMENTS_CHANNEL_ID)" }, { status: 503 });
   }
 
   try {

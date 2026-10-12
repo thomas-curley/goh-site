@@ -158,7 +158,7 @@ export async function PUT(
       // default channel — events can be posted to a custom destination now.
       const channelId = data.discord_channel_id ?? (await getAlertChannel(supabase, "events"));
       try {
-        if (!channelId) throw new Error("No events alert channel configured (Admin > Alert Channels, or DISCORD_EVENTS_CHANNEL_ID)");
+        if (!channelId) throw new Error("No events alert channel configured (Admin > Settings > Discord Channels, or DISCORD_EVENTS_CHANNEL_ID)");
         const template = await resolveTemplate(supabase, "event_post", templateId);
         if (!template) throw new Error("No event_post template configured");
         const message = renderTemplate(template.sections, {

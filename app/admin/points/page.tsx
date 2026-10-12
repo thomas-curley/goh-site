@@ -61,7 +61,7 @@ export default function AdminPointsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-2">Clan Points Rules</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-2">Points Rules</h1>
       <p className="text-sm text-bark-brown-light mb-6">
         How many points each RuneLite plugin-reported event is worth. Disabling a rule stops both the points
         and the Discord notification for that event type.

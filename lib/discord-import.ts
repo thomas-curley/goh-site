@@ -20,7 +20,7 @@ export interface ImportResult {
 
 // Original hardcoded default, kept as the last-resort fallback so this
 // doesn't break for anyone who hasn't set DISCORD_ANNOUNCEMENTS_CHANNEL_ID
-// or an Admin > Alert Channels override yet.
+// or an Admin > Settings > Discord Channels override yet.
 const LEGACY_ANNOUNCEMENTS_CHANNEL_ID = "1486887506367611063";
 
 export async function runAnnouncementsImport(): Promise<ImportResult> {

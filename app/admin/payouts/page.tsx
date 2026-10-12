@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
@@ -37,14 +38,6 @@ interface Payout {
   dm_sent_at: string | null;
 }
 
-interface Raffle {
-  id: string;
-  title: string;
-  occurred_on: string;
-  created_by: string | null;
-  created_at: string;
-}
-
 const CATEGORIES: { key: string; label: string }[] = [
   { key: "sotw", label: "Skill of the Week" },
   { key: "botw", label: "Boss of the Week" },
@@ -59,12 +52,6 @@ const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label
 type FilterTab = "unpaid" | "paid" | "all";
 
 const inputClass = "w-full px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
-// inputClass bakes in w-full, which conflicts with an explicit width/flex
-// utility (w-20, flex-1, etc.) added alongside it on the same element --
-// Tailwind's generated stylesheet order (not the order classes appear in
-// className) decides which width wins, so the two together are unreliable.
-// This variant omits it for the few places that size themselves explicitly.
-const inputClassNoWidth = inputClass.replace("w-full ", "");
 
 function linkedSourceLabel(p: Payout): string | null {
   return p.wom_competitions?.title ?? p.events?.title ?? p.raffles?.title ?? null;
@@ -275,22 +262,13 @@ export default function AdminPayoutsPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [sendingDmId, setSendingDmId] = useState<string | null>(null);
   const [notifyWinners, setNotifyWinners] = useState(false);
-  const [dmTemplate, setDmTemplate] = useState("");
-  const [dmTemplateDraft, setDmTemplateDraft] = useState("");
-  const [showDmSettings, setShowDmSettings] = useState(false);
-  const [savingDmTemplate, setSavingDmTemplate] = useState(false);
   const [roster, setRoster] = useState<string[]>([]);
   const [linkedRsns, setLinkedRsns] = useState<Set<string>>(new Set());
 
   const [prizePlacements, setPrizePlacements] = useState<{ placement: number; amount: number }[]>([]);
   const [prizeDefaultAmount, setPrizeDefaultAmount] = useState(0);
-  const [prizeDraftPlacements, setPrizeDraftPlacements] = useState<{ placement: number; amount: number }[]>([]);
-  const [prizeDraftDefaultAmount, setPrizeDraftDefaultAmount] = useState(0);
-  const [showPrizeSettings, setShowPrizeSettings] = useState(false);
-  const [savingPrizeDefaults, setSavingPrizeDefaults] = useState(false);
 
   const [showAddWinners, setShowAddWinners] = useState(false);
-  const [showRaffles, setShowRaffles] = useState(false);
 
   const [batchCategory, setBatchCategory] = useState("sotw");
   const [batchSourceDetail, setBatchSourceDetail] = useState("");
@@ -313,19 +291,6 @@ export default function AdminPayoutsPage() {
   const [rollDownSuggested, setRollDownSuggested] = useState(false);
   const [suggestingRollDown, setSuggestingRollDown] = useState(false);
 
-  const [raffles, setRaffles] = useState<Raffle[]>([]);
-  const [raffleTitle, setRaffleTitle] = useState("");
-  const [raffleDate, setRaffleDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [creatingRaffle, setCreatingRaffle] = useState(false);
-  const [expandedRaffleId, setExpandedRaffleId] = useState<string | null>(null);
-  // Whether a raffle's winners list is shown, keyed by raffle id -- only the
-  // most recent raffle starts expanded (see isRaffleExpanded below) so a
-  // growing history of past raffles doesn't turn this into an endless
-  // scroll; anything the admin manually toggles is remembered here.
-  const [raffleWinnersExpanded, setRaffleWinnersExpanded] = useState<Record<string, boolean>>({});
-  const [raffleRows, setRaffleRows] = useState<{ recipient_rsn: string; prize: string }[]>([{ recipient_rsn: "", prize: "" }]);
-  const [raffleSubmitting, setRaffleSubmitting] = useState(false);
-
   const load = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/admin/payouts");
@@ -334,36 +299,17 @@ export default function AdminPayoutsPage() {
     setLoading(false);
   }, []);
 
-  const loadRaffles = useCallback(async () => {
-    const res = await fetch("/api/admin/raffles");
-    const data = await res.json().catch(() => ({}));
-    setRaffles(res.ok ? data.raffles ?? [] : []);
-  }, []);
-
-  const loadDmTemplate = useCallback(async () => {
-    const res = await fetch("/api/admin/payouts/dm-config");
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setDmTemplate(data.template ?? "");
-      setDmTemplateDraft(data.template ?? "");
-    }
-  }, []);
-
   const loadPrizeDefaults = useCallback(async () => {
     const res = await fetch("/api/admin/payouts/prize-defaults");
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       setPrizePlacements(data.placements ?? []);
-      setPrizeDraftPlacements(data.placements ?? []);
       setPrizeDefaultAmount(data.defaultAmount ?? 0);
-      setPrizeDraftDefaultAmount(data.defaultAmount ?? 0);
     }
   }, []);
 
   useEffect(() => {
     load();
-    loadRaffles();
-    loadDmTemplate();
     loadPrizeDefaults();
     (async () => {
       const [compRes, eventRes, membersRes, linkedRes] = await Promise.all([
@@ -381,7 +327,7 @@ export default function AdminPayoutsPage() {
       if (membersRes.ok) setRoster((membersData.members ?? []).map((m: { displayName: string }) => m.displayName));
       if (linkedRes.ok) setLinkedRsns(new Set((linkedData.rsns ?? []).map((r: string) => normalizeRsn(r))));
     })();
-  }, [load, loadRaffles, loadDmTemplate, loadPrizeDefaults]);
+  }, [load, loadPrizeDefaults]);
 
   /** "6,500,000 GP" for a given 1-based placement, per the configured defaults (explicit per-placement amount, falling back to the flat default for anything not explicitly listed). */
   const prizeForPlacement = useCallback(
@@ -391,29 +337,6 @@ export default function AdminPayoutsPage() {
     },
     [prizePlacements, prizeDefaultAmount]
   );
-
-  const addPrizePlacementRow = () =>
-    setPrizeDraftPlacements((prev) => [...prev, { placement: prev.length > 0 ? Math.max(...prev.map((p) => p.placement)) + 1 : 1, amount: 0 }]);
-  const updatePrizePlacementRow = (i: number, patch: Partial<{ placement: number; amount: number }>) =>
-    setPrizeDraftPlacements((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
-  const removePrizePlacementRow = (i: number) => setPrizeDraftPlacements((prev) => prev.filter((_, idx) => idx !== i));
-
-  const savePrizeDefaults = async () => {
-    setSavingPrizeDefaults(true);
-    const res = await fetch("/api/admin/payouts/prize-defaults", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ placements: prizeDraftPlacements, defaultAmount: prizeDraftDefaultAmount }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setStatus("Prize defaults saved.");
-      await loadPrizeDefaults();
-    } else {
-      setStatus(data.error ?? "Failed to save prize defaults.");
-    }
-    setSavingPrizeDefaults(false);
-  };
 
   const updateRow = (i: number, field: "recipient_rsn" | "prize", value: string) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
@@ -510,23 +433,6 @@ export default function AdminPayoutsPage() {
     setSendingDmId(null);
   };
 
-  const saveDmTemplate = async () => {
-    setSavingDmTemplate(true);
-    const res = await fetch("/api/admin/payouts/dm-config", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ template: dmTemplateDraft }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setDmTemplate(dmTemplateDraft);
-      setStatus("DM template saved.");
-    } else {
-      setStatus(data.error ?? "Failed to save template.");
-    }
-    setSavingDmTemplate(false);
-  };
-
   const startRollDown = async (payout: Payout) => {
     setRollingDownId(payout.id);
     setRollDownValue("");
@@ -600,52 +506,6 @@ export default function AdminPayoutsPage() {
     });
   };
 
-  const handleCreateRaffle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!raffleTitle.trim()) return;
-    setCreatingRaffle(true);
-    const res = await fetch("/api/admin/raffles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: raffleTitle, occurredOn: raffleDate }),
-    });
-    if (res.ok) {
-      setRaffleTitle("");
-      await loadRaffles();
-    }
-    setCreatingRaffle(false);
-  };
-
-  const handleDeleteRaffle = async (raffle: Raffle) => {
-    if (!confirm(`Delete raffle "${raffle.title}"? Its winner entries stay in Prize Payouts, just unlinked.`)) return;
-    await fetch(`/api/admin/raffles/${raffle.id}`, { method: "DELETE" });
-    await loadRaffles();
-    await load();
-  };
-
-  const updateRaffleRow = (i: number, field: "recipient_rsn" | "prize", value: string) => {
-    setRaffleRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
-  };
-  const addRaffleRow = () => setRaffleRows((prev) => [...prev, { recipient_rsn: "", prize: "" }]);
-  const removeRaffleRow = (i: number) => setRaffleRows((prev) => prev.filter((_, idx) => idx !== i));
-
-  const handleAddRaffleWinners = async (e: React.FormEvent, raffleId: string) => {
-    e.preventDefault();
-    setRaffleSubmitting(true);
-    const entries = raffleRows.filter((r) => r.recipient_rsn.trim() && r.prize.trim()).map((r) => ({ ...r, category: "raffle" }));
-    const res = await fetch("/api/admin/payouts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries, raffleId, notifyWinners }),
-    });
-    if (res.ok) {
-      setRaffleRows([{ recipient_rsn: "", prize: "" }]);
-      setExpandedRaffleId(null);
-      await load();
-    }
-    setRaffleSubmitting(false);
-  };
-
   const competitionScoped = filterCompetitionId ? payouts.filter((p) => p.wom_competition_id === filterCompetitionId) : payouts;
   const filtered = competitionScoped.filter((p) => {
     if (tab === "unpaid") return !p.is_paid;
@@ -686,7 +546,10 @@ export default function AdminPayoutsPage() {
       <h1 className="font-display text-3xl text-gnome-green mb-1">Prize Payouts</h1>
       <p className="text-bark-brown-light mb-6">
         Track whether competition, raffle, and giveaway winners have actually been paid out. Skill/Boss of the Week
-        winners from competitions with a configured payout count are added here automatically once they end.
+        winners from competitions with a configured payout count are added here automatically once they end. Raffles
+        are run from <Link href="/admin/raffles" className="text-gnome-green hover:underline">Raffles</Link>; default
+        prize amounts and the winner DM live under{" "}
+        <Link href="/admin/prize-defaults" className="text-gnome-green hover:underline">Prize &amp; DM Defaults</Link>.
       </p>
 
       {filterCompetitionId && (
@@ -698,118 +561,6 @@ export default function AdminPayoutsPage() {
         </div>
       )}
 
-      <Card hover={false} className="mb-8">
-        <button
-          type="button"
-          onClick={() => setShowDmSettings((v) => !v)}
-          className="w-full flex items-center justify-between gap-3 cursor-pointer"
-        >
-          <h2 className="font-display text-lg text-bark-brown">DM Notification Settings</h2>
-          <span className="text-xs text-gnome-green">{showDmSettings ? "Hide" : "Edit template"}</span>
-        </button>
-        <p className="text-xs text-iron-grey mt-1">
-          When notifying a winner, this message is sent as a Discord DM -- only works if their RSN is linked to a
-          verified account.
-        </p>
-
-        {showDmSettings && (
-          <div className="mt-4 pt-4 border-t border-parchment-dark space-y-3">
-            <textarea
-              value={dmTemplateDraft}
-              onChange={(e) => setDmTemplateDraft(e.target.value)}
-              rows={4}
-              maxLength={1000}
-              className={inputClass}
-            />
-            <p className="text-xs text-iron-grey">
-              Variables: <span className="font-mono">{"{user}"}</span> <span className="font-mono">{"{payout}"}</span>{" "}
-              <span className="font-mono">{"{competition}"}</span> <span className="font-mono">{"{placement}"}</span> (placement is
-              only set for competition winners, e.g. &quot;1st&quot; -- blank for raffles/manual entries).
-            </p>
-            <div className="flex items-center gap-3">
-              <Button size="sm" disabled={savingDmTemplate || !dmTemplateDraft.trim()} onClick={saveDmTemplate}>
-                {savingDmTemplate ? "Saving..." : "Save Template"}
-              </Button>
-              {dmTemplateDraft !== dmTemplate && (
-                <button type="button" onClick={() => setDmTemplateDraft(dmTemplate)} className="text-xs text-iron-grey hover:underline cursor-pointer">
-                  Revert changes
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </Card>
-
-      <Card hover={false} className="mb-8">
-        <button
-          type="button"
-          onClick={() => setShowPrizeSettings((v) => !v)}
-          className="w-full flex items-center justify-between gap-3 cursor-pointer"
-        >
-          <h2 className="font-display text-lg text-bark-brown">Default Prize Structure</h2>
-          <span className="text-xs text-gnome-green">{showPrizeSettings ? "Hide" : "Edit defaults"}</span>
-        </button>
-        <p className="text-xs text-iron-grey mt-1">
-          When you link a competition above, its top finishers are pulled in with these amounts pre-filled by
-          placement -- still editable per-row before you save.
-        </p>
-
-        {showPrizeSettings && (
-          <div className="mt-4 pt-4 border-t border-parchment-dark space-y-3">
-            <div className="space-y-2">
-              {prizeDraftPlacements.map((p, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-xs text-iron-grey w-14 shrink-0">Place</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={p.placement}
-                    onChange={(e) => updatePrizePlacementRow(i, { placement: Math.max(1, Number(e.target.value) || 1) })}
-                    className={`${inputClassNoWidth} w-20 shrink-0`}
-                  />
-                  <span className="text-xs text-iron-grey w-14 shrink-0">Amount</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={p.amount}
-                    onChange={(e) => updatePrizePlacementRow(i, { amount: Math.max(0, Number(e.target.value) || 0) })}
-                    className={`${inputClassNoWidth} flex-1 min-w-0`}
-                  />
-                  <button type="button" onClick={() => removePrizePlacementRow(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
-                </div>
-              ))}
-            </div>
-            <button type="button" onClick={addPrizePlacementRow} className="text-xs text-gnome-green hover:underline cursor-pointer">+ Add placement</button>
-
-            <div className="flex items-center gap-2 pt-2">
-              <label className="text-sm text-bark-brown shrink-0">Every other placement:</label>
-              <input
-                type="number"
-                min={0}
-                value={prizeDraftDefaultAmount}
-                onChange={(e) => setPrizeDraftDefaultAmount(Math.max(0, Number(e.target.value) || 0))}
-                className={`${inputClass} sm:w-48`}
-              />
-              <span className="text-xs text-iron-grey shrink-0">GP each</span>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <Button size="sm" disabled={savingPrizeDefaults} onClick={savePrizeDefaults}>
-                {savingPrizeDefaults ? "Saving..." : "Save Defaults"}
-              </Button>
-              {(JSON.stringify(prizeDraftPlacements) !== JSON.stringify(prizePlacements) || prizeDraftDefaultAmount !== prizeDefaultAmount) && (
-                <button
-                  type="button"
-                  onClick={() => { setPrizeDraftPlacements(prizePlacements); setPrizeDraftDefaultAmount(prizeDefaultAmount); }}
-                  className="text-xs text-iron-grey hover:underline cursor-pointer"
-                >
-                  Revert changes
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </Card>
 
       <Card hover={false} className="mb-8">
         <button
@@ -924,140 +675,6 @@ export default function AdminPayoutsPage() {
         )}
       </Card>
 
-      {/* Raffles */}
-      <Card hover={false} className="mb-8">
-        <button
-          type="button"
-          onClick={() => setShowRaffles((v) => !v)}
-          className="w-full flex items-center justify-between gap-3 cursor-pointer"
-        >
-          <h2 className="font-display text-lg text-bark-brown">Weekly Raffles</h2>
-          <span className="text-xs text-gnome-green">{showRaffles ? "Hide" : "Show"}</span>
-        </button>
-        <p className="text-xs text-iron-grey mt-1">Create a raffle for the week, then add its winners underneath it.</p>
-
-        {showRaffles && (
-        <div className="mt-4 pt-4 border-t border-parchment-dark">
-        <form onSubmit={handleCreateRaffle} className="flex flex-col sm:flex-row gap-2 mb-6">
-          <input
-            type="text"
-            value={raffleTitle}
-            onChange={(e) => setRaffleTitle(e.target.value)}
-            placeholder="e.g. Week of 8/17 Raffle"
-            className={`${inputClass} flex-1`}
-          />
-          <input type="date" value={raffleDate} onChange={(e) => setRaffleDate(e.target.value)} className={`${inputClass} sm:w-44`} />
-          <Button type="submit" size="sm" disabled={creatingRaffle}>
-            {creatingRaffle ? "Creating..." : "+ New Raffle"}
-          </Button>
-        </form>
-
-        {raffles.length === 0 ? (
-          <p className="text-sm text-iron-grey">No raffles yet.</p>
-        ) : (
-          <div className="space-y-4">
-            {raffles.map((raffle, i) => {
-              const winners = payouts.filter((p) => p.raffle_id === raffle.id);
-              const paidCount = winners.filter((w) => w.is_paid).length;
-              // Only the most recent raffle (i === 0) starts expanded, unless the admin has toggled this one manually.
-              const isExpanded = raffleWinnersExpanded[raffle.id] ?? i === 0;
-              return (
-                <div key={raffle.id} className="border border-bark-brown-light/40 rounded-md p-3">
-                  <div className="flex items-center justify-between gap-3 mb-2">
-                    <button
-                      type="button"
-                      onClick={() => setRaffleWinnersExpanded((prev) => ({ ...prev, [raffle.id]: !isExpanded }))}
-                      className="flex items-center gap-2 text-left cursor-pointer min-w-0"
-                    >
-                      <span className={`text-iron-grey text-[10px] shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}>▶</span>
-                      <span className="min-w-0">
-                        <p className="font-semibold text-bark-brown text-sm truncate">{raffle.title}</p>
-                        <p className="text-xs text-iron-grey">
-                          {new Date(raffle.occurred_on).toLocaleDateString()}
-                          {winners.length > 0 && ` · ${winners.length} winner${winners.length === 1 ? "" : "s"} (${paidCount} paid)`}
-                        </p>
-                      </span>
-                    </button>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedRaffleId((prev) => (prev === raffle.id ? null : raffle.id))}
-                        className="text-xs text-gnome-green hover:underline cursor-pointer"
-                      >
-                        + Add Winner
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRaffle(raffle)}
-                        className="text-xs text-red-accent hover:underline cursor-pointer"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-
-                  {isExpanded && winners.length > 0 && (
-                    <ul className="space-y-1 mb-2">
-                      {winners.map((p) => (
-                        <li key={p.id} className="flex items-center justify-between gap-3 text-sm py-1 px-2 rounded bg-parchment-dark/40">
-                          <span>
-                            <span className="font-mono text-bark-brown">{p.recipient_rsn}</span>
-                            <span className="text-bark-brown-light"> — {p.prize || "no amount set"}</span>
-                          </span>
-                          <span className={`text-xs shrink-0 ${p.is_paid ? "text-gnome-green" : "text-iron-grey"}`}>
-                            {p.is_paid ? "Paid" : "Unpaid"}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {isExpanded && winners.length > 0 && (
-                    <p className="text-xs text-iron-grey mb-2">Manage payment status, screenshots, and roll-downs for these in the list below.</p>
-                  )}
-
-                  {expandedRaffleId === raffle.id && (
-                    <form onSubmit={(e) => handleAddRaffleWinners(e, raffle.id)} className="space-y-2 mt-2">
-                      {raffleRows.map((row, i) => (
-                        <div key={i} className="flex gap-2">
-                          <RsnAutocomplete
-                            value={row.recipient_rsn}
-                            onChange={(value) => updateRaffleRow(i, "recipient_rsn", value)}
-                            roster={roster}
-                            linkedRsns={linkedRsns}
-                            className={`${inputClass} font-mono`}
-                          />
-                          <input
-                            type="text"
-                            value={row.prize}
-                            onChange={(e) => updateRaffleRow(i, "prize", e.target.value)}
-                            placeholder="Prize, e.g. 1,000,000 GP"
-                            className={`${inputClass} flex-1`}
-                          />
-                          {raffleRows.length > 1 && (
-                            <button type="button" onClick={() => removeRaffleRow(i)} className="text-red-accent hover:underline text-xs cursor-pointer shrink-0 px-2">✕</button>
-                          )}
-                        </div>
-                      ))}
-                      <label className="flex items-center gap-2 text-xs text-bark-brown cursor-pointer">
-                        <input type="checkbox" checked={notifyWinners} onChange={(e) => setNotifyWinners(e.target.checked)} className="accent-gnome-green" />
-                        Also notify winners via Discord DM
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <Button type="button" variant="ghost" size="sm" onClick={addRaffleRow}>+ Add Row</Button>
-                        <Button type="submit" size="sm" disabled={raffleSubmitting}>
-                          {raffleSubmitting ? "Saving..." : "Save Winners"}
-                        </Button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        </div>
-        )}
-      </Card>
 
       <div className="flex flex-wrap gap-2 mb-4">
         {([

@@ -26,7 +26,8 @@ function presetRange(preset: Preset): { start: string; end: string } {
 
 const inputClass = "px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
-export default function AttendanceExportPage() {
+/** Attendee names for a date range of events, for drawing the weekly raffle. Shown on the Raffles page. */
+export function AttendanceExport() {
   const [preset, setPreset] = useState<Preset>("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -91,8 +92,8 @@ export default function AttendanceExportPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-1">Attendance Export</h1>
-      <p className="text-bark-brown-light mb-6">
+      <h2 className="font-display text-xl text-bark-brown mb-1">Attendance for the Draw</h2>
+      <p className="text-sm text-bark-brown-light mb-4">
         Pull attendee names from a date range of events, ready to paste into a raffle wheel or spreadsheet.
       </p>
 

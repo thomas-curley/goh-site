@@ -208,7 +208,7 @@ export default function SeriesUpdatesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-3xl text-gnome-green">Series Update</h1>
+          <h1 className="font-display text-3xl text-gnome-green">Series Updates</h1>
           <p className="text-sm text-bark-brown-light mt-1">
             Post what tonight&apos;s activity is for a recurring series night — no new event record needed.
           </p>

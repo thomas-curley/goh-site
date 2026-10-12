@@ -1,5 +1,8 @@
 "use client";
 
+import { AdminTabs } from "@/components/admin/AdminTabs";
+import { OVERVIEW_TABS } from "@/lib/admin-tabs";
+import { NeedsAttention } from "@/components/admin/NeedsAttention";
 import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
@@ -143,12 +146,15 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-3xl text-gnome-green">Dashboard</h1>
         <Button variant="ghost" size="sm" onClick={captureSnapshot} disabled={capturing}>
           {capturing ? "Capturing..." : "📸 Capture Snapshot"}
         </Button>
       </div>
+      <AdminTabs tabs={OVERVIEW_TABS} />
+
+      <NeedsAttention />
 
       {/* Live Stats */}
       {currentStats && (

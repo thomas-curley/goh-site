@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { checkPermission } from "@/lib/check-permission";
+import { getAdminAccess, hasPermission } from "@/lib/check-permission";
 import type { PermissionKey } from "@/lib/permissions";
+import { ADMIN_NAV } from "@/lib/admin-nav";
+import { getPendingCounts } from "@/lib/admin-pending";
 import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
@@ -10,56 +12,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const ADMIN_NAV: { href: string; label: string; permission: PermissionKey; group?: string }[] = [
-  { href: "/admin", label: "Dashboard", permission: "view_admin" },
-  { href: "/admin/activity", label: "Player Activity", permission: "view_admin" },
-  { href: "/admin/tutorials", label: "Tutorials", permission: "view_admin" },
-
-  { href: "/admin/events", label: "Create Event", permission: "manage_events", group: "Events" },
-  { href: "/admin/events/list", label: "Event List", permission: "manage_events", group: "Events" },
-  { href: "/admin/event-recap", label: "Event Recap", permission: "manage_events", group: "Events" },
-  { href: "/admin/attendance-export", label: "Attendance Export", permission: "manage_events", group: "Events" },
-  { href: "/admin/announcements", label: "Announcements", permission: "manage_events", group: "Events" },
-  { href: "/admin/series-updates", label: "Series Update", permission: "manage_events", group: "Events" },
-  { href: "/admin/ingame-events", label: "In-Game Clan Panel", permission: "manage_events", group: "Events" },
-
-  { href: "/admin/polls", label: "Polls", permission: "manage_polls", group: "Engagement" },
-  { href: "/admin/surveys", label: "Surveys", permission: "manage_surveys", group: "Engagement" },
-  { href: "/admin/feedback", label: "Feedback", permission: "manage_feedback", group: "Engagement" },
-  { href: "/admin/wom-competitions", label: "WOM Competitions", permission: "manage_competitions", group: "Engagement" },
-  { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", permission: "manage_competitions", group: "Engagement" },
-  { href: "/admin/availability", label: "Availability Polls", permission: "manage_availability", group: "Engagement" },
-  { href: "/admin/loans", label: "Loans", permission: "manage_loans", group: "Engagement" },
-  { href: "/admin/payouts", label: "Prize Payouts", permission: "manage_payouts", group: "Engagement" },
-
-  { href: "/admin/bingo", label: "Create Bingo Event", permission: "manage_bingo", group: "Bingo" },
-  { href: "/admin/bingo/list", label: "Bingo Event List", permission: "manage_bingo", group: "Bingo" },
-
-  { href: "/admin/points", label: "Points Rules", permission: "manage_points", group: "Points" },
-
-  { href: "/admin/templates", label: "Post Templates", permission: "manage_templates", group: "Content" },
-  { href: "/admin/guides", label: "Guides", permission: "manage_guides", group: "Content" },
-  { href: "/admin/handbook", label: "Staff Handbook", permission: "manage_handbook", group: "Content" },
-
-  { href: "/admin/rsn-links", label: "RSN Links", permission: "manage_rsn_links", group: "Members" },
-  { href: "/admin/staff-applications", label: "Staff Applications", permission: "manage_staff_applications", group: "Members" },
-  { href: "/admin/gn0mebook", label: "Gn0meBook", permission: "manage_member_profiles", group: "Members" },
-  { href: "/admin/gnomie-reviews", label: "Review a Gn0mie", permission: "manage_gnomie_reviews", group: "Members" },
-  { href: "/admin/testimonials", label: "Testimonials", permission: "manage_testimonials", group: "Members" },
-
-  { href: "/admin/commands", label: "Bot Commands", permission: "manage_commands", group: "System" },
-  { href: "/admin/permissions", label: "Permissions", permission: "manage_permissions", group: "System" },
-  { href: "/admin/alert-channels", label: "Alert Channels", permission: "manage_settings", group: "System" },
-  { href: "/admin/banned-ips", label: "Banned IPs", permission: "manage_banned_ips", group: "System" },
-  { href: "/admin/sections", label: "Section Visibility", permission: "manage_sections", group: "System" },
-];
-
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { allowed, user } = await checkPermission("view_admin");
+  const access = await getAdminAccess();
+  const { user } = access;
+  const allowed = hasPermission(access, "view_admin");
 
   if (!user && allowed) {
     // Supabase not configured — dev mode
@@ -69,7 +29,7 @@ export default async function AdminLayout({
           Admin panel — Supabase not configured. Auth enforcement disabled for development.
         </div>
         <div className="mx-auto px-4 lg:px-8 py-6">
-          <AdminSidebar navItems={ADMIN_NAV}>{children}</AdminSidebar>
+          <AdminSidebar navItems={ADMIN_NAV.map(({ href, label, group, alsoActiveOn }) => ({ href, label, group, alsoActiveOn, badgeCount: 0 }))}>{children}</AdminSidebar>
         </div>
       </div>
     );
@@ -98,12 +58,14 @@ export default async function AdminLayout({
     );
   }
 
-  // Filter nav to only show items the user has permission for
-  const visibleNav = [];
-  for (const item of ADMIN_NAV) {
-    const { allowed: itemAllowed } = await checkPermission(item.permission);
-    if (itemAllowed) visibleNav.push(item);
-  }
+  // Filter nav to only show items the user has permission for. Each
+  // section's own layout.tsx (AdminGate) enforces the same permission on the
+  // page itself.
+  const can = (permission: PermissionKey) => hasPermission(access, permission);
+  const pending = await getPendingCounts(can);
+  const visibleNav = ADMIN_NAV.filter((item) => (Array.isArray(item.permission) ? item.permission.some(can) : can(item.permission))).map(
+    ({ href, label, group, alsoActiveOn, badge }) => ({ href, label, group, alsoActiveOn, badgeCount: badge ? pending[badge] ?? 0 : 0 })
+  );
 
   return (
     <div className="min-h-[80vh]">

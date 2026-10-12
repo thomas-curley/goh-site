@@ -59,7 +59,7 @@ export default function EditBingoEventPage() {
     if (!confirm("Delete this bingo event? This can't be undone.")) return;
     setDeleting(true);
     const res = await fetch(`/api/admin/bingo/${eventId}`, { method: "DELETE" });
-    if (res.ok) router.push("/admin/bingo/list");
+    if (res.ok) router.push("/admin/bingo");
     else setDeleting(false);
   };
 
@@ -75,7 +75,7 @@ export default function EditBingoEventPage() {
     return (
       <div>
         <p className="text-bark-brown-light">Bingo event not found.</p>
-        <Link href="/admin/bingo/list" className="text-sm text-gnome-green hover:underline">← Back to Bingo Events</Link>
+        <Link href="/admin/bingo" className="text-sm text-gnome-green hover:underline">← Back to Bingo Events</Link>
       </div>
     );
   }

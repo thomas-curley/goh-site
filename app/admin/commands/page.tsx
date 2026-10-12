@@ -160,7 +160,7 @@ export default function AdminCommandsPage() {
     return (
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h1 className="font-display text-3xl text-gnome-green">Custom Commands</h1>
+          <h1 className="font-display text-3xl text-gnome-green">Bot Commands</h1>
           <Button onClick={() => setStep(1)}>+ Create Command</Button>
         </div>
 

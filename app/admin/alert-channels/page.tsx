@@ -68,7 +68,7 @@ export default function AlertChannelsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-2">Alert Channels</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-2">Discord Channels</h1>
       <p className="text-sm text-bark-brown-light mb-6">
         Redirect where each feature posts to Discord — a channel/thread link or raw ID. Leave blank to use the
         environment default.

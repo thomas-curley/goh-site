@@ -4,11 +4,34 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { activeNavHref } from "@/lib/admin-nav";
 
 interface NavItem {
   href: string;
   label: string;
-  group?: string;
+  group: string;
+  alsoActiveOn?: string[];
+  badgeCount: number;
+}
+
+const COLLAPSED_STORAGE_KEY = "admin-nav-collapsed";
+
+function readCollapsed(): string[] {
+  try {
+    const raw = window.localStorage.getItem(COLLAPSED_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((g): g is string => typeof g === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCollapsed(groups: string[]) {
+  try {
+    window.localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify(groups));
+  } catch {
+    // Storage unavailable (private window etc.) -- collapsing just won't persist.
+  }
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -24,14 +47,38 @@ function ChevronIcon({ open }: { open: boolean }) {
   );
 }
 
+function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-2 min-w-5 px-1.5 rounded-full bg-red-accent text-white text-[11px] font-semibold leading-5 text-center shrink-0">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Every group starts expanded; the ones an admin collapses are remembered
+  // in this browser. The group holding the current page always shows open.
+  const [collapsed, setCollapsed] = useState<string[]>([]);
 
-  const ungrouped = navItems.filter((item) => !item.group);
+  useEffect(() => {
+    // Read after mount (from a promise callback, not synchronously in the
+    // effect) so the server render and first client render match.
+    void Promise.resolve().then(() => setCollapsed(readCollapsed()));
+  }, []);
+
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMobileOpen(false);
+  }
+
+  const activeHref = activeNavHref(pathname, navItems);
+
   const groups: { name: string; items: NavItem[] }[] = [];
   for (const item of navItems) {
-    if (!item.group) continue;
     let group = groups.find((g) => g.name === item.group);
     if (!group) {
       group = { name: item.group, items: [] };
@@ -40,32 +87,25 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
     group.items.push(item);
   }
 
-  // Accordion: only one group open at a time, so the sidebar stays scannable
-  // instead of every section being expanded at once. Whichever group
-  // contains the current page is opened automatically on navigation.
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMobileOpen(false);
-    const activeGroup = groups.find((g) => g.items.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`)));
-    setOpenGroup(activeGroup?.name ?? null);
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const toggleGroup = (name: string) => {
-    setOpenGroup((prev) => (prev === name ? null : name));
+    setCollapsed((prev) => {
+      const next = prev.includes(name) ? prev.filter((g) => g !== name) : [...prev, name];
+      writeCollapsed(next);
+      return next;
+    });
   };
 
   const linkClass = (href: string) =>
     cn(
-      "block px-3 py-2 rounded-md text-sm transition-colors",
-      pathname === href
+      "flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+      href === activeHref
         ? "bg-gnome-green/15 text-gnome-green font-semibold"
         : "text-bark-brown hover:bg-parchment-dark hover:text-gnome-green"
     );
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
-      <aside className="md:w-52 shrink-0">
+      <aside className="md:w-56 shrink-0">
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
@@ -81,36 +121,33 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
           </svg>
         </button>
 
-        <h2 className="hidden md:block font-display text-xl text-gnome-green mb-4">
-          Admin Panel
-        </h2>
+        <h2 className="hidden md:block font-display text-xl text-gnome-green mb-4">Admin Panel</h2>
 
-        <nav className={cn("md:block overflow-hidden transition-all", mobileOpen ? "max-h-[2000px]" : "max-h-0 md:max-h-none")}>
-          <div className="space-y-1 pb-1">
-            {ungrouped.map((item) => (
-              <Link key={item.href} href={item.href} className={linkClass(item.href)}>
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
+        <nav className={cn("md:block overflow-hidden transition-all", mobileOpen ? "max-h-[3000px]" : "max-h-0 md:max-h-none")}>
           {groups.map((group) => {
-            const isOpen = openGroup === group.name;
+            const containsActive = group.items.some((item) => item.href === activeHref);
+            const isOpen = containsActive || !collapsed.includes(group.name);
+            const groupBadge = group.items.reduce((sum, item) => sum + item.badgeCount, 0);
             return (
-              <div key={group.name} className="pt-2">
+              <div key={group.name} className="pt-2 first:pt-0">
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.name)}
-                  className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-iron-grey hover:text-gnome-green transition-colors cursor-pointer"
+                  disabled={containsActive}
+                  className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-iron-grey hover:text-gnome-green transition-colors cursor-pointer disabled:cursor-default disabled:hover:text-iron-grey"
                 >
-                  {group.name}
+                  <span className="flex items-center">
+                    {group.name}
+                    {!isOpen && <Badge count={groupBadge} />}
+                  </span>
                   <ChevronIcon open={isOpen} />
                 </button>
                 {isOpen && (
-                  <div className="space-y-1 mt-1">
+                  <div className="space-y-0.5 mt-1">
                     {group.items.map((item) => (
                       <Link key={item.href} href={item.href} className={linkClass(item.href)}>
-                        {item.label}
+                        <span className="truncate">{item.label}</span>
+                        <Badge count={item.badgeCount} />
                       </Link>
                     ))}
                   </div>

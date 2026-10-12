@@ -87,7 +87,7 @@ export default function AdminLoansPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-1">Loan Board</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-1">Loans</h1>
       <p className="text-bark-brown-light mb-6">Every loan request on the site, with dispute overrides.</p>
 
       {status && (
