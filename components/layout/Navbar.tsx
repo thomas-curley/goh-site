@@ -75,6 +75,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/loans/apply", label: "Request a Loan", sectionKey: "bank" },
     ],
   },
+  { type: "link", href: "/newsletter", label: "Newsletter", sectionKey: "newsletter" },
   { type: "link", href: "/about", label: "About", sectionKey: "about" },
 ];
 
