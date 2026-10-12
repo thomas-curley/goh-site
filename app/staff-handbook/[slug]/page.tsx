@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { getHandbookTree, flattenHandbookTree, type HandbookNode } from "@/lib/handbook";
+import { getPublishedEditions } from "@/lib/handbook-editions";
 import { checkClanEligibility } from "@/lib/clan-access";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { checkSectionAccess } from "@/lib/section-gate";
@@ -17,7 +18,7 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -62,6 +63,10 @@ function SidebarNav({ tree, activeSlug }: { tree: HandbookNode[]; activeSlug: st
 
 export default async function HandbookSectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  // Once an uploaded handbook is published, the old section pages are retired.
+  const editionsClient = getServiceClient();
+  if (editionsClient && (await getPublishedEditions(editionsClient)).length > 0) redirect("/staff-handbook");
+
   const tree = await getHandbookTree();
   const flat = flattenHandbookTree(tree);
   const section = flat.find((s) => s.slug === slug);
