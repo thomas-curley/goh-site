@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getCompetitionLeaders, getGroupCompetitions } from "@/lib/wom";
+import { classifyMetric, getCompetitionLeaders, getGroupCompetitions } from "@/lib/wom";
 import { getAlertChannel } from "@/lib/alert-channels";
 import { formatRolePingMentions } from "@/lib/post-templates";
 import { generateWeeklyAnnouncementText } from "@/lib/weekly-announcement-text";
@@ -10,7 +10,6 @@ import {
   buildForumTipsSection,
   buildRaffleMessage,
   buildResultsMessage,
-  nextJagexWeekStart,
   type PrizeStructure,
   type WeeklyCompetitionType,
   type WeeklyLeader,
@@ -23,19 +22,51 @@ const WINNER_COUNT = 10;
 const FULL_LEADERBOARD_LIMIT = 500;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * The parts of weekly_competition_config the turnover still uses. The
+ * current_* columns are written on every turnover so next week's form can
+ * preselect what was posted; next_* columns are no longer used (competitions
+ * are picked on the turnover form itself).
+ */
 export interface WeeklyConfig {
   current_competition_ids: number[];
-  current_competition_type: WeeklyCompetitionType | null;
-  current_competition_name: string | null;
-  current_week_start_date: string | null;
   current_forum_thread_id: string | null;
   current_competition_emoji: string | null;
-  next_competition_ids: number[];
-  next_competition_type: WeeklyCompetitionType | null;
-  next_competition_name: string | null;
   ping_role_ids: string[] | null;
   raffle_prize_amount: number | string | null;
   last_run_at: string | null;
+}
+
+/** A WOM group competition as offered in the turnover form's pickers. */
+export interface PickableCompetition {
+  id: number;
+  title: string;
+  metric: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+/** Group competitions from the last few weeks / next few weeks -- the only ones worth offering in the pickers. */
+export async function getPickableCompetitions(): Promise<PickableCompetition[]> {
+  const now = Date.now();
+  const window = 5 * WEEK_MS;
+  const all = await getGroupCompetitions();
+  return all
+    .filter((c) => new Date(c.endsAt).getTime() >= now - window && new Date(c.startsAt).getTime() <= now + window)
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
+    .map((c) => ({ id: c.id, title: c.title, metric: c.metric, startsAt: new Date(c.startsAt).toISOString(), endsAt: new Date(c.endsAt).toISOString() }));
+}
+
+function competitionType(metric: string, title: string): WeeklyCompetitionType {
+  const kind = classifyMetric(metric);
+  if (kind === "skill") return "sotw";
+  if (kind === "boss") return "botw";
+  return /skill of the week/i.test(title) ? "sotw" : "botw";
+}
+
+/** "The Gauntlet / Corrupted Gauntlet" for a multi-competition week -- each title reduced to its bare skill/boss name. */
+function combinedName(comps: PickableCompetition[]): string {
+  return [...new Set(comps.map((c) => bareCompetitionName(c.title)))].join(" / ");
 }
 
 export interface TurnoverPreview {
@@ -43,6 +74,9 @@ export interface TurnoverPreview {
   forum: { channelId: string; title: string; content: string };
   raffle: { channelId: string; content: string } | null;
   nextEmoji: string;
+  nextIds: number[];
+  nextType: WeeklyCompetitionType;
+  nextName: string;
   startDate: string; // ISO instant the new competition starts
   warnings: string[];
 }
@@ -77,13 +111,31 @@ export async function getPrizeStructure(supabase: SupabaseClient): Promise<Prize
 export async function buildTurnoverPreview(
   supabase: SupabaseClient,
   config: WeeklyConfig,
-  input: { previousThreadId: string | null; raffleWinners: string[]; raffleAmount: number; pingRoleIds: string[] }
+  input: {
+    finishedIds: number[];
+    nextIds: number[];
+    previousThreadId: string | null;
+    raffleWinners: string[];
+    raffleAmount: number;
+    pingRoleIds: string[];
+  }
 ): Promise<TurnoverPreview> {
   const warnings: string[] = [];
-  const finishedType = config.current_competition_type!;
-  const finishedName = bareCompetitionName(config.current_competition_name ?? "Competition");
-  const nextType = config.next_competition_type!;
-  const nextName = bareCompetitionName(config.next_competition_name ?? "Competition");
+
+  const groupCompetitions = await getPickableCompetitions();
+  const pick = (ids: number[]) => ids.map((id) => groupCompetitions.find((c) => c.id === id)).filter((c): c is PickableCompetition => !!c);
+  const finished = pick(input.finishedIds);
+  const next = pick(input.nextIds);
+  if (finished.length !== input.finishedIds.length || next.length !== input.nextIds.length) {
+    throw new Error("One of the picked competitions isn't in the clan's WOM group (or is more than a few weeks old) -- refresh and pick again.");
+  }
+  if (finished.length === 0) throw new Error("Pick the competition(s) that just finished.");
+  if (next.length === 0) throw new Error("Pick next week's competition(s).");
+
+  const finishedType = competitionType(finished[0].metric, finished[0].title);
+  const finishedName = combinedName(finished);
+  const nextType = competitionType(next[0].metric, next[0].title);
+  const nextName = combinedName(next);
 
   const [announcementsChannelId, forumChannelId] = await Promise.all([
     getAlertChannel(supabase, "weekly_competition_announcements"),
@@ -95,31 +147,24 @@ export async function buildTurnoverPreview(
   }
 
   const prizes = await getPrizeStructure(supabase);
-  const [leaders, text, groupCompetitions] = await Promise.all([
-    computeCombinedLeaders(config.current_competition_ids, prizes.length + 1),
+  const [leaders, text] = await Promise.all([
+    computeCombinedLeaders(input.finishedIds, prizes.length + 1),
     generateWeeklyAnnouncementText({ finishedType, finishedName, nextType, nextName }),
-    getGroupCompetitions(),
   ]);
 
-  const findComp = (id: number | undefined) => (id == null ? undefined : groupCompetitions.find((c) => c.id === id));
+  // Dates come from WOM's own start/end, so the post always matches the competition page.
+  const startDate = new Date(next[0].startsAt);
+  const endDate = new Date(next[0].endsAt);
+  const finishedStart = new Date(finished[0].startsAt);
+  if (new Date(finished[0].endsAt).getTime() > Date.now()) {
+    warnings.push(`"${finished[0].title}" hasn't ended yet -- the results are the current standings, not final.`);
+  }
 
-  // Dates come from WOM's own start/end when available, so the post always
-  // matches the competition page.
-  const nextComp = findComp(config.next_competition_ids[0]);
-  const startDate = nextComp ? new Date(nextComp.startsAt) : nextJagexWeekStart(new Date());
-  const endDate = nextComp ? new Date(nextComp.endsAt) : new Date(startDate.getTime() + WEEK_MS);
-  if (!nextComp) warnings.push("Couldn't find next week's competition in the WOM group -- dates were calculated, double-check them.");
+  const nextCompetitionNames = next.map((c) => bareCompetitionName(c.title));
 
-  const currentComp = findComp(config.current_competition_ids[0]);
-  const finishedStart = currentComp
-    ? new Date(currentComp.startsAt)
-    : config.current_week_start_date
-      ? new Date(`${config.current_week_start_date}T12:00:00Z`)
-      : new Date(startDate.getTime() - WEEK_MS);
-
-  const nextCompetitionNames = config.next_competition_ids.map((id, i) => findComp(id)?.title ?? `${nextName} (Part ${i + 1})`);
-
-  const finishedEmoji = config.current_competition_emoji || text.finishedEmoji;
+  // The stored emoji belongs to whatever the last turnover posted -- only reuse it for that same competition.
+  const sameAsStored = [...input.finishedIds].sort().join(",") === [...(config.current_competition_ids ?? [])].sort().join(",");
+  const finishedEmoji = (sameAsStored && config.current_competition_emoji) || text.finishedEmoji;
   const nextEmoji = text.nextEmoji;
 
   let results: TurnoverPreview["results"] = null;
@@ -152,7 +197,7 @@ export async function buildTurnoverPreview(
     emoji: nextEmoji,
     startDate,
     endDate,
-    competitionIds: config.next_competition_ids,
+    competitionIds: input.nextIds,
     competitionNames: nextCompetitionNames,
     prizes,
     intro: text.forumIntro,
@@ -183,6 +228,9 @@ export async function buildTurnoverPreview(
     forum: { channelId: forumChannelId, title: forumPost.title, content: forumPost.content },
     raffle,
     nextEmoji,
+    nextIds: input.nextIds,
+    nextType,
+    nextName,
     startDate: startDate.toISOString(),
     warnings,
   };

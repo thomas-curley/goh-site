@@ -4,7 +4,6 @@ import { checkPermission } from "@/lib/check-permission";
 import { getAlertChannel } from "@/lib/alert-channels";
 import { createForumPost, isDiscordSnowflake, postToChannel } from "@/lib/discord";
 import { splitDiscordMessage } from "@/lib/weekly-announcement-templates";
-import type { WeeklyConfig } from "@/lib/weekly-turnover";
 
 export const maxDuration = 60;
 
@@ -36,8 +35,9 @@ async function postChunks(chunks: string[], channelId: string) {
 //   3. raffle   -> announcements channel
 // Each step is optional (omit it to skip, e.g. on a retry after a partial
 // failure). Stops at the first failure and reports which steps went out, so
-// the page can retry just the rest. The config rotates to next week as soon
-// as the new forum thread exists.
+// the page can retry just the rest. As soon as the new forum thread exists,
+// it's saved (with the competitions it's for) as "this week" -- next week's
+// form prefills from that.
 export async function POST(request: NextRequest) {
   const { allowed } = await checkPermission("manage_competitions");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -83,11 +83,9 @@ export async function POST(request: NextRequest) {
     const forumChannelId = await getAlertChannel(supabase, "skill_or_kill_forum");
     if (!forumChannelId) return fail("forum", new Error("no Skill or Kill of the Week Forum channel configured"), 400);
 
-    const { data } = await supabase.from("weekly_competition_config").select("*").eq("id", 1).maybeSingle();
-    const config = data as unknown as WeeklyConfig | null;
-    if (!config?.next_competition_type || config.next_competition_ids.length === 0) {
-      return fail("forum", new Error("next week's competition isn't set (already rotated?)"), 400);
-    }
+    const nextIds: number[] = Array.isArray(body.nextIds) ? body.nextIds.map(Number).filter((n: number) => Number.isInteger(n)) : [];
+    const nextType = body.nextType === "sotw" || body.nextType === "botw" ? body.nextType : null;
+    if (nextIds.length === 0 || !nextType) return fail("forum", new Error("missing next week's competition"), 400);
 
     const chunks = splitDiscordMessage(content);
     try {
@@ -110,15 +108,12 @@ export async function POST(request: NextRequest) {
     const { error: rotateError } = await supabase
       .from("weekly_competition_config")
       .update({
-        current_competition_ids: config.next_competition_ids,
-        current_competition_type: config.next_competition_type,
-        current_competition_name: config.next_competition_name,
+        current_competition_ids: nextIds,
+        current_competition_type: nextType,
+        current_competition_name: text(body.nextName).slice(0, 150) || null,
         current_week_start_date: Number.isNaN(startDate.getTime()) ? new Date().toISOString().slice(0, 10) : startDate.toISOString().slice(0, 10),
         current_forum_thread_id: forumThreadId,
         current_competition_emoji: text(body.nextEmoji).slice(0, 32) || null,
-        next_competition_ids: [],
-        next_competition_type: null,
-        next_competition_name: null,
         last_run_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -126,7 +121,7 @@ export async function POST(request: NextRequest) {
     if (rotateError) {
       console.error("Weekly turnover: rotation failed:", rotateError);
       return NextResponse.json(
-        { completed, forumThreadId, rotated, failed: "forum", error: "The forum thread was posted, but rotating to next week failed -- fix Current Week under Manual recovery." },
+        { completed, forumThreadId, rotated, failed: "forum", error: "The forum thread was posted, but saving it as this week's thread failed -- paste its link into the form next week." },
         { status: 500 }
       );
     }

@@ -38,14 +38,11 @@ export async function POST(request: NextRequest) {
   if (!data) return NextResponse.json({ error: "weekly_competition_config row is missing." }, { status: 500 });
   const config = data as unknown as WeeklyConfig;
 
-  if (!config.current_competition_type || config.current_competition_ids.length === 0) {
-    return NextResponse.json({ error: "No current competition configured -- fix it under Manual recovery below." }, { status: 400 });
-  }
-  if (!config.next_competition_type || config.next_competition_ids.length === 0) {
-    return NextResponse.json({ error: "Set up Next Week's competition first." }, { status: 400 });
-  }
-
   const body = await request.json().catch(() => ({}));
+  const ids = (value: unknown): number[] =>
+    Array.isArray(value) ? [...new Set(value.map(Number).filter((n) => Number.isInteger(n) && n > 0))].slice(0, 4) : [];
+  const finishedIds = ids(body.finishedIds);
+  const nextIds = ids(body.nextIds);
   const rawThread = typeof body.previousThread === "string" ? body.previousThread : "";
   const previousThreadId = resolveThreadId(rawThread);
   if (rawThread.trim() && !previousThreadId) {
@@ -77,7 +74,7 @@ export async function POST(request: NextRequest) {
     .eq("id", 1);
 
   try {
-    const preview = await buildTurnoverPreview(supabase, config, { previousThreadId, raffleWinners, raffleAmount, pingRoleIds });
+    const preview = await buildTurnoverPreview(supabase, config, { finishedIds, nextIds, previousThreadId, raffleWinners, raffleAmount, pingRoleIds });
     return NextResponse.json({ preview });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to build the preview." }, { status: 400 });
