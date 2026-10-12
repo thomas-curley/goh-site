@@ -14,10 +14,6 @@
     {
       "path": "/api/cron/bingo-sync",
       "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-announcement",
-      "schedule": "0 0 * * 1"
     }
   ],
   "headers": [
