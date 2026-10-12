@@ -176,4 +176,3 @@ export const TEMPLATE_TOUR: TourDefinition = {
   ],
 };
 
-export const ALL_TOURS: TourDefinition[] = [ANNOUNCEMENT_TOUR, EVENT_RECAP_TOUR, TEMPLATE_TOUR];

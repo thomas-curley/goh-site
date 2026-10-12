@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -50,7 +51,9 @@ interface TrackedLootItem {
 
 export default function EventRecapPage() {
   const [events, setEvents] = useState<PastEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<string>("");
+  // "Recap" on the Events list links here with ?eventId= to preselect the event.
+  const searchParams = useSearchParams();
+  const [selectedEvent, setSelectedEvent] = useState<string>(() => searchParams.get("eventId") ?? "");
   const [destination, setDestination] = useState("");
   const [autoArchive, setAutoArchive] = useState<ThreadAutoArchive>(DEFAULT_THREAD_AUTO_ARCHIVE);
   const [closeForumPost, setCloseForumPost] = useState(false);

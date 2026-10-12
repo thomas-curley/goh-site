@@ -1,5 +1,5 @@
 import { AdminGate } from "@/components/admin/AdminGate";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <AdminGate permission="manage_guides">{children}</AdminGate>;
+  return <AdminGate permission="manage_payouts">{children}</AdminGate>;
 }

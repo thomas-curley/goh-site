@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminTabs } from "@/components/admin/AdminTabs";
+import { ROLES_ACCESS_TABS } from "@/lib/admin-tabs";
 import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
@@ -82,7 +84,8 @@ export default function AdminPermissionsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-2">Permissions</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-4">Roles &amp; Access</h1>
+      <AdminTabs tabs={ROLES_ACCESS_TABS} />
       <p className="text-sm text-bark-brown-light mb-6">
         Configure which clan ranks can access each feature. Members must have their RSN
         linked to get their rank detected.

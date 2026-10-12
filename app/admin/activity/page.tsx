@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminTabs } from "@/components/admin/AdminTabs";
+import { OVERVIEW_TABS } from "@/lib/admin-tabs";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -243,7 +245,8 @@ export default function AdminActivityPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-1">Player Activity</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-4">Dashboard</h1>
+      <AdminTabs tabs={OVERVIEW_TABS} />
       <p className="text-bark-brown-light mb-6">
         Retention, engagement, and skilling-vs-bossing activity for the clan roster. For clan growth over
         time see the <Link href="/admin" className="text-gnome-green hover:underline">Dashboard</Link>; for
