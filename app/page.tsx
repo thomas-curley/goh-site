@@ -176,11 +176,12 @@ export default async function HomePage() {
           </Card>
         </div>
 
-        {/* Newsletter shoutout + active competition, side by side when both exist */}
+        {/* Newsletter shoutout + active competition: 40/60 side by side when
+            both exist; on its own the newsletter keeps its 40% width, centred. */}
         {(latestNewsletter || activeCompetitions.length > 0) && (
-          <div className={`mt-6 grid grid-cols-1 gap-6 ${latestNewsletter && activeCompetitions.length > 0 ? "md:grid-cols-2" : ""}`}>
+          <div className={`mt-6 grid grid-cols-1 gap-6 ${latestNewsletter && activeCompetitions.length > 0 ? "md:grid-cols-5" : ""}`}>
             {latestNewsletter && (
-              <Card className="flex gap-4 items-start">
+              <Card className={`flex gap-4 items-start ${activeCompetitions.length > 0 ? "md:col-span-2" : "md:w-2/5 md:mx-auto"}`}>
                 <Link href={`/newsletter/${latestNewsletter.issue_number}`} className="shrink-0" aria-label={`Read Issue No. ${latestNewsletter.issue_number}`}>
                   {latestNewsletter.cover_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -210,7 +211,7 @@ export default async function HomePage() {
               </Card>
             )}
             {activeCompetitions.length > 0 && (
-            <Card>
+            <Card className={latestNewsletter ? "md:col-span-3" : undefined}>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>
                   <p className="text-xs text-iron-grey uppercase tracking-wide">Active Competition</p>
