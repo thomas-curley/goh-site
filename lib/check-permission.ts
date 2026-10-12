@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "./supabase-server";
 import { resolveEffectiveRole } from "./clan-access";
 import type { PermissionKey } from "./permissions";
@@ -48,4 +49,45 @@ export async function checkPermission(permission: PermissionKey): Promise<{
     // Supabase not configured
     return { allowed: true, user: null }; // Allow in dev mode
   }
+}
+
+export interface AdminAccess {
+  user: { id: string; clan_rank: string | null; discord_username: string } | null;
+  /** Every permission the caller's role is granted, from one role_permissions query. */
+  granted: Set<PermissionKey>;
+  /** Supabase isn't configured (local dev) -- everything is allowed, same as checkPermission. */
+  devMode: boolean;
+}
+
+/**
+ * All of the caller's permissions at once, memoized per request with
+ * React's cache() -- the admin layout and every section gate share one
+ * lookup instead of each running checkPermission (four queries apiece).
+ */
+export const getAdminAccess = cache(async (): Promise<AdminAccess> => {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { user: null, granted: new Set(), devMode: false };
+
+    const [{ data: profile }, role] = await Promise.all([
+      supabase.from("user_profiles").select("discord_username").eq("id", user.id).single(),
+      resolveEffectiveRole(supabase, user.id),
+    ]);
+
+    const { data: perms } = await supabase.from("role_permissions").select("permission").eq("role", role).eq("granted", true);
+
+    return {
+      user: { id: user.id, clan_rank: role, discord_username: profile?.discord_username ?? "" },
+      granted: new Set((perms ?? []).map((p) => p.permission as PermissionKey)),
+      devMode: false,
+    };
+  } catch {
+    // Supabase not configured
+    return { user: null, granted: new Set(), devMode: true };
+  }
+});
+
+export function hasPermission(access: AdminAccess, permission: PermissionKey): boolean {
+  return access.devMode || access.granted.has(permission);
 }

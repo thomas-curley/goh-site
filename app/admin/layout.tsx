@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { checkPermission } from "@/lib/check-permission";
+import { getAdminAccess, hasPermission } from "@/lib/check-permission";
 import type { PermissionKey } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -59,7 +59,9 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { allowed, user } = await checkPermission("view_admin");
+  const access = await getAdminAccess();
+  const { user } = access;
+  const allowed = hasPermission(access, "view_admin");
 
   if (!user && allowed) {
     // Supabase not configured — dev mode
@@ -98,12 +100,10 @@ export default async function AdminLayout({
     );
   }
 
-  // Filter nav to only show items the user has permission for
-  const visibleNav = [];
-  for (const item of ADMIN_NAV) {
-    const { allowed: itemAllowed } = await checkPermission(item.permission);
-    if (itemAllowed) visibleNav.push(item);
-  }
+  // Filter nav to only show items the user has permission for. Each
+  // section's own layout.tsx (AdminGate) enforces the same permission on the
+  // page itself.
+  const visibleNav = ADMIN_NAV.filter((item) => hasPermission(access, item.permission));
 
   return (
     <div className="min-h-[80vh]">
