@@ -27,11 +27,11 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/polls", label: "Polls", group: "Discord Posts", permission: "manage_polls" },
   { href: "/admin/surveys", label: "Surveys", group: "Discord Posts", permission: "manage_surveys" },
 
-  { href: "/admin/wom-competitions", label: "WOM Competitions", group: "Competitions & Prizes", permission: "manage_competitions" },
-  { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", group: "Competitions & Prizes", permission: "manage_competitions" },
-  { href: "/admin/bingo", label: "Bingo", group: "Competitions & Prizes", permission: "manage_bingo" },
-  { href: "/admin/payouts", label: "Prize Payouts", group: "Competitions & Prizes", permission: "manage_payouts", badge: "unpaid_payouts" },
-  { href: "/admin/raffles", label: "Raffles", group: "Competitions & Prizes", permission: "manage_payouts" },
+  { href: "/admin/wom-competitions", label: "WOM Competitions", group: "Competitions", permission: "manage_competitions" },
+  { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", group: "Competitions", permission: "manage_competitions" },
+  { href: "/admin/bingo", label: "Bingo", group: "Competitions", permission: "manage_bingo" },
+  { href: "/admin/payouts", label: "Prize Payouts", group: "Competitions", permission: "manage_payouts", badge: "unpaid_payouts" },
+  { href: "/admin/raffles", label: "Raffles", group: "Competitions", permission: "manage_payouts" },
 
   { href: "/admin/feedback", label: "Feedback", group: "Review Queue", permission: "manage_feedback", badge: "feedback" },
   { href: "/admin/staff-applications", label: "Staff Applications", group: "Review Queue", permission: "manage_staff_applications", badge: "staff_applications" },
