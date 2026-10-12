@@ -12,6 +12,8 @@ import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import { getFeaturedTestimonials } from "@/lib/testimonials";
 import { TestimonialsSection } from "@/components/testimonials/TestimonialsSection";
+import { getLatestNewsletter } from "@/lib/newsletters";
+import { formatIssueDate } from "@/lib/newsletter-format";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +100,9 @@ export default async function HomePage() {
     getAnnouncements(),
     getFeaturedTestimonials(),
   ]);
+  // Only shout out the newsletter when there's an issue to read and the
+  // section isn't hidden from this viewer.
+  const latestNewsletter = (await checkSectionAccess("newsletter")) ? await getLatestNewsletter() : null;
 
   const memberCount = groupDetails?.memberships?.length ?? 0;
   const totalExp = groupDetails?.memberships?.reduce(
@@ -171,9 +176,40 @@ export default async function HomePage() {
           </Card>
         </div>
 
-        {/* Active Competition (thin row) */}
-        {activeCompetitions.length > 0 && (
-          <div className="mt-6">
+        {/* Newsletter shoutout + active competition, side by side when both exist */}
+        {(latestNewsletter || activeCompetitions.length > 0) && (
+          <div className={`mt-6 grid grid-cols-1 gap-6 ${latestNewsletter && activeCompetitions.length > 0 ? "md:grid-cols-2" : ""}`}>
+            {latestNewsletter && (
+              <Card className="flex gap-4 items-start">
+                <Link href={`/newsletter/${latestNewsletter.issue_number}`} className="shrink-0" aria-label={`Read Issue No. ${latestNewsletter.issue_number}`}>
+                  {latestNewsletter.cover_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={latestNewsletter.cover_url}
+                      alt=""
+                      className="w-20 sm:w-24 aspect-[3/4] object-cover object-top rounded border border-bark-brown-light/40 shadow bg-white"
+                    />
+                  ) : (
+                    <div className="w-20 sm:w-24 aspect-[3/4] rounded bg-parchment-dark/60 flex items-center justify-center text-3xl">📰</div>
+                  )}
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-iron-grey uppercase tracking-wide">Latest from {latestNewsletter.title}</p>
+                  <h3 className="font-display text-lg text-bark-brown leading-tight">Issue No. {latestNewsletter.issue_number}</h3>
+                  <p className="text-xs text-iron-grey">{formatIssueDate(latestNewsletter.published_on)}</p>
+                  {latestNewsletter.headline && <p className="text-sm text-bark-brown-light mt-1 line-clamp-2">{latestNewsletter.headline}</p>}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+                    <Link href={`/newsletter/${latestNewsletter.issue_number}`} className="text-gnome-green font-semibold hover:underline">
+                      Read the latest issue &rarr;
+                    </Link>
+                    <Link href="/newsletter#archive-heading" className="text-gnome-green hover:underline">
+                      Past issues
+                    </Link>
+                  </div>
+                </div>
+              </Card>
+            )}
+            {activeCompetitions.length > 0 && (
             <Card>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>
@@ -198,6 +234,7 @@ export default async function HomePage() {
                 <p className="text-sm text-iron-grey">No participants yet.</p>
               )}
             </Card>
+            )}
           </div>
         )}
       </section>

@@ -36,6 +36,20 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 12, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-12-home-newsletter",
+    date: "2026-10-12",
+    kind: "new",
+    audience: "everyone",
+    title: "Newsletter shoutout on the home page",
+    summary:
+      "The home page's Clan at a Glance section now shows the latest Weekly Glider issue, with its cover, date and headline, and links to read it or browse past issues. It updates automatically when a new issue is published.",
+    tryIt: ["Open the home page and scroll to Clan at a Glance.", "Press 'Read the latest issue'."],
+    links: [
+      { label: "Home page", href: "/" },
+      { label: "Newsletter", href: "/newsletter" },
+    ],
+  },
+  {
     id: "2026-10-12-event-images-kept",
     date: "2026-10-12",
     kind: "fixed",
