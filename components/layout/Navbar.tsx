@@ -75,8 +75,14 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/loans/apply", label: "Request a Loan", sectionKey: "bank" },
     ],
   },
-  { type: "link", href: "/newsletter", label: "Newsletter", sectionKey: "newsletter" },
-  { type: "link", href: "/about", label: "About", sectionKey: "about" },
+  {
+    type: "dropdown",
+    label: "Clan",
+    items: [
+      { href: "/newsletter", label: "Newsletter", sectionKey: "newsletter" },
+      { href: "/about", label: "About", sectionKey: "about" },
+    ],
+  },
 ];
 
 interface NavbarProps {
