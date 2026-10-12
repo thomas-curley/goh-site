@@ -87,11 +87,16 @@ export async function GET(request: NextRequest) {
 
   const status = request.nextUrl.searchParams.get("status");
 
-  let query = supabase.from("feedback_submissions").select("*").order("created_at", { ascending: false });
+  // IP addresses never leave the server -- see the survey responses route.
+  let query = supabase
+    .from("feedback_submissions")
+    .select("id, message, category, respondent_name, status, created_at, ip_address")
+    .order("created_at", { ascending: false });
   if (status) query = query.eq("status", status);
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: "Failed to load feedback." }, { status: 500 });
 
-  return NextResponse.json({ submissions: data ?? [] });
+  const submissions = (data ?? []).map(({ ip_address, ...rest }) => ({ ...rest, can_ban: !!ip_address }));
+  return NextResponse.json({ submissions });
 }

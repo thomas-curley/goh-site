@@ -105,5 +105,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: "Failed to load reviews." }, { status: 500 });
 
-  return NextResponse.json({ reviews: data ?? [], guildId: process.env.DISCORD_GUILD_ID ?? null });
+  // IP addresses never leave the server (they're only for ban checks).
+  const reviews = (data ?? []).map((review) => Object.fromEntries(Object.entries(review).filter(([key]) => key !== "ip_address")));
+  return NextResponse.json({ reviews, guildId: process.env.DISCORD_GUILD_ID ?? null });
 }

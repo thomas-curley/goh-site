@@ -18,7 +18,6 @@ interface GnomieReview {
   reviewed_at: string | null;
   discord_message_id: string | null;
   discord_channel_id: string | null;
-  ip_address: string | null;
   created_at: string;
 }
 
@@ -152,10 +151,6 @@ export default function AdminGnomieReviewsPage() {
                           ))}
                         </div>
                       </div>
-                    )}
-
-                    {r.ip_address && (
-                      <p className="text-xs text-iron-grey">Submitted from IP: <span className="font-mono">{r.ip_address}</span></p>
                     )}
 
                     {r.review_notes && (

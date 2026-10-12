@@ -11,7 +11,8 @@ interface FeedbackSubmission {
   respondent_name: string | null;
   status: "new" | "reviewed" | "archived";
   created_at: string;
-  ip_address: string | null;
+  /** Whether an IP was recorded -- the address itself is never sent to the browser. */
+  can_ban: boolean;
 }
 
 type Tab = "new" | "reviewed" | "archived" | "all";
@@ -29,7 +30,7 @@ export default function AdminFeedbackPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
-  const [banningIp, setBanningIp] = useState<string | null>(null);
+  const [banningId, setBanningId] = useState<string | null>(null);
 
   const load = useCallback(async (activeTab: Tab) => {
     setLoading(true);
@@ -58,17 +59,17 @@ export default function AdminFeedbackPage() {
     setBusyId(null);
   };
 
-  const handleBanIp = async (ip: string) => {
-    if (!confirm(`Ban ${ip}? This blocks it from submitting feedback or surveys, not just this one.`)) return;
-    setBanningIp(ip);
+  const handleBan = async (feedbackId: string) => {
+    if (!confirm("Ban this person's IP address? This blocks it from submitting feedback or surveys, not just this one.")) return;
+    setBanningId(feedbackId);
     const res = await fetch("/api/admin/banned-ips", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ipAddress: ip, reason: "Banned from feedback inbox" }),
+      body: JSON.stringify({ feedbackId, reason: "Banned from feedback inbox" }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) alert(data.error ?? "Failed to ban that IP.");
-    setBanningIp(null);
+    alert(res.ok ? "Banned." : data.error ?? "Failed to ban that IP.");
+    setBanningId(null);
   };
 
   return (
@@ -110,17 +111,16 @@ export default function AdminFeedbackPage() {
                   </p>
                   <p className="text-xs text-iron-grey">
                     {new Date(s.created_at).toLocaleString()}
-                    {s.ip_address && <span className="font-mono ml-2">{s.ip_address}</span>}
                   </p>
                 </div>
-                {s.ip_address && (
+                {s.can_ban && (
                   <button
                     type="button"
-                    onClick={() => handleBanIp(s.ip_address!)}
-                    disabled={banningIp === s.ip_address}
+                    onClick={() => handleBan(s.id)}
+                    disabled={banningId === s.id}
                     className="text-xs text-red-accent hover:underline cursor-pointer shrink-0"
                   >
-                    {banningIp === s.ip_address ? "..." : "Ban IP"}
+                    {banningId === s.id ? "..." : "Ban IP"}
                   </button>
                 )}
               </div>

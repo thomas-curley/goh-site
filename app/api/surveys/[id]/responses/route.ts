@@ -140,13 +140,16 @@ export async function GET(
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
+  // IP addresses never leave the server: staff ban a respondent by response
+  // id (see /api/admin/banned-ips), which looks the address up itself.
   const { data, error } = await supabase
     .from("survey_responses")
-    .select("*")
+    .select("id, answers, respondent_name, submitted_at, ip_address")
     .eq("survey_id", id)
     .order("submitted_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: "Failed to load responses." }, { status: 500 });
 
-  return NextResponse.json({ responses: data ?? [] });
+  const responses = (data ?? []).map(({ ip_address, ...rest }) => ({ ...rest, can_ban: !!ip_address }));
+  return NextResponse.json({ responses });
 }

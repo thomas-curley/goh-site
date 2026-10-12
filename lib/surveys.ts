@@ -8,6 +8,9 @@ export type QuestionType = "rating" | "multiple_choice" | "text" | "likert";
 
 export type LikertScale = 3 | 5;
 
+/** Most questions one survey can hold (checked by the create/update API and the builder). */
+export const MAX_SURVEY_QUESTIONS = 50;
+
 export interface SurveyQuestion {
   id: string;
   type: QuestionType;
