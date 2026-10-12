@@ -322,11 +322,17 @@ export async function sendDirectMessage(discordId: string, content: string) {
  * replaces embeds wholesale on PATCH. Unlike postToChannel, an absent
  * imageUrl explicitly clears embeds (embeds: []) rather than omitting the
  * key, so editing a post to remove its banner actually removes it.
+ *
+ * Pass `null` to leave the message's embeds exactly as they are -- for
+ * edits that only change the text (and so mustn't wipe images the site
+ * didn't put there, like link previews or a banner on an older post).
  */
-export async function editChannelMessage(channelId: string, messageId: string, content: string, imageUrl?: string | string[]) {
+export async function editChannelMessage(channelId: string, messageId: string, content: string, imageUrl?: string | string[] | null) {
   const body: Record<string, unknown> = { content: await resolveEmoteShorthand(content) };
 
-  if (imageUrl) {
+  if (imageUrl === null) {
+    // Leave embeds untouched.
+  } else if (imageUrl) {
     const urls = Array.isArray(imageUrl) ? imageUrl.filter(Boolean) : [imageUrl].filter(Boolean);
     body.embeds = urls.length > 0 ? urls.slice(0, 10).map((url) => ({ image: { url } })) : [];
   } else {

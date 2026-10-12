@@ -36,6 +36,21 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 12, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-12-event-images-kept",
+    date: "2026-10-12",
+    kind: "fixed",
+    audience: "admin",
+    title: "Editing an event no longer removes its image",
+    summary:
+      "Saving an event or a recurring series on the site sometimes wiped the cover image from the Discord event, or images from the Discord post. Images now only change when you change them in the form.",
+    tryIt: [
+      "Go to Admin › Events and edit an event that has a cover image in Discord.",
+      "Change something else, like the description, and save.",
+      "Check the Discord event and post: the image is still there.",
+    ],
+    links: [{ label: "Admin › Events", href: "/admin/events" }],
+  },
+  {
     id: "2026-10-12-whats-new",
     date: "2026-10-12",
     kind: "new",
