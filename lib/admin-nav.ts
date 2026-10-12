@@ -4,7 +4,8 @@ import type { PendingKey } from "@/lib/admin-pending";
 export interface AdminNavItem {
   href: string;
   label: string;
-  group: string;
+  /** Sidebar group heading; omitted for links shown on their own at the top (Dashboard). */
+  group?: string;
   /** Shown if the caller has any of these. */
   permission: PermissionKey | PermissionKey[];
   /** Other pages that count as "in" this item for highlighting (tabs, per-item sub-pages reached from it). */
@@ -16,7 +17,7 @@ export interface AdminNavItem {
 // The admin sidebar, in display order. Each section's own layout.tsx
 // (AdminGate) enforces the page's permission; this only decides what's listed.
 export const ADMIN_NAV: AdminNavItem[] = [
-  { href: "/admin", label: "Dashboard", group: "Overview", permission: "view_admin", alsoActiveOn: ["/admin/activity"] },
+  { href: "/admin", label: "Dashboard", permission: "view_admin", alsoActiveOn: ["/admin/activity"] },
 
   { href: "/admin/events", label: "Events", group: "Events", permission: "manage_events", alsoActiveOn: ["/admin/event-recap"] },
   { href: "/admin/series-updates", label: "Series Updates", group: "Events", permission: "manage_events" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -9,29 +9,9 @@ import { activeNavHref } from "@/lib/admin-nav";
 interface NavItem {
   href: string;
   label: string;
-  group: string;
+  group?: string;
   alsoActiveOn?: string[];
   badgeCount: number;
-}
-
-const COLLAPSED_STORAGE_KEY = "admin-nav-collapsed";
-
-function readCollapsed(): string[] {
-  try {
-    const raw = window.localStorage.getItem(COLLAPSED_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((g): g is string => typeof g === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeCollapsed(groups: string[]) {
-  try {
-    window.localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify(groups));
-  } catch {
-    // Storage unavailable (private window etc.) -- collapsing just won't persist.
-  }
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -59,26 +39,25 @@ function Badge({ count }: { count: number }) {
 export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  // Every group starts expanded; the ones an admin collapses are remembered
-  // in this browser. The group holding the current page always shows open.
-  const [collapsed, setCollapsed] = useState<string[]>([]);
 
-  useEffect(() => {
-    // Read after mount (from a promise callback, not synchronously in the
-    // effect) so the server render and first client render match.
-    void Promise.resolve().then(() => setCollapsed(readCollapsed()));
-  }, []);
+  const activeHref = activeNavHref(pathname, navItems);
+  const activeGroup = navItems.find((item) => item.href === activeHref)?.group ?? null;
 
+  // Accordion: one group open at a time, so the sidebar stays short.
+  // Navigating opens the group holding the new page.
+  const [openGroup, setOpenGroup] = useState<string | null>(activeGroup);
   const [lastPathname, setLastPathname] = useState(pathname);
   if (pathname !== lastPathname) {
     setLastPathname(pathname);
     setMobileOpen(false);
+    setOpenGroup(activeGroup);
   }
 
-  const activeHref = activeNavHref(pathname, navItems);
-
+  // Ungrouped links (Dashboard) sit on their own above the groups.
+  const topLinks = navItems.filter((item) => !item.group);
   const groups: { name: string; items: NavItem[] }[] = [];
   for (const item of navItems) {
+    if (!item.group) continue;
     let group = groups.find((g) => g.name === item.group);
     if (!group) {
       group = { name: item.group, items: [] };
@@ -87,13 +66,7 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
     group.items.push(item);
   }
 
-  const toggleGroup = (name: string) => {
-    setCollapsed((prev) => {
-      const next = prev.includes(name) ? prev.filter((g) => g !== name) : [...prev, name];
-      writeCollapsed(next);
-      return next;
-    });
-  };
+  const toggleGroup = (name: string) => setOpenGroup((prev) => (prev === name ? null : name));
 
   const linkClass = (href: string) =>
     cn(
@@ -124,17 +97,26 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
         <h2 className="hidden md:block font-display text-xl text-gnome-green mb-4">Admin Panel</h2>
 
         <nav className={cn("md:block overflow-hidden transition-all", mobileOpen ? "max-h-[3000px]" : "max-h-0 md:max-h-none")}>
+          {topLinks.length > 0 && (
+            <div className="space-y-0.5 mb-2">
+              {topLinks.map((item) => (
+                <Link key={item.href} href={item.href} className={linkClass(item.href)}>
+                  <span className="truncate">{item.label}</span>
+                  <Badge count={item.badgeCount} />
+                </Link>
+              ))}
+            </div>
+          )}
           {groups.map((group) => {
-            const containsActive = group.items.some((item) => item.href === activeHref);
-            const isOpen = containsActive || !collapsed.includes(group.name);
+            const isOpen = openGroup === group.name;
             const groupBadge = group.items.reduce((sum, item) => sum + item.badgeCount, 0);
             return (
               <div key={group.name} className="pt-2 first:pt-0">
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.name)}
-                  disabled={containsActive}
-                  className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-iron-grey hover:text-gnome-green transition-colors cursor-pointer disabled:cursor-default disabled:hover:text-iron-grey"
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-iron-grey hover:text-gnome-green transition-colors cursor-pointer"
                 >
                   <span className="flex items-center min-w-0 text-left">
                     <span className="truncate">{group.name}</span>
