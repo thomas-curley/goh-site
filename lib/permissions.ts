@@ -85,7 +85,7 @@ export const PERMISSIONS = {
   manage_handbook: {
     key: "manage_handbook",
     label: "Manage Staff Handbook",
-    description: "Create and edit Staff Handbook pages",
+    description: "Upload and publish Staff Handbook editions",
   },
   manage_payouts: {
     key: "manage_payouts",
