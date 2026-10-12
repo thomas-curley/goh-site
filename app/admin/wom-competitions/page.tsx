@@ -376,7 +376,7 @@ export default function WomCompetitionsPage() {
               <div>
                 <p className="font-semibold text-bark-brown">Post an announcement to Discord</p>
                 <p className="text-xs text-bark-brown-light">
-                  Posts to the channel configured for &quot;WOM Competitions&quot; under Admin &gt; Alert Channels. If none is set, this is skipped silently.
+                  Posts to the channel configured for &quot;WOM Competitions&quot; under Admin &gt; Settings &gt; Discord Channels. If none is set, this is skipped silently.
                 </p>
               </div>
             </label>

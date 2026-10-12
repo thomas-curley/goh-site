@@ -141,9 +141,9 @@ export async function buildTurnoverPreview(
     getAlertChannel(supabase, "weekly_competition_announcements"),
     getAlertChannel(supabase, "skill_or_kill_forum"),
   ]);
-  if (!forumChannelId) throw new Error("No Skill or Kill of the Week Forum channel configured. Set one under Admin > Alert Channels.");
+  if (!forumChannelId) throw new Error("No Skill or Kill of the Week Forum channel configured. Set one under Admin > Settings > Discord Channels.");
   if (!announcementsChannelId && input.raffleWinners.length) {
-    throw new Error("No Weekly SOTW/BotW Announcements channel configured for the raffle post. Set one under Admin > Alert Channels.");
+    throw new Error("No Weekly SOTW/BotW Announcements channel configured for the raffle post. Set one under Admin > Settings > Discord Channels.");
   }
 
   const prizes = await getPrizeStructure(supabase);
