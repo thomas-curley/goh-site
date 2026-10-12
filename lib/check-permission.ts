@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { connection } from "next/server";
 import { createSupabaseServerClient } from "./supabase-server";
 import { resolveEffectiveRole } from "./clan-access";
 import type { PermissionKey } from "./permissions";
@@ -65,6 +66,10 @@ export interface AdminAccess {
  * lookup instead of each running checkPermission (four queries apiece).
  */
 export const getAdminAccess = cache(async (): Promise<AdminAccess> => {
+  // Always per-request, never prerendered: outside the try so a build
+  // without Supabase env vars can't bake the dev-mode "allow everything"
+  // result into a static page.
+  await connection();
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();

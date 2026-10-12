@@ -2,6 +2,7 @@
 
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { OVERVIEW_TABS } from "@/lib/admin-tabs";
+import { NeedsAttention } from "@/components/admin/NeedsAttention";
 import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
@@ -152,6 +153,8 @@ export default function AdminDashboard() {
         </Button>
       </div>
       <AdminTabs tabs={OVERVIEW_TABS} />
+
+      <NeedsAttention />
 
       {/* Live Stats */}
       {currentStats && (
