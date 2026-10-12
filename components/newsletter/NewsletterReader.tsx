@@ -60,7 +60,7 @@ export function NewsletterReader({ issue, archive }: { issue: Newsletter; archiv
       <div className="space-y-6">
         {issue.page_urls.map((url, i) => (
           <figure key={url} id={`page-${i + 1}`} className="scroll-mt-20">
-            <a href={url} target="_blank" rel="noreferrer" className="block cursor-zoom-in" title="Open full size">
+            <a href={url} target="_blank" rel="noreferrer" className="block cursor-pointer" title="Open full size">
               {/* Plain <img>: these are full-page scans of unknown size, served straight from storage. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
