@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 12, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-12-dark-mode-text",
+    date: "2026-10-12",
+    kind: "fixed",
+    audience: "everyone",
+    title: "Dark mode text is readable again",
+    summary:
+      "In dark mode some cards kept a light background while their text turned light, so it was hard to read. This showed up on What's New, survey results, the handbook, Clan Rules and other pages. Those cards now switch to dark too.",
+    tryIt: ["Switch to dark mode with the moon button in the top bar.", "Open What's New and check the cards are easy to read."],
+    links: [{ label: "What's New", href: "/whats-new" }],
+  },
+  {
     id: "2026-10-12-home-newsletter",
     date: "2026-10-12",
     kind: "new",
