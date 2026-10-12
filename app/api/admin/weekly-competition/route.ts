@@ -59,6 +59,13 @@ export async function PUT(request: NextRequest) {
   if (typeof body.currentWeekStartDate === "string" || body.currentWeekStartDate === null) {
     update.current_week_start_date = body.currentWeekStartDate || null;
   }
+  if (typeof body.currentForumThreadId === "string" || body.currentForumThreadId === null) {
+    const threadId = typeof body.currentForumThreadId === "string" ? body.currentForumThreadId.trim() : "";
+    if (threadId && !/^\d{15,25}$/.test(threadId)) return NextResponse.json({ error: "Forum thread id must be a Discord id." }, { status: 400 });
+    update.current_forum_thread_id = threadId || null;
+  }
+  const currentEmoji = text(body.currentCompetitionEmoji);
+  if (currentEmoji !== undefined) update.current_competition_emoji = currentEmoji?.slice(0, 32) ?? null;
 
   const { error } = await supabase.from("weekly_competition_config").update(update).eq("id", 1);
   if (error) return NextResponse.json({ error: "Failed to save." }, { status: 500 });
