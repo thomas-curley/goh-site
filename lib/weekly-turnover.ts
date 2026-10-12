@@ -4,6 +4,7 @@ import { getAlertChannel } from "@/lib/alert-channels";
 import { formatRolePingMentions } from "@/lib/post-templates";
 import { generateWeeklyAnnouncementText } from "@/lib/weekly-announcement-text";
 import {
+  bareCompetitionName,
   buildForumGuideSection,
   buildForumPost,
   buildForumTipsSection,
@@ -80,9 +81,9 @@ export async function buildTurnoverPreview(
 ): Promise<TurnoverPreview> {
   const warnings: string[] = [];
   const finishedType = config.current_competition_type!;
-  const finishedName = config.current_competition_name ?? "Competition";
+  const finishedName = bareCompetitionName(config.current_competition_name ?? "Competition");
   const nextType = config.next_competition_type!;
-  const nextName = config.next_competition_name ?? "Competition";
+  const nextName = bareCompetitionName(config.next_competition_name ?? "Competition");
 
   const [announcementsChannelId, forumChannelId] = await Promise.all([
     getAlertChannel(supabase, "weekly_competition_announcements"),

@@ -122,6 +122,33 @@ export function nextJagexWeekStart(from: Date): Date {
   return d;
 }
 
+/**
+ * The bare skill/boss from a stored competition name, since admins often
+ * paste the full WOM title ("Skill of the Week | 10/11 | Fletching", "10/11 -
+ * SKILL OF THE WEEK - FLETCHING") where the templates only want "Fletching"
+ * (they add the date and label themselves). All-caps input is title-cased.
+ */
+export function bareCompetitionName(name: string): string {
+  const trimmed = name.trim();
+  const DATE = /\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g;
+  const LABEL = /\b(skill|boss|kill)\s+of\s+the\s+week\b/gi;
+  // A plain name ("TzKal-Zuk", "Chambers of Xeric: Challenge Mode") is left alone.
+  if (!trimmed.match(DATE) && !trimmed.match(LABEL)) return trimmed;
+
+  // Turn the date/label into "|" breaks, then trim the separators left around them.
+  const bare = trimmed
+    .replace(DATE, "|")
+    .replace(LABEL, "|")
+    .split("|")
+    .map((part) => part.replace(/^[\s\-—–:]+|[\s\-—–:]+$/g, ""))
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!bare) return trimmed;
+  return bare === bare.toUpperCase() ? bare.toLowerCase().replace(/(^|[\s-])[a-z]/g, (c) => c.toUpperCase()) : bare;
+}
+
 export function womCompetitionUrl(id: number): string {
   return `https://wiseoldman.net/competitions/${id}`;
 }
