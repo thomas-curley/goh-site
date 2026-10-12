@@ -23,6 +23,7 @@ export const SITE_SECTIONS = [
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
   { key: "testimonials", label: "Testimonials", description: "Public clan testimonials/reviews." },
   { key: "points", label: "Clan Points", description: "Points leaderboard, fed by the RuneLite plugin." },
+  { key: "newsletter", label: "Newsletter", description: "The Weekly Glider -- latest issue and archive (/newsletter)." },
   { key: "about", label: "About", description: "About page." },
 ] as const;
 

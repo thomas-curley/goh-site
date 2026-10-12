@@ -107,6 +107,11 @@ export const PERMISSIONS = {
     label: "Manage Testimonials",
     description: "Approve or reject public clan testimonials, and pick which ones are featured",
   },
+  manage_newsletter: {
+    key: "manage_newsletter",
+    label: "Manage Newsletter",
+    description: "Upload, publish and edit issues of The Weekly Glider newsletter",
+  },
   manage_sections: {
     key: "manage_sections",
     label: "Manage Section Visibility",
