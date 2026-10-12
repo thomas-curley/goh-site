@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
       const preview = message.length > 300 ? `${message.slice(0, 300)}…` : message;
       await postToDestination(
         channelId,
-        "New Gn0mie Review",
-        `${highlightTypeLabel(highlightType).emoji} New review pending approval for **${targetRsn}**, from ${submitterName || "Anonymous"}\n> ${preview}\nReview in admin: ${siteUrl}/admin/gnomie-reviews`
+        "New Gn0mie Shoutout",
+        `${highlightTypeLabel(highlightType).emoji} New shoutout pending approval for **${targetRsn}**, from ${submitterName || "Anonymous"}\n> ${preview}\nReview in admin: ${siteUrl}/admin/gnomie-reviews`
       );
     }
   } catch (err) {

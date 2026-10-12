@@ -45,8 +45,7 @@ const NAV_ITEMS: NavItem[] = [
     items: [
       { href: "/gn0mebook", label: "Gn0meBook", sectionKey: "gn0mebook" },
       { href: "/members", label: "Member List", sectionKey: "members_list" },
-      { href: "/review-a-gnomie", label: "Review a Gn0mie", sectionKey: "gnomie_reviews" },
-      { href: "/testimonials", label: "Testimonials", sectionKey: "testimonials" },
+      { href: "/gnomie-shoutouts", label: "Submit Gn0mie Shoutouts", sectionKey: "gnomie_reviews" },
       { href: "/staff-handbook", label: "Staff Handbook", sectionKey: "staff_handbook" },
     ],
   },
@@ -65,6 +64,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/feedback", label: "Submit Feedback", sectionKey: "feedback" },
       { href: "/surveys", label: "Surveys", sectionKey: "surveys" },
       { href: "/availability", label: "Availability", sectionKey: "availability" },
+      { href: "/testimonials", label: "Testimonials", sectionKey: "testimonials" },
     ],
   },
   {
@@ -80,6 +80,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "Clan",
     items: [
       { href: "/newsletter", label: "Newsletter", sectionKey: "newsletter" },
+      { href: "/rank-structure", label: "Rank Structure", sectionKey: "rank_structure" },
+      { href: "/clan-rules", label: "Clan Rules", sectionKey: "clan_rules" },
       { href: "/about", label: "About", sectionKey: "about" },
     ],
   },

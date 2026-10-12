@@ -36,7 +36,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   { href: "/admin/feedback", label: "Feedback", group: "Review Queue", permission: "manage_feedback", badge: "feedback" },
   { href: "/admin/staff-applications", label: "Staff Applications", group: "Review Queue", permission: "manage_staff_applications", badge: "staff_applications" },
-  { href: "/admin/gnomie-reviews", label: "Gn0mie Reviews", group: "Review Queue", permission: "manage_gnomie_reviews", badge: "gnomie_reviews" },
+  { href: "/admin/gnomie-reviews", label: "Gn0mie Shoutouts", group: "Review Queue", permission: "manage_gnomie_reviews", badge: "gnomie_reviews" },
   { href: "/admin/testimonials", label: "Testimonials", group: "Review Queue", permission: "manage_testimonials", badge: "testimonials" },
   { href: "/admin/rsn-links", label: "RSN Links", group: "Review Queue", permission: "manage_rsn_links", badge: "rsn_requests" },
   { href: "/admin/bingo/submissions", label: "Bingo Submissions", group: "Review Queue", permission: "manage_bingo", badge: "bingo_submissions" },
@@ -45,6 +45,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/loans", label: "Loans", group: "Members", permission: "manage_loans" },
 
   { href: "/admin/newsletter", label: "Newsletter", group: "Content", permission: "manage_newsletter" },
+  { href: "/admin/clan-pages", label: "Rank Structure & Rules", group: "Content", permission: "manage_clan_pages" },
   { href: "/admin/templates", label: "Post Templates", group: "Content", permission: "manage_templates" },
   { href: "/admin/handbook", label: "Staff Handbook", group: "Content", permission: "manage_handbook" },
   { href: "/admin/commands", label: "Bot Commands", group: "Content", permission: "manage_commands" },

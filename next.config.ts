@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Renamed to match the Discord channel; old links (and Discord posts) keep working.
+      { source: "/review-a-gnomie", destination: "/gnomie-shoutouts", permanent: false },
       {
         source: "/guides/tools",
         destination: "/tools",

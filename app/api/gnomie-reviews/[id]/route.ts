@@ -47,7 +47,7 @@ export async function PATCH(
   if (status === "approved") {
     const channelId = await getAlertChannel(supabase, "gnomie_reviews");
     if (!channelId) {
-      return NextResponse.json({ error: "No Gn0mie Reviews highlight channel is configured. Set one under Admin > Settings > Discord Channels." }, { status: 400 });
+      return NextResponse.json({ error: "No Gn0mie Shoutouts highlight channel is configured. Set one under Admin > Settings > Discord Channels." }, { status: 400 });
     }
 
     const { data: profile } = await supabase

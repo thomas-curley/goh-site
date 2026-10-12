@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/Card";
-import { RankBadge } from "@/components/ui/RankBadge";
-import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE, RANKS } from "@/lib/constants";
+import Link from "next/link";
+import { RankList } from "@/components/clan/RankList";
+import { getClanPage } from "@/lib/clan-pages";
+import { CLAN_NAME, CLAN_CHAT, DISCORD_INVITE } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
 export default async function AboutPage() {
   if (!(await checkSectionAccess("about"))) return <SectionUnavailable />;
 
-  const featuredTestimonials = await getFeaturedTestimonials();
+  const [featuredTestimonials, rankPage] = await Promise.all([getFeaturedTestimonials(), getClanPage("rank-structure")]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -75,26 +77,22 @@ export default async function AboutPage() {
       {/* Rank Structure */}
       <section className="mb-12">
         <h2 className="font-display text-2xl text-gnome-green mb-4">Rank Structure</h2>
-        <Card hover={false}>
-          <div className="space-y-4">
-            {[...RANKS].reverse().map((rank) => (
-              <div key={rank.key} className="flex items-start gap-4 pb-4 border-b border-parchment-dark last:border-0 last:pb-0">
-                <RankBadge rank={rank.name} className="mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-bark-brown">{rank.name}</p>
-                  <p className="text-sm text-bark-brown-light">
-                    {rank.key === "owner" && "Clan founder — the Owner rank in WOM. Full admin access."}
-                    {rank.key === "council_member" && "Clan leadership — Summoner and other council ranks in WOM. Manages events, guides, and clan operations with full admin access."}
-                    {rank.key === "yew" && "Experienced and trusted members who contribute actively to the clan."}
-                    {rank.key === "pine" && "Established members who participate regularly in events and activities."}
-                    {rank.key === "oak" && "Members who have been around a while and proven themselves."}
-                    {rank.key === "gnome_child" && "Welcome! New members start here. Join events and get to know us."}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+        {/* Once a rank chart is uploaded it's the source of truth -- link to it rather than show the older list. */}
+        {rankPage ? (
+          <Card hover={false}>
+            <p className="text-bark-brown-light">
+              Ranks are earned through activity, event participation, and time in the clan.{" "}
+              <Link href="/rank-structure" className="text-gnome-green font-semibold hover:underline">See the full rank structure &rarr;</Link>
+            </p>
+          </Card>
+        ) : (
+          <>
+            <RankList />
+            <p className="mt-3 text-sm">
+              <Link href="/rank-structure" className="text-gnome-green hover:underline">See the rank structure page &rarr;</Link>
+            </p>
+          </>
+        )}
       </section>
 
       {/* What Our Members Say */}
