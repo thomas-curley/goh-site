@@ -136,8 +136,8 @@ export function AdminSidebar({ navItems, children }: { navItems: NavItem[]; chil
                   disabled={containsActive}
                   className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-iron-grey hover:text-gnome-green transition-colors cursor-pointer disabled:cursor-default disabled:hover:text-iron-grey"
                 >
-                  <span className="flex items-center">
-                    {group.name}
+                  <span className="flex items-center min-w-0 text-left">
+                    <span className="truncate">{group.name}</span>
                     {!isOpen && <Badge count={groupBadge} />}
                   </span>
                   <ChevronIcon open={isOpen} />
