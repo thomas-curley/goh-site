@@ -70,6 +70,11 @@ export async function POST(request: NextRequest) {
   const pollOptions: string[] = Array.isArray(body.pollOptions)
     ? [...new Set<string>(body.pollOptions.filter((o: unknown): o is string => typeof o === "string").map((o: string) => o.trim().slice(0, MAX_POLL_OPTION_LENGTH)).filter(Boolean))].slice(0, MAX_POLL_OPTIONS)
     : [];
+  const pollType = body.pollType === "sotw" || body.pollType === "botw" ? body.pollType : null;
+  const pollWeek = typeof body.pollWeek === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.pollWeek) ? body.pollWeek : null;
+  if (votingThreadId && pollOptions.length && (!pollType || !pollWeek)) {
+    return NextResponse.json({ error: "Pick the voting poll's week and whether it's Skill or Boss of the Week." }, { status: 400 });
+  }
   const pingRoleIds: string[] = Array.isArray(body.pingRoleIds)
     ? body.pingRoleIds.filter((id: unknown): id is string => typeof id === "string" && (id === "@everyone" || id === "@here" || isDiscordSnowflake(id)))
     : [];
@@ -86,7 +91,7 @@ export async function POST(request: NextRequest) {
     .eq("id", 1);
 
   try {
-    const preview = await buildTurnoverPreview(supabase, config, { finishedIds, nextIds, previousThreadId, raffleWinners, raffleAmount, pingRoleIds, votingThreadId, pollOptions });
+    const preview = await buildTurnoverPreview(supabase, config, { finishedIds, nextIds, previousThreadId, raffleWinners, raffleAmount, pingRoleIds, votingThreadId, pollOptions, pollType: pollType ?? "sotw", pollWeek: pollWeek ?? "" });
     return NextResponse.json({ preview });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to build the preview." }, { status: 400 });

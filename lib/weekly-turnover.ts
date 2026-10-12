@@ -11,7 +11,6 @@ import {
   buildRaffleMessage,
   buildPollQuestion,
   buildResultsMessage,
-  oppositeType,
   type PrizeStructure,
   type WeeklyCompetitionType,
   type WeeklyLeader,
@@ -48,6 +47,7 @@ export interface PickableCompetition {
   id: number;
   title: string;
   metric: string;
+  type: WeeklyCompetitionType;
   startsAt: string;
   endsAt: string;
 }
@@ -60,7 +60,14 @@ export async function getPickableCompetitions(): Promise<PickableCompetition[]> 
   return all
     .filter((c) => new Date(c.endsAt).getTime() >= now - window && new Date(c.startsAt).getTime() <= now + window)
     .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
-    .map((c) => ({ id: c.id, title: c.title, metric: c.metric, startsAt: new Date(c.startsAt).toISOString(), endsAt: new Date(c.endsAt).toISOString() }));
+    .map((c) => ({
+      id: c.id,
+      title: c.title,
+      metric: c.metric,
+      type: competitionType(c.metric, c.title),
+      startsAt: new Date(c.startsAt).toISOString(),
+      endsAt: new Date(c.endsAt).toISOString(),
+    }));
 }
 
 function competitionType(metric: string, title: string): WeeklyCompetitionType {
@@ -128,6 +135,9 @@ export async function buildTurnoverPreview(
     pingRoleIds: string[];
     votingThreadId: string | null;
     pollOptions: string[];
+    pollType: WeeklyCompetitionType;
+    /** "YYYY-MM-DD" -- the Sunday the voted-on week starts. */
+    pollWeek: string;
   }
 ): Promise<TurnoverPreview> {
   const warnings: string[] = [];
@@ -233,13 +243,13 @@ export async function buildTurnoverPreview(
     warnings.push("No raffle winners entered -- the raffle post will be skipped.");
   }
 
-  // The vote for the week after the new one -- the opposite type, since
-  // weeks alternate between skills and bosses.
+  // The vote for an upcoming week -- type and week picked on the form.
   let poll: TurnoverPreview["poll"] = null;
-  if (input.votingThreadId && input.pollOptions.length >= 2) {
+  if (input.votingThreadId && input.pollOptions.length >= 2 && input.pollWeek) {
     poll = {
       channelId: input.votingThreadId,
-      question: buildPollQuestion(oppositeType(nextType), new Date(startDate.getTime() + WEEK_MS)),
+      // Midday UTC is the same calendar day in New York, which buildPollQuestion formats in.
+      question: buildPollQuestion(input.pollType, new Date(`${input.pollWeek}T12:00:00Z`)),
       answers: input.pollOptions,
       durationHours: POLL_DURATION_HOURS,
     };

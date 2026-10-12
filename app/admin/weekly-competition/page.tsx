@@ -21,6 +21,7 @@ interface Competition {
   id: number;
   title: string;
   metric: string;
+  type: "sotw" | "botw";
   startsAt: string;
   endsAt: string;
 }
@@ -47,6 +48,27 @@ const STEP_LABEL: Record<Step, string> = {
   raffle: "Raffle winners (announcements)",
   poll: "Voting poll (voting thread)",
 };
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** "YYYY-MM-DD" of an instant's New York calendar day (what the posts' dates show). */
+function nyDateInput(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+/**
+ * Starting values for the voting poll: the week after next week's
+ * competition, and the opposite type (weeks usually alternate) -- both
+ * editable on the form.
+ */
+function defaultPoll(competitions: Competition[], nextIds: number[]): { week: string; type: "sotw" | "botw" } | null {
+  const next = competitions.find((c) => c.id === nextIds[0]);
+  if (!next) return null;
+  return {
+    week: nyDateInput(new Date(new Date(next.startsAt).getTime() + WEEK_MS)),
+    type: next.type === "sotw" ? "botw" : "sotw",
+  };
+}
 
 function lines(text: string): string[] {
   return text.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -133,6 +155,10 @@ export default function WeeklyCompetitionPage() {
   const [raffleAmount, setRaffleAmount] = useState("1000000");
   const [votingThread, setVotingThread] = useState("");
   const [pollOptionsText, setPollOptionsText] = useState("");
+  const [pollWeek, setPollWeek] = useState("");
+  const [pollType, setPollType] = useState<"sotw" | "botw">("botw");
+  // Once the admin edits the poll's week/type, stop re-defaulting them when the next-week picks change.
+  const [pollTouched, setPollTouched] = useState(false);
 
   const [preview, setPreview] = useState<Preview | null>(null);
   const [include, setInclude] = useState<Record<Step, boolean>>({ results: true, forum: true, raffle: true, poll: true });
@@ -161,6 +187,11 @@ export default function WeeklyCompetitionPage() {
     const picks = defaultPicks(comps, c?.current_competition_ids ?? []);
     setFinishedIds(picks.finished);
     setNextIds(picks.next);
+    const poll = defaultPoll(comps, picks.next);
+    if (poll) {
+      setPollWeek(poll.week);
+      setPollType(poll.type);
+    }
     setLoading(false);
   };
 
@@ -209,6 +240,8 @@ export default function WeeklyCompetitionPage() {
         raffleAmount: Number(raffleAmount.replace(/[^\d.]/g, "")) || 0,
         votingThread,
         pollOptions: lines(pollOptionsText),
+        pollWeek,
+        pollType,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -311,7 +344,14 @@ export default function WeeklyCompetitionPage() {
               competitions={competitions.filter((c) => new Date(c.endsAt).getTime() > now)}
               now={now}
               selected={nextIds}
-              onChange={setNextIds}
+              onChange={(ids) => {
+                setNextIds(ids);
+                const poll = pollTouched ? null : defaultPoll(competitions, ids);
+                if (poll) {
+                  setPollWeek(poll.week);
+                  setPollType(poll.type);
+                }
+              }}
             />
           </div>
 
@@ -338,14 +378,42 @@ export default function WeeklyCompetitionPage() {
             <div className="flex-1">
               <label className="block text-sm font-semibold text-bark-brown mb-1">Voting poll options (one per line)</label>
               <textarea value={pollOptionsText} onChange={(e) => setPollOptionsText(e.target.value)} rows={5} className={inputClass} placeholder={"Vardorvis\nDuke Sucellus\nPhantom Muspah\nNightmare (both reg + Phosani)"} />
-              <p className="text-xs text-iron-grey mt-1">
-                For the week after next -- bosses after a skill week, skills after a boss week. 2-10 options, 55 characters each.
-              </p>
+              <p className="text-xs text-iron-grey mt-1">2-10 options, 55 characters each.</p>
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-bark-brown mb-1">Voting thread</label>
-              <input type="text" value={votingThread} onChange={(e) => setVotingThread(e.target.value)} className={inputClass} placeholder="Paste the SOTW / BOTW VOTING POLL thread link" />
-              <p className="text-xs text-iron-grey mt-1">Remembered for next time. Leave blank (or no options) to skip the poll.</p>
+            <div className="flex-1 space-y-3">
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-bark-brown mb-1">Poll is for</label>
+                  <select
+                    value={pollType}
+                    onChange={(e) => {
+                      setPollType(e.target.value as "sotw" | "botw");
+                      setPollTouched(true);
+                    }}
+                    className={`${inputClass} cursor-pointer`}
+                  >
+                    <option value="sotw">Skill of the Week</option>
+                    <option value="botw">Boss of the Week</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-bark-brown mb-1">Week of</label>
+                  <input
+                    type="date"
+                    value={pollWeek}
+                    onChange={(e) => {
+                      setPollWeek(e.target.value);
+                      setPollTouched(true);
+                    }}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-bark-brown mb-1">Voting thread</label>
+                <input type="text" value={votingThread} onChange={(e) => setVotingThread(e.target.value)} className={inputClass} placeholder="Paste the SOTW / BOTW VOTING POLL thread link" />
+                <p className="text-xs text-iron-grey mt-1">Remembered for next time. Leave blank (or no options) to skip the poll.</p>
+              </div>
             </div>
           </div>
         </div>
