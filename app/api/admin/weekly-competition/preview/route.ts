@@ -8,6 +8,9 @@ import { buildTurnoverPreview, type WeeklyConfig } from "@/lib/weekly-turnover";
 export const maxDuration = 60;
 
 const MAX_RAFFLE_WINNERS = 25;
+// Discord's poll limits.
+const MAX_POLL_OPTIONS = 10;
+const MAX_POLL_OPTION_LENGTH = 55;
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,8 +27,8 @@ function resolveThreadId(input: unknown): string | null {
   return isDiscordSnowflake(input) ? input.trim() : null;
 }
 
-// POST - build (but don't send) all three turnover posts for the admin to
-// review and edit. Also remembers the thread / ping roles / raffle amount
+// POST - build (but don't send) all the turnover posts for the admin to
+// review and edit. Also remembers the threads / ping roles / raffle amount
 // entered, so they're prefilled next time.
 export async function POST(request: NextRequest) {
   const { allowed } = await checkPermission("manage_competitions");
@@ -59,6 +62,14 @@ export async function POST(request: NextRequest) {
   if (!Number.isFinite(raffleAmount) || raffleAmount < 0) {
     return NextResponse.json({ error: "Raffle prize must be a non-negative number." }, { status: 400 });
   }
+  const rawVotingThread = typeof body.votingThread === "string" ? body.votingThread : "";
+  const votingThreadId = resolveThreadId(rawVotingThread);
+  if (rawVotingThread.trim() && !votingThreadId) {
+    return NextResponse.json({ error: "Couldn't read the voting thread -- paste the thread's link or id." }, { status: 400 });
+  }
+  const pollOptions: string[] = Array.isArray(body.pollOptions)
+    ? [...new Set<string>(body.pollOptions.filter((o: unknown): o is string => typeof o === "string").map((o: string) => o.trim().slice(0, MAX_POLL_OPTION_LENGTH)).filter(Boolean))].slice(0, MAX_POLL_OPTIONS)
+    : [];
   const pingRoleIds: string[] = Array.isArray(body.pingRoleIds)
     ? body.pingRoleIds.filter((id: unknown): id is string => typeof id === "string" && (id === "@everyone" || id === "@here" || isDiscordSnowflake(id)))
     : [];
@@ -69,12 +80,13 @@ export async function POST(request: NextRequest) {
       current_forum_thread_id: previousThreadId,
       ping_role_ids: pingRoleIds,
       raffle_prize_amount: raffleAmount,
+      voting_thread_id: votingThreadId,
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1);
 
   try {
-    const preview = await buildTurnoverPreview(supabase, config, { finishedIds, nextIds, previousThreadId, raffleWinners, raffleAmount, pingRoleIds });
+    const preview = await buildTurnoverPreview(supabase, config, { finishedIds, nextIds, previousThreadId, raffleWinners, raffleAmount, pingRoleIds, votingThreadId, pollOptions });
     return NextResponse.json({ preview });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to build the preview." }, { status: 400 });

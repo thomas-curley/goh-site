@@ -9,7 +9,9 @@ import {
   buildForumPost,
   buildForumTipsSection,
   buildRaffleMessage,
+  buildPollQuestion,
   buildResultsMessage,
+  oppositeType,
   type PrizeStructure,
   type WeeklyCompetitionType,
   type WeeklyLeader,
@@ -21,6 +23,9 @@ const WINNER_COUNT = 10;
 // roster never gets truncated before summing.
 const FULL_LEADERBOARD_LIMIT = 500;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// Closes before the next Sunday turnover, so the winner is known in time to
+// set up its WOM competition.
+const POLL_DURATION_HOURS = 6 * 24;
 
 /**
  * The parts of weekly_competition_config the turnover still uses. The
@@ -34,6 +39,7 @@ export interface WeeklyConfig {
   current_competition_emoji: string | null;
   ping_role_ids: string[] | null;
   raffle_prize_amount: number | string | null;
+  voting_thread_id: string | null;
   last_run_at: string | null;
 }
 
@@ -73,6 +79,8 @@ export interface TurnoverPreview {
   results: { channelId: string; content: string } | null;
   forum: { channelId: string; title: string; content: string };
   raffle: { channelId: string; content: string } | null;
+  /** The next-next week's vote, posted in the voting thread. */
+  poll: { channelId: string; question: string; answers: string[]; durationHours: number } | null;
   nextEmoji: string;
   nextIds: number[];
   nextType: WeeklyCompetitionType;
@@ -118,6 +126,8 @@ export async function buildTurnoverPreview(
     raffleWinners: string[];
     raffleAmount: number;
     pingRoleIds: string[];
+    votingThreadId: string | null;
+    pollOptions: string[];
   }
 ): Promise<TurnoverPreview> {
   const warnings: string[] = [];
@@ -223,10 +233,27 @@ export async function buildTurnoverPreview(
     warnings.push("No raffle winners entered -- the raffle post will be skipped.");
   }
 
+  // The vote for the week after the new one -- the opposite type, since
+  // weeks alternate between skills and bosses.
+  let poll: TurnoverPreview["poll"] = null;
+  if (input.votingThreadId && input.pollOptions.length >= 2) {
+    poll = {
+      channelId: input.votingThreadId,
+      question: buildPollQuestion(oppositeType(nextType), new Date(startDate.getTime() + WEEK_MS)),
+      answers: input.pollOptions,
+      durationHours: POLL_DURATION_HOURS,
+    };
+  } else if (!input.votingThreadId) {
+    warnings.push("No voting thread set -- the voting poll will be skipped.");
+  } else {
+    warnings.push("Enter at least 2 poll options -- the voting poll will be skipped.");
+  }
+
   return {
     results,
     forum: { channelId: forumChannelId, title: forumPost.title, content: forumPost.content },
     raffle,
+    poll,
     nextEmoji,
     nextIds: input.nextIds,
     nextType,
