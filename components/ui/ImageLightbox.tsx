@@ -20,7 +20,7 @@ export function ImageLightbox({ src, alt = "", onClose }: ImageLightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-6 cursor-zoom-out"
+      className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-6 cursor-pointer"
       onClick={onClose}
     >
       <button

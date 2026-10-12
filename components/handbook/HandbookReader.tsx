@@ -198,7 +198,7 @@ export function HandbookReader({
         <div className="space-y-6 min-w-0">
           {edition.page_urls.map((url, i) => (
             <figure key={i} id={`page-${i + 1}`} ref={(el) => { pageRefs.current[i] = el; }} className="scroll-mt-20">
-              <button type="button" onClick={() => setZoomed(i)} className="block w-full cursor-zoom-in" title="Tap to zoom">
+              <button type="button" onClick={() => setZoomed(i)} className="block w-full cursor-pointer" title="Tap to zoom">
                 {/* Plain <img>: signed links to full-page images of unknown size in a private bucket. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
