@@ -13,6 +13,7 @@ interface WeeklyConfig {
   current_forum_thread_id: string | null;
   ping_role_ids: string[] | null;
   raffle_prize_amount: number | string | null;
+  voting_thread_id: string | null;
   last_run_at: string | null;
 }
 
@@ -20,16 +21,19 @@ interface Competition {
   id: number;
   title: string;
   metric: string;
+  type: "sotw" | "botw";
   startsAt: string;
   endsAt: string;
 }
 
-type Step = "results" | "forum" | "raffle";
+type Step = "results" | "forum" | "raffle" | "poll";
+type TextStep = Exclude<Step, "poll">;
 
 interface Preview {
   results: { channelId: string; content: string } | null;
   forum: { channelId: string; title: string; content: string };
   raffle: { channelId: string; content: string } | null;
+  poll: { channelId: string; question: string; answers: string[]; durationHours: number } | null;
   nextEmoji: string;
   nextIds: number[];
   nextType: "sotw" | "botw";
@@ -42,7 +46,33 @@ const STEP_LABEL: Record<Step, string> = {
   results: "Results (last week's thread)",
   forum: "New forum thread",
   raffle: "Raffle winners (announcements)",
+  poll: "Voting poll (voting thread)",
 };
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** "YYYY-MM-DD" of an instant's New York calendar day (what the posts' dates show). */
+function nyDateInput(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+/**
+ * Starting values for the voting poll: the week after next week's
+ * competition, and the opposite type (weeks usually alternate) -- both
+ * editable on the form.
+ */
+function defaultPoll(competitions: Competition[], nextIds: number[]): { week: string; type: "sotw" | "botw" } | null {
+  const next = competitions.find((c) => c.id === nextIds[0]);
+  if (!next) return null;
+  return {
+    week: nyDateInput(new Date(new Date(next.startsAt).getTime() + WEEK_MS)),
+    type: next.type === "sotw" ? "botw" : "sotw",
+  };
+}
+
+function lines(text: string): string[] {
+  return text.split("\n").map((l) => l.trim()).filter(Boolean);
+}
 
 // Competitions within this much of the Sunday turnover count as "ending" /
 // "starting" at it, for preselecting the pickers.
@@ -123,9 +153,17 @@ export default function WeeklyCompetitionPage() {
   const [pingRoleIds, setPingRoleIds] = useState<string[]>([]);
   const [raffleText, setRaffleText] = useState("");
   const [raffleAmount, setRaffleAmount] = useState("1000000");
+  const [votingThread, setVotingThread] = useState("");
+  const [pollOptionsText, setPollOptionsText] = useState("");
+  const [pollWeek, setPollWeek] = useState("");
+  const [pollType, setPollType] = useState<"sotw" | "botw">("botw");
+  // Once the admin edits the poll's week/type, stop re-defaulting them when the next-week picks change.
+  const [pollTouched, setPollTouched] = useState(false);
 
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [include, setInclude] = useState<Record<Step, boolean>>({ results: true, forum: true, raffle: true });
+  const [include, setInclude] = useState<Record<Step, boolean>>({ results: true, forum: true, raffle: true, poll: true });
+  // The preview's poll options, kept as raw text while editing (one per line).
+  const [pollAnswersText, setPollAnswersText] = useState("");
   const [done, setDone] = useState<Step[]>([]);
   const [imageUrl, setImageUrl] = useState("");
 
@@ -144,10 +182,16 @@ export default function WeeklyCompetitionPage() {
       setPreviousThread(c.current_forum_thread_id ?? "");
       setPingRoleIds(c.ping_role_ids ?? []);
       if (c.raffle_prize_amount != null) setRaffleAmount(String(Number(c.raffle_prize_amount)));
+      setVotingThread(c.voting_thread_id ?? "");
     }
     const picks = defaultPicks(comps, c?.current_competition_ids ?? []);
     setFinishedIds(picks.finished);
     setNextIds(picks.next);
+    const poll = defaultPoll(comps, picks.next);
+    if (poll) {
+      setPollWeek(poll.week);
+      setPollType(poll.type);
+    }
     setLoading(false);
   };
 
@@ -192,14 +236,19 @@ export default function WeeklyCompetitionPage() {
         nextIds,
         previousThread,
         pingRoleIds,
-        raffleWinners: raffleText.split("\n").map((w) => w.trim()).filter(Boolean),
+        raffleWinners: lines(raffleText),
         raffleAmount: Number(raffleAmount.replace(/[^\d.]/g, "")) || 0,
+        votingThread,
+        pollOptions: lines(pollOptionsText),
+        pollWeek,
+        pollType,
       }),
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.preview) {
       setPreview(data.preview);
-      setInclude({ results: !!data.preview.results, forum: true, raffle: !!data.preview.raffle });
+      setInclude({ results: !!data.preview.results, forum: true, raffle: !!data.preview.raffle, poll: !!data.preview.poll });
+      setPollAnswersText((data.preview.poll?.answers ?? []).join("\n"));
       setDone([]);
     } else {
       setError(data.error ?? "Failed to build the preview.");
@@ -209,7 +258,7 @@ export default function WeeklyCompetitionPage() {
 
   const postAll = async () => {
     if (!preview) return;
-    const pending = (["results", "forum", "raffle"] as const).filter((s) => include[s] && !done.includes(s) && preview[s]);
+    const pending = (["results", "forum", "raffle", "poll"] as const).filter((s) => include[s] && !done.includes(s) && preview[s]);
     if (pending.length === 0) return;
     if (!confirm(`Post to Discord now?\n\n${pending.map((s) => `• ${STEP_LABEL[s]}`).join("\n")}`)) return;
     setRunning(true);
@@ -222,6 +271,7 @@ export default function WeeklyCompetitionPage() {
         results: pending.includes("results") ? preview.results : undefined,
         forum: pending.includes("forum") ? { title: preview.forum.title, content: preview.forum.content, imageUrl: imageUrl.trim() } : undefined,
         raffle: pending.includes("raffle") ? preview.raffle : undefined,
+        poll: pending.includes("poll") && preview.poll ? { ...preview.poll, answers: lines(pollAnswersText) } : undefined,
         nextEmoji: preview.nextEmoji,
         nextIds: preview.nextIds,
         nextType: preview.nextType,
@@ -246,7 +296,7 @@ export default function WeeklyCompetitionPage() {
     setRunning(false);
   };
 
-  const updatePreview = (step: Step, field: "content" | "title", value: string) => {
+  const updatePreview = (step: TextStep, field: "content" | "title", value: string) => {
     setPreview((p) => {
       if (!p) return p;
       if (step === "forum") return { ...p, forum: { ...p.forum, [field]: value } };
@@ -270,8 +320,8 @@ export default function WeeklyCompetitionPage() {
       <h1 className="font-display text-3xl text-gnome-green mb-1">Weekly SOTW/BotW</h1>
       <p className="text-bark-brown-light mb-6">
         Sunday turnover: posts the finished competition&apos;s results in its forum thread, opens the new week&apos;s
-        forum thread, and announces the raffle winners. Create the competitions themselves under Admin {" > "}WOM
-        Competitions first.
+        forum thread, announces the raffle winners, and opens the vote for the week after. Create the competitions
+        themselves under Admin {" > "}WOM Competitions first.
       </p>
 
       {error && <div className="mb-4 p-3 rounded-md bg-red-accent/10 border border-red-accent/30 text-sm text-red-accent">{error}</div>}
@@ -294,7 +344,14 @@ export default function WeeklyCompetitionPage() {
               competitions={competitions.filter((c) => new Date(c.endsAt).getTime() > now)}
               now={now}
               selected={nextIds}
-              onChange={setNextIds}
+              onChange={(ids) => {
+                setNextIds(ids);
+                const poll = pollTouched ? null : defaultPoll(competitions, ids);
+                if (poll) {
+                  setPollWeek(poll.week);
+                  setPollType(poll.type);
+                }
+              }}
             />
           </div>
 
@@ -315,6 +372,48 @@ export default function WeeklyCompetitionPage() {
             <div className="sm:w-48">
               <label className="block text-sm font-semibold text-bark-brown mb-1">GP per raffle winner</label>
               <input type="text" inputMode="numeric" value={raffleAmount} onChange={(e) => setRaffleAmount(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-bark-brown mb-1">Voting poll options (one per line)</label>
+              <textarea value={pollOptionsText} onChange={(e) => setPollOptionsText(e.target.value)} rows={5} className={inputClass} placeholder={"Vardorvis\nDuke Sucellus\nPhantom Muspah\nNightmare (both reg + Phosani)"} />
+              <p className="text-xs text-iron-grey mt-1">2-10 options, 55 characters each.</p>
+            </div>
+            <div className="flex-1 space-y-3">
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-bark-brown mb-1">Poll is for</label>
+                  <select
+                    value={pollType}
+                    onChange={(e) => {
+                      setPollType(e.target.value as "sotw" | "botw");
+                      setPollTouched(true);
+                    }}
+                    className={`${inputClass} cursor-pointer`}
+                  >
+                    <option value="sotw">Skill of the Week</option>
+                    <option value="botw">Boss of the Week</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-bark-brown mb-1">Week of</label>
+                  <input
+                    type="date"
+                    value={pollWeek}
+                    onChange={(e) => {
+                      setPollWeek(e.target.value);
+                      setPollTouched(true);
+                    }}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-bark-brown mb-1">Voting thread</label>
+                <input type="text" value={votingThread} onChange={(e) => setVotingThread(e.target.value)} className={inputClass} placeholder="Paste the SOTW / BOTW VOTING POLL thread link" />
+                <p className="text-xs text-iron-grey mt-1">Remembered for next time. Leave blank (or no options) to skip the poll.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -371,6 +470,48 @@ export default function WeeklyCompetitionPage() {
                 </div>
               );
             })}
+
+            {preview.poll && (
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-bark-brown cursor-pointer">
+                    <input type="checkbox" checked={include.poll} disabled={done.includes("poll")} onChange={(e) => setInclude((i) => ({ ...i, poll: e.target.checked }))} className="accent-gnome-green" />
+                    {STEP_LABEL.poll}
+                  </label>
+                  <span className={`text-xs ${done.includes("poll") ? "text-gnome-green font-semibold" : "text-iron-grey"}`}>
+                    {done.includes("poll") ? "Posted ✓" : `${lines(pollAnswersText).length} options`}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={preview.poll.question}
+                  disabled={done.includes("poll")}
+                  maxLength={300}
+                  onChange={(e) => setPreview((p) => (p && p.poll ? { ...p, poll: { ...p.poll, question: e.target.value } } : p))}
+                  className={`${inputClass} mb-2 font-semibold`}
+                />
+                <textarea
+                  value={pollAnswersText}
+                  disabled={done.includes("poll")}
+                  onChange={(e) => setPollAnswersText(e.target.value)}
+                  rows={6}
+                  className={`${inputClass} text-sm`}
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <label className="text-xs text-iron-grey">Closes after</label>
+                  <select
+                    value={preview.poll.durationHours}
+                    disabled={done.includes("poll")}
+                    onChange={(e) => setPreview((p) => (p && p.poll ? { ...p, poll: { ...p.poll, durationHours: Number(e.target.value) } } : p))}
+                    className={`${inputClass.replace("w-full ", "")} cursor-pointer`}
+                  >
+                    {[3, 4, 5, 6, 7].map((d) => (
+                      <option key={d} value={d * 24}>{d} days</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
 
             <Button size="sm" disabled={running || generating} onClick={postAll}>
               {running ? "Posting..." : done.length ? "Post Remaining" : "Post Everything"}

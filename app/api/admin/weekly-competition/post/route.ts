@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { getAlertChannel } from "@/lib/alert-channels";
-import { createForumPost, isDiscordSnowflake, postToChannel } from "@/lib/discord";
+import { createForumPost, createPoll, isDiscordSnowflake, postToChannel } from "@/lib/discord";
 import { splitDiscordMessage } from "@/lib/weekly-announcement-templates";
 
 export const maxDuration = 60;
 
-type Step = "results" | "forum" | "raffle";
+type Step = "results" | "forum" | "raffle" | "poll";
+
+// Discord's poll limits.
+const MAX_POLL_OPTIONS = 10;
+const MAX_POLL_OPTION_LENGTH = 55;
+const MAX_POLL_QUESTION_LENGTH = 300;
+const MAX_POLL_DURATION_HOURS = 768;
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,13 +39,14 @@ async function postChunks(chunks: string[], channelId: string) {
 //   1. results  -> reply in last week's forum thread
 //   2. forum    -> new thread for this week (split across messages if long)
 //   3. raffle   -> announcements channel
+//   4. poll     -> the voting thread (next-next week's SOTW/BotW vote)
 // Each step is optional (omit it to skip, e.g. on a retry after a partial
 // failure). Stops at the first failure and reports which steps went out, so
 // the page can retry just the rest. As soon as the new forum thread exists,
 // it's saved (with the competitions it's for) as "this week" -- next week's
 // form prefills from that.
 export async function POST(request: NextRequest) {
-  const { allowed } = await checkPermission("manage_competitions");
+  const { allowed, user } = await checkPermission("manage_competitions");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const supabase = getServiceClient();
@@ -147,6 +154,40 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       return fail("raffle", err);
     }
+    await sleep(1500);
+  }
+
+  // 4. Next-next week's vote in the voting thread. Saved to the polls table
+  // too, so it shows (with live results) on the admin Polls page.
+  if (body.poll) {
+    const threadId = text(body.poll.channelId);
+    const question = text(body.poll.question).slice(0, MAX_POLL_QUESTION_LENGTH);
+    const answers: string[] = Array.isArray(body.poll.answers)
+      ? [...new Set<string>(body.poll.answers.map(text).filter(Boolean))].map((a) => a.slice(0, MAX_POLL_OPTION_LENGTH)).slice(0, MAX_POLL_OPTIONS)
+      : [];
+    const durationHours = Math.round(Number(body.poll.durationHours));
+    if (!isDiscordSnowflake(threadId) || !question || answers.length < 2) return fail("poll", new Error("missing thread, question or at least 2 options"), 400);
+    if (!Number.isFinite(durationHours) || durationHours < 1 || durationHours > MAX_POLL_DURATION_HOURS) return fail("poll", new Error("duration must be 1-768 hours"), 400);
+
+    let created: Awaited<ReturnType<typeof createPoll>>;
+    try {
+      created = await createPoll(threadId, question, answers, durationHours, false);
+      completed.push("poll");
+    } catch (err) {
+      return fail("poll", err);
+    }
+
+    const { error: pollSaveError } = await supabase.from("polls").insert({
+      question,
+      options: created.options.map((o) => ({ answer_id: o.answerId, text: o.text })),
+      channel_id: threadId,
+      discord_message_id: created.messageId,
+      allow_multiselect: false,
+      duration_hours: durationHours,
+      created_by: user?.discord_username ?? null,
+    });
+    // The poll is live on Discord either way -- only its admin Polls page entry is missing.
+    if (pollSaveError) console.error("Weekly turnover: poll posted but not saved to polls table:", pollSaveError);
   }
 
   return NextResponse.json({ completed, forumThreadId, rotated });

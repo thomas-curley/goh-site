@@ -317,6 +317,13 @@ export function buildRaffleMessage(params: {
   return blocks.join("\n\n");
 }
 
+// --- 4. Voting poll (voting thread) -------------------------------------------
+
+/** "What Should Boss Of The Week Be for 10/18" -- matches the hand-made polls. */
+export function buildPollQuestion(type: WeeklyCompetitionType, weekStart: Date): string {
+  return `What Should ${type === "sotw" ? "Skill" : "Boss"} Of The Week Be for ${formatShortDate(weekStart)}`;
+}
+
 // --- Splitting ---------------------------------------------------------------
 
 /** Discord's per-message content limit for bots. */

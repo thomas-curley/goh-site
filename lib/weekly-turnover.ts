@@ -9,6 +9,7 @@ import {
   buildForumPost,
   buildForumTipsSection,
   buildRaffleMessage,
+  buildPollQuestion,
   buildResultsMessage,
   type PrizeStructure,
   type WeeklyCompetitionType,
@@ -21,6 +22,9 @@ const WINNER_COUNT = 10;
 // roster never gets truncated before summing.
 const FULL_LEADERBOARD_LIMIT = 500;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// Closes before the next Sunday turnover, so the winner is known in time to
+// set up its WOM competition.
+const POLL_DURATION_HOURS = 6 * 24;
 
 /**
  * The parts of weekly_competition_config the turnover still uses. The
@@ -34,6 +38,7 @@ export interface WeeklyConfig {
   current_competition_emoji: string | null;
   ping_role_ids: string[] | null;
   raffle_prize_amount: number | string | null;
+  voting_thread_id: string | null;
   last_run_at: string | null;
 }
 
@@ -42,6 +47,7 @@ export interface PickableCompetition {
   id: number;
   title: string;
   metric: string;
+  type: WeeklyCompetitionType;
   startsAt: string;
   endsAt: string;
 }
@@ -54,7 +60,14 @@ export async function getPickableCompetitions(): Promise<PickableCompetition[]> 
   return all
     .filter((c) => new Date(c.endsAt).getTime() >= now - window && new Date(c.startsAt).getTime() <= now + window)
     .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
-    .map((c) => ({ id: c.id, title: c.title, metric: c.metric, startsAt: new Date(c.startsAt).toISOString(), endsAt: new Date(c.endsAt).toISOString() }));
+    .map((c) => ({
+      id: c.id,
+      title: c.title,
+      metric: c.metric,
+      type: competitionType(c.metric, c.title),
+      startsAt: new Date(c.startsAt).toISOString(),
+      endsAt: new Date(c.endsAt).toISOString(),
+    }));
 }
 
 function competitionType(metric: string, title: string): WeeklyCompetitionType {
@@ -73,6 +86,8 @@ export interface TurnoverPreview {
   results: { channelId: string; content: string } | null;
   forum: { channelId: string; title: string; content: string };
   raffle: { channelId: string; content: string } | null;
+  /** The next-next week's vote, posted in the voting thread. */
+  poll: { channelId: string; question: string; answers: string[]; durationHours: number } | null;
   nextEmoji: string;
   nextIds: number[];
   nextType: WeeklyCompetitionType;
@@ -118,6 +133,11 @@ export async function buildTurnoverPreview(
     raffleWinners: string[];
     raffleAmount: number;
     pingRoleIds: string[];
+    votingThreadId: string | null;
+    pollOptions: string[];
+    pollType: WeeklyCompetitionType;
+    /** "YYYY-MM-DD" -- the Sunday the voted-on week starts. */
+    pollWeek: string;
   }
 ): Promise<TurnoverPreview> {
   const warnings: string[] = [];
@@ -223,10 +243,27 @@ export async function buildTurnoverPreview(
     warnings.push("No raffle winners entered -- the raffle post will be skipped.");
   }
 
+  // The vote for an upcoming week -- type and week picked on the form.
+  let poll: TurnoverPreview["poll"] = null;
+  if (input.votingThreadId && input.pollOptions.length >= 2 && input.pollWeek) {
+    poll = {
+      channelId: input.votingThreadId,
+      // Midday UTC is the same calendar day in New York, which buildPollQuestion formats in.
+      question: buildPollQuestion(input.pollType, new Date(`${input.pollWeek}T12:00:00Z`)),
+      answers: input.pollOptions,
+      durationHours: POLL_DURATION_HOURS,
+    };
+  } else if (!input.votingThreadId) {
+    warnings.push("No voting thread set -- the voting poll will be skipped.");
+  } else {
+    warnings.push("Enter at least 2 poll options -- the voting poll will be skipped.");
+  }
+
   return {
     results,
     forum: { channelId: forumChannelId, title: forumPost.title, content: forumPost.content },
     raffle,
+    poll,
     nextEmoji,
     nextIds: input.nextIds,
     nextType,
