@@ -2,17 +2,51 @@ import { NextResponse } from "next/server";
 
 const DISCORD_API = "https://discord.com/api/v10";
 
-// Discord channel types that can receive a bot-posted text message.
-const TEXT_CHANNEL_TYPES = new Set([0, 5]);
 const CATEGORY_TYPE = 4;
+// Channel types the site can post into: text and announcement channels take
+// a message; forum and media channels take a new post (see
+// postToDestination in lib/discord.ts).
+const POSTABLE_TYPES: Record<number, ChannelKind> = { 0: "text", 5: "announcement", 15: "forum", 16: "forum" };
 
-interface ChannelListResult {
-  channels: { id: string; name: string; category: string | null }[];
-  threads: { id: string; name: string; parentChannel: string | null }[];
+type ChannelKind = "text" | "announcement" | "forum";
+
+export interface ChannelListThread {
+  id: string;
+  name: string;
+}
+
+export interface ChannelListChannel {
+  id: string;
+  name: string;
+  kind: ChannelKind;
+  /** Active threads/forum posts under this channel, newest first. */
+  threads: ChannelListThread[];
+}
+
+export interface ChannelListResult {
+  /** One per Discord category, in Discord's sidebar order (uncategorized first). */
+  groups: { category: string | null; channels: ChannelListChannel[] }[];
+  /** Active threads whose parent isn't listed above (e.g. a voice channel's text chat). */
+  otherThreads: ChannelListThread[];
+}
+
+interface RawChannel {
+  id: string;
+  name: string;
+  type: number;
+  position: number;
+  parent_id: string | null;
+}
+
+/** Snowflakes encode creation time, so a bigger id is a newer thread. */
+function newestFirst(a: { id: string }, b: { id: string }): number {
+  const x = BigInt(a.id);
+  const y = BigInt(b.id);
+  return x === y ? 0 : x > y ? -1 : 1;
 }
 
 // ChannelSelector renders once per "Post To" field, and /admin/alert-channels
-// renders one per feature row (9+ at once on a single page load) -- cache
+// renders one per feature row (15+ at once on a single page load) -- cache
 // briefly so that doesn't turn into a burst of duplicate Discord API calls.
 let cache: { data: ChannelListResult; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -33,8 +67,6 @@ export async function GET() {
     const [channelsRes, threadsRes] = await Promise.all([
       fetch(`${DISCORD_API}/guilds/${guildId}/channels`, { headers: { Authorization: `Bot ${token}` } }),
       // Active threads -- forum posts and weekly-series threads live here.
-      // You can't post directly into a forum channel, only into one of its
-      // threads, so this is what actually resolves "post to Minigame Monday".
       fetch(`${DISCORD_API}/guilds/${guildId}/threads/active`, { headers: { Authorization: `Bot ${token}` } }),
     ]);
 
@@ -42,32 +74,45 @@ export async function GET() {
       return NextResponse.json({ error: "Failed to fetch channels" }, { status: 500 });
     }
 
-    const channels: { id: string; name: string; type: number; position: number; parent_id: string | null }[] = await channelsRes.json();
+    const channels: RawChannel[] = await channelsRes.json();
     const threadsBody: { threads?: { id: string; name: string; parent_id: string | null }[] } = threadsRes.ok ? await threadsRes.json() : {};
 
-    const categoryNames = new Map(
-      channels.filter((c) => c.type === CATEGORY_TYPE).map((c) => [c.id, c.name])
-    );
-    const channelNames = new Map(channels.map((c) => [c.id, c.name]));
+    // Threads grouped under their parent channel.
+    const threadsByParent = new Map<string, ChannelListThread[]>();
+    const otherThreads: ChannelListThread[] = [];
+    const postableIds = new Set(channels.filter((c) => c.type in POSTABLE_TYPES).map((c) => c.id));
+    for (const t of threadsBody.threads ?? []) {
+      const thread = { id: t.id, name: t.name };
+      if (t.parent_id && postableIds.has(t.parent_id)) {
+        const list = threadsByParent.get(t.parent_id) ?? [];
+        list.push(thread);
+        threadsByParent.set(t.parent_id, list);
+      } else {
+        otherThreads.push(thread);
+      }
+    }
 
-    const filtered = channels
-      .filter((c) => TEXT_CHANNEL_TYPES.has(c.type))
-      .sort((a, b) => a.position - b.position)
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        category: c.parent_id ? categoryNames.get(c.parent_id) ?? null : null,
-      }));
+    // Discord's sidebar order: uncategorized channels first, then each
+    // category by its position; channels by position within a category.
+    // (Positions are only meaningful among siblings, so sorting every channel
+    // by position in one flat list interleaves categories.)
+    const byPosition = (a: RawChannel, b: RawChannel) => a.position - b.position || newestFirst(b, a);
+    const categories = channels.filter((c) => c.type === CATEGORY_TYPE).sort(byPosition);
+    const toEntry = (c: RawChannel): ChannelListChannel => ({
+      id: c.id,
+      name: c.name,
+      kind: POSTABLE_TYPES[c.type],
+      threads: (threadsByParent.get(c.id) ?? []).sort(newestFirst),
+    });
+    const postableIn = (parentId: string | null) =>
+      channels.filter((c) => c.type in POSTABLE_TYPES && (c.parent_id ?? null) === parentId).sort(byPosition).map(toEntry);
 
-    const threads = (threadsBody.threads ?? [])
-      .map((t) => ({
-        id: t.id,
-        name: t.name,
-        parentChannel: t.parent_id ? channelNames.get(t.parent_id) ?? null : null,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const groups = [
+      { category: null, channels: postableIn(null) },
+      ...categories.map((cat) => ({ category: cat.name, channels: postableIn(cat.id) })),
+    ].filter((g) => g.channels.length > 0);
 
-    const data: ChannelListResult = { channels: filtered, threads };
+    const data: ChannelListResult = { groups, otherThreads: otherThreads.sort(newestFirst) };
     cache = { data, fetchedAt: Date.now() };
     return NextResponse.json(data);
   } catch {

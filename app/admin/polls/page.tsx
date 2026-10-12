@@ -278,7 +278,7 @@ export default function AdminPollsPage() {
           </div>
 
           <div className="space-y-2">
-            <ChannelSelector value={destination} onChange={setDestination} label="Post To (optional)" allowBlank />
+            <ChannelSelector value={destination} onChange={setDestination} label="Post To (optional)" allowBlank excludeForums />
             <input
               type="text"
               value={destination}
