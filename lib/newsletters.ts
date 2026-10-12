@@ -24,6 +24,22 @@ export async function getPublishedNewsletters(): Promise<NewsletterSummary[]> {
   return (data ?? []).map(({ page_urls, ...rest }) => ({ ...rest, cover_url: (page_urls as string[])[0] ?? null }));
 }
 
+/** The newest published issue (summary only), or null if none are published yet. */
+export async function getLatestNewsletter(): Promise<NewsletterSummary | null> {
+  const supabase = getServiceClient();
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("newsletters")
+    .select("id, issue_number, title, headline, published_on, page_urls")
+    .eq("is_published", true)
+    .order("issue_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  const { page_urls, ...rest } = data;
+  return { ...rest, cover_url: (page_urls as string[])[0] ?? null };
+}
+
 /** One published issue by number, or null. */
 export async function getPublishedNewsletter(issueNumber: number): Promise<Newsletter | null> {
   const supabase = getServiceClient();
