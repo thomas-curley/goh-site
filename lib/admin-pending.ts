@@ -5,7 +5,7 @@ import type { PermissionKey } from "@/lib/permissions";
 export const PENDING_SOURCES = {
   feedback: { label: "New feedback", href: "/admin/feedback", permission: "manage_feedback", table: "feedback_submissions", column: "status", value: "new" },
   staff_applications: { label: "Staff applications", href: "/admin/staff-applications", permission: "manage_staff_applications", table: "staff_applications", column: "status", value: "pending" },
-  gnomie_reviews: { label: "Gn0mie reviews", href: "/admin/gnomie-reviews", permission: "manage_gnomie_reviews", table: "gnomie_reviews", column: "status", value: "pending" },
+  gnomie_reviews: { label: "Gn0mie shoutouts", href: "/admin/gnomie-reviews", permission: "manage_gnomie_reviews", table: "gnomie_reviews", column: "status", value: "pending" },
   testimonials: { label: "Testimonials", href: "/admin/testimonials", permission: "manage_testimonials", table: "testimonials", column: "status", value: "pending" },
   rsn_requests: { label: "RSN reset requests", href: "/admin/rsn-links", permission: "manage_rsn_links", table: "rsn_reset_requests", column: "status", value: "pending" },
   bingo_submissions: { label: "Bingo tile submissions", href: "/admin/bingo/submissions", permission: "manage_bingo", table: "bingo_tile_completions", column: "status", value: "pending_review" },

@@ -99,7 +99,7 @@ export const PERMISSIONS = {
   },
   manage_gnomie_reviews: {
     key: "manage_gnomie_reviews",
-    label: "Review a Gn0mie Submissions",
+    label: "Gn0mie Shoutout Submissions",
     description: "Approve or reject public shoutouts about clan members before they post to Discord",
   },
   manage_testimonials: {
@@ -111,6 +111,11 @@ export const PERMISSIONS = {
     key: "manage_newsletter",
     label: "Manage Newsletter",
     description: "Upload, publish and edit issues of The Weekly Glider newsletter",
+  },
+  manage_clan_pages: {
+    key: "manage_clan_pages",
+    label: "Manage Rank Structure & Clan Rules",
+    description: "Upload the Rank Structure and Clan Rules pages shown under the Clan menu",
   },
   manage_sections: {
     key: "manage_sections",

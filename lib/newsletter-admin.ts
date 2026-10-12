@@ -17,7 +17,7 @@ const supabaseHost = (() => {
 })();
 
 /** Only files from this project's own storage -- the pages render as <img> on a public page. */
-function isOwnStorageUrl(value: unknown): value is string {
+export function isOwnStorageUrl(value: unknown): value is string {
   if (typeof value !== "string") return false;
   try {
     const url = new URL(value);

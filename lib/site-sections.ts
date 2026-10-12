@@ -18,12 +18,14 @@ export const SITE_SECTIONS = [
   { key: "feedback", label: "Feedback", description: "General feedback form." },
   { key: "surveys", label: "Surveys", description: "Public survey index." },
   { key: "availability", label: "Availability", description: "Availability poll index." },
-  { key: "gnomie_reviews", label: "Review a Gn0mie", description: "Public shoutout form." },
+  { key: "gnomie_reviews", label: "Gn0mie Shoutouts", description: "Public shoutout form (/gnomie-shoutouts)." },
   { key: "bank", label: "Bank (Loans)", description: "Loan board, request form, My Loans." },
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
   { key: "testimonials", label: "Testimonials", description: "Public clan testimonials/reviews." },
   { key: "points", label: "Clan Points", description: "Points leaderboard, fed by the RuneLite plugin." },
   { key: "newsletter", label: "Newsletter", description: "The Weekly Glider -- latest issue and archive (/newsletter)." },
+  { key: "rank_structure", label: "Rank Structure", description: "Clan rank structure (/rank-structure)." },
+  { key: "clan_rules", label: "Clan Rules", description: "Clan rules (/clan-rules)." },
   { key: "about", label: "About", description: "About page." },
 ] as const;
 

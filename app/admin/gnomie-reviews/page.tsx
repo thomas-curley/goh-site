@@ -77,9 +77,9 @@ export default function AdminGnomieReviewsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-gnome-green mb-1">Gn0mie Reviews</h1>
+      <h1 className="font-display text-3xl text-gnome-green mb-1">Gn0mie Shoutouts</h1>
       <p className="text-bark-brown-light mb-6">
-        Approve or reject shoutouts submitted via <span className="font-mono text-xs">/review-a-gnomie</span>.
+        Approve or reject shoutouts submitted via <span className="font-mono text-xs">/gnomie-shoutouts</span>.
         Approving posts it to the configured Discord highlight channel.
       </p>
 
