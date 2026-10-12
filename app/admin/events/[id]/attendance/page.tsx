@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckInCodeControl } from "@/components/events/CheckInCodeControl";
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -217,6 +218,8 @@ export default function EventAttendancePage() {
           Copy Self Check-In Link
         </Button>
       </div>
+
+      <CheckInCodeControl eventId={eventId} className="mb-6 max-w-md" />
 
       {/* Import signups from a Discord reaction */}
       <Card hover={false} className="mb-6">
