@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { WhatsNewMenuLink } from "@/components/whats-new/WhatsNewMenuLink";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 
@@ -115,6 +116,10 @@ export function UserMenu({ hiddenKeys }: UserMenuProps) {
               My Loans
             </Link>
           )}
+          <WhatsNewMenuLink
+            onClick={() => setOpen(false)}
+            className="px-4 py-2 text-sm text-bark-brown hover:bg-parchment-dark transition-colors"
+          />
           <Link
             href="/admin"
             onClick={() => setOpen(false)}
