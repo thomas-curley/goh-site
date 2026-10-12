@@ -32,8 +32,20 @@ export async function POST(request: NextRequest) {
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
   const body = await request.json().catch(() => ({}));
-  const ipAddress = typeof body.ipAddress === "string" ? body.ipAddress.trim() : "";
+  let ipAddress = typeof body.ipAddress === "string" ? body.ipAddress.trim() : "";
   const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+
+  // The survey results and feedback inbox don't show IPs, so they ban by the
+  // response/submission id and the address is looked up here.
+  const source =
+    typeof body.surveyResponseId === "string" ? { table: "survey_responses", id: body.surveyResponseId }
+    : typeof body.feedbackId === "string" ? { table: "feedback_submissions", id: body.feedbackId }
+    : null;
+  if (!ipAddress && source) {
+    const { data: row } = await supabase.from(source.table).select("ip_address").eq("id", source.id).maybeSingle();
+    ipAddress = typeof row?.ip_address === "string" ? row.ip_address : "";
+    if (!ipAddress) return NextResponse.json({ error: "No IP address was recorded for that submission." }, { status: 400 });
+  }
 
   if (!ipAddress) return NextResponse.json({ error: "An IP address is required." }, { status: 400 });
 

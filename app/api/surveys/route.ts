@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import type { QuestionType, AccessLevel } from "@/lib/surveys";
+import { MAX_SURVEY_QUESTIONS as MAX_QUESTIONS, type QuestionType, type AccessLevel } from "@/lib/surveys";
 
 const VALID_ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 
@@ -13,7 +13,6 @@ function getServiceClient() {
 }
 
 const VALID_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
-const MAX_QUESTIONS = 20;
 
 // GET - list surveys. Public callers get only active ones (?active=true);
 // admins can list everything for the builder page.

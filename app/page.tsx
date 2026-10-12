@@ -23,16 +23,30 @@ async function getUpcomingEvents() {
   const supabase = createClient(url, key, {
     global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
   });
+  // Events already under way stay listed until they end, so people can
+  // check in from here while one is running. Events without an end time
+  // count as running for a few hours after they start.
+  const now = Date.now();
   const { data } = await supabase
     .from("events")
-    .select("id, title, event_type, start_time, host_rsn, world, location, meet_location")
+    .select("id, title, event_type, start_time, end_time, host_rsn, world, location, meet_location")
     .eq("show_on_calendar", true)
-    .gte("start_time", new Date().toISOString())
+    .gte("start_time", new Date(now - LOOKBACK_MS).toISOString())
     .order("start_time", { ascending: true })
-    .limit(3);
+    .limit(10);
 
-  return data ?? [];
+  return (data ?? [])
+    .map((event) => {
+      const start = new Date(event.start_time).getTime();
+      const end = event.end_time ? new Date(event.end_time).getTime() : start + NO_END_TIME_RUNNING_MS;
+      return { ...event, ended: end < now, happeningNow: start <= now && end >= now };
+    })
+    .filter((event) => !event.ended)
+    .slice(0, 3);
 }
+
+const LOOKBACK_MS = 24 * 60 * 60 * 1000;
+const NO_END_TIME_RUNNING_MS = 3 * 60 * 60 * 1000;
 
 async function getActiveCompetitions() {
   const competitions = await getGroupCompetitions();
@@ -200,13 +214,18 @@ export default async function HomePage() {
                 const eventType = EVENT_TYPES.find((t) => t.key === event.event_type);
                 const startDate = new Date(event.start_time);
                 return (
-                  <Card key={event.id} className="relative overflow-hidden">
+                  <Card key={event.id} className="relative overflow-hidden h-full">
                     <div
                       className="absolute left-0 top-0 bottom-0 w-1"
                       style={{ backgroundColor: eventType?.color ?? "#6B6B6B" }}
                     />
-                    <div className="pl-4">
+                    <div className="pl-4 flex flex-col h-full">
                       <p className="text-xs text-iron-grey uppercase tracking-wide mb-1">
+                        {event.happeningNow && (
+                          <span className="inline-block mr-2 px-1.5 py-0.5 rounded bg-red-accent text-white font-semibold normal-case tracking-normal">
+                            Happening now
+                          </span>
+                        )}
                         {startDate.toLocaleDateString("en-US", {
                           weekday: "short",
                           month: "short",
@@ -222,13 +241,24 @@ export default async function HomePage() {
                         })}
                       </p>
                       <h3 className="font-display text-lg text-bark-brown mb-1">
-                        {event.title}
+                        {/* Stretched link: the whole card opens the event's details. */}
+                        <Link href={`/events?event=${event.id}`} className="after:absolute after:inset-0 hover:text-gnome-green">
+                          {event.title}
+                        </Link>
                       </h3>
                       <div className="text-sm text-iron-grey space-y-0.5">
                         {event.host_rsn && (
                           <p>Host: <span className="font-mono">{event.host_rsn}</span></p>
                         )}
                         {event.world && <p>World {event.world}</p>}
+                      </div>
+                      <div className="relative z-10 mt-auto pt-4 flex items-center gap-3">
+                        <Link href={`/events/${event.id}/signup`}>
+                          <Button size="sm">Check In</Button>
+                        </Link>
+                        <Link href={`/events?event=${event.id}`} className="text-xs text-gnome-green hover:underline">
+                          More info →
+                        </Link>
                       </div>
                     </div>
                   </Card>

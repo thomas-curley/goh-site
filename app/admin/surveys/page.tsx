@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from "recharts";
-import { ACCESS_LEVEL_LABELS, LIKERT_LABELS, QUESTION_TYPE_LABELS, type AccessLevel, type LikertScale, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
+import { SurveyResults, type SurveyResponse } from "@/components/admin/SurveyResults";
+import { ACCESS_LEVEL_LABELS, LIKERT_LABELS, MAX_SURVEY_QUESTIONS, QUESTION_TYPE_LABELS, type AccessLevel, type LikertScale, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
 import { downloadXlsx, slugifyFilename, type SheetCell } from "@/lib/export-xlsx";
 
 interface Survey {
@@ -19,14 +17,6 @@ interface Survey {
   access_level: AccessLevel;
   created_by: string | null;
   created_at: string;
-}
-
-interface SurveyResponse {
-  id: string;
-  answers: { question_id: string; value: string | number | string[] | null }[];
-  respondent_name: string | null;
-  submitted_at: string;
-  ip_address: string | null;
 }
 
 const QUESTION_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
@@ -49,11 +39,10 @@ function formatAnswerForExport(question: SurveyQuestion, value: string | number 
 }
 
 function exportSurveyResults(survey: Survey, responses: SurveyResponse[]) {
-  const responseHeader: SheetCell[] = ["Respondent", "Submitted At", "IP Address", ...survey.questions.map((q) => q.prompt)];
+  const responseHeader: SheetCell[] = ["Respondent", "Submitted At", ...survey.questions.map((q) => q.prompt)];
   const responseRows: SheetCell[][] = responses.map((r) => [
     r.respondent_name || "Anonymous",
     new Date(r.submitted_at).toLocaleString(),
-    r.ip_address ?? "",
     ...survey.questions.map((q) => formatAnswerForExport(q, r.answers.find((a) => a.question_id === q.id)?.value)),
   ]);
 
@@ -88,7 +77,7 @@ export default function AdminSurveysPage() {
   const [responsesBySurvey, setResponsesBySurvey] = useState<Record<string, SurveyResponse[]>>({});
   const [loadingResponses, setLoadingResponses] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [banningIp, setBanningIp] = useState<string | null>(null);
+  const [banningId, setBanningId] = useState<string | null>(null);
 
   const loadSurveys = useCallback(async () => {
     setLoading(true);
@@ -103,7 +92,7 @@ export default function AdminSurveysPage() {
   const updateQuestion = (i: number, patch: Partial<SurveyQuestion>) => {
     setQuestions((prev) => prev.map((q, idx) => (idx === i ? { ...q, ...patch } : q)));
   };
-  const addQuestion = () => setQuestions((prev) => [...prev, newQuestion()]);
+  const addQuestion = () => setQuestions((prev) => (prev.length >= MAX_SURVEY_QUESTIONS ? prev : [...prev, newQuestion()]));
   const removeQuestion = (i: number) => setQuestions((prev) => prev.filter((_, idx) => idx !== i));
 
   const addOption = (i: number) => updateQuestion(i, { options: [...(questions[i].options ?? []), ""] });
@@ -184,17 +173,17 @@ export default function AdminSurveysPage() {
     setTogglingId(null);
   };
 
-  const handleBanIp = async (ip: string) => {
-    if (!confirm(`Ban ${ip}? This blocks it from submitting to any survey, not just this one.`)) return;
-    setBanningIp(ip);
+  const handleBan = async (surveyResponseId: string) => {
+    if (!confirm("Ban this respondent's IP address? This blocks it from submitting to any survey, not just this one.")) return;
+    setBanningId(surveyResponseId);
     const res = await fetch("/api/admin/banned-ips", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ipAddress: ip, reason: "Banned from survey results" }),
+      body: JSON.stringify({ surveyResponseId, reason: "Banned from survey results" }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) alert(data.error ?? "Failed to ban that IP.");
-    setBanningIp(null);
+    alert(res.ok ? "Banned." : data.error ?? "Failed to ban that IP.");
+    setBanningId(null);
   };
 
   return (
@@ -331,9 +320,16 @@ export default function AdminSurveysPage() {
                 </Card>
               ))}
             </div>
-            <button type="button" onClick={addQuestion} className="text-xs text-gnome-green hover:underline mt-3 cursor-pointer">
-              + Add question
-            </button>
+            <div className="flex items-center gap-3 mt-3">
+              {questions.length < MAX_SURVEY_QUESTIONS && (
+                <button type="button" onClick={addQuestion} className="text-xs text-gnome-green hover:underline cursor-pointer">
+                  + Add question
+                </button>
+              )}
+              <span className="text-xs text-iron-grey">
+                {questions.length} / {MAX_SURVEY_QUESTIONS} questions
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -408,39 +404,12 @@ export default function AdminSurveysPage() {
                         <div className="w-6 h-6 border-4 border-parchment-dark border-t-gnome-green rounded-full animate-spin" />
                       </div>
                     ) : (
-                      <>
-                        <p className="text-xs text-iron-grey">
-                          {responses.length} response{responses.length === 1 ? "" : "s"}
-                        </p>
-                        {survey.questions.map((q) => (
-                          <QuestionResults key={q.id} question={q} responses={responses} />
-                        ))}
-                        {responses.length > 0 && (
-                          <div>
-                            <p className="text-xs text-iron-grey uppercase tracking-wide mb-2">Respondents</p>
-                            <ul className="text-sm text-bark-brown space-y-1">
-                              {responses.map((r) => (
-                                <li key={r.id} className="flex items-center justify-between gap-2">
-                                  <span>
-                                    {r.respondent_name || "Anonymous"} · {new Date(r.submitted_at).toLocaleDateString()}
-                                    {r.ip_address && <span className="text-iron-grey font-mono text-xs ml-2">{r.ip_address}</span>}
-                                  </span>
-                                  {r.ip_address && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleBanIp(r.ip_address!)}
-                                      disabled={banningIp === r.ip_address}
-                                      className="text-xs text-red-accent hover:underline cursor-pointer shrink-0"
-                                    >
-                                      {banningIp === r.ip_address ? "..." : "Ban IP"}
-                                    </button>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </>
+                      <SurveyResults
+                        questions={survey.questions}
+                        responses={responses}
+                        onBan={handleBan}
+                        banningId={banningId}
+                      />
                     )}
                   </div>
                 )}
@@ -448,100 +417,6 @@ export default function AdminSurveysPage() {
             );
           })}
         </div>
-      )}
-    </div>
-  );
-}
-
-function QuestionResults({ question, responses }: { question: SurveyQuestion; responses: SurveyResponse[] }) {
-  const values = responses
-    .map((r) => r.answers.find((a) => a.question_id === question.id)?.value)
-    .filter((v): v is string | number | string[] => v !== null && v !== undefined);
-
-  if (question.type === "rating") {
-    const nums = values.filter((v): v is number => typeof v === "number");
-    const avg = nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
-    const data = [1, 2, 3, 4, 5].map((n) => ({ rating: String(n), count: nums.filter((v) => v === n).length }));
-    return (
-      <div>
-        <p className="text-sm font-semibold text-bark-brown mb-1">{question.prompt}</p>
-        <p className="text-xs text-iron-grey mb-2">Average: {avg.toFixed(1)} / 5 ({nums.length} rated)</p>
-        {nums.length > 0 && (
-          <ResponsiveContainer width="100%" height={140}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-              <XAxis dataKey="rating" tick={{ fontSize: 10, fill: "#555" }} />
-              <YAxis tick={{ fontSize: 10, fill: "#555" }} allowDecimals={false} />
-              <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-              <Bar dataKey="count" fill="#2D5016" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-    );
-  }
-
-  if (question.type === "likert") {
-    const scale = question.scale ?? 5;
-    const labels = LIKERT_LABELS[scale];
-    const nums = values.filter((v): v is number => typeof v === "number");
-    const avg = nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
-    const data = labels.map((label, idx) => ({ label, count: nums.filter((v) => v === idx + 1).length }));
-    return (
-      <div>
-        <p className="text-sm font-semibold text-bark-brown mb-1">{question.prompt}</p>
-        <p className="text-xs text-iron-grey mb-2">Average: {avg.toFixed(1)} / {scale} ({nums.length} answered)</p>
-        {nums.length > 0 && (
-          <ResponsiveContainer width="100%" height={Math.max(120, data.length * 34)}>
-            <BarChart data={data} layout="vertical" margin={{ left: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#555" }} />
-              <YAxis type="category" dataKey="label" width={140} tick={{ fontSize: 11, fill: "#555" }} />
-              <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-              <Bar dataKey="count" fill="#2D5016" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-    );
-  }
-
-  if (question.type === "multiple_choice") {
-    const data = (question.options ?? []).map((opt) => ({
-      option: opt,
-      count: values.filter((v) => (Array.isArray(v) ? v.includes(opt) : v === opt)).length,
-    }));
-    return (
-      <div>
-        <p className="text-sm font-semibold text-bark-brown mb-2">{question.prompt}</p>
-        {values.length > 0 ? (
-          <ResponsiveContainer width="100%" height={Math.max(100, data.length * 36)}>
-            <BarChart data={data} layout="vertical" margin={{ left: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#555" }} />
-              <YAxis type="category" dataKey="option" width={140} tick={{ fontSize: 11, fill: "#555" }} />
-              <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-              <Bar dataKey="count" fill="#2D5016" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="text-xs text-iron-grey">No answers yet.</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <p className="text-sm font-semibold text-bark-brown mb-2">{question.prompt}</p>
-      {values.length === 0 ? (
-        <p className="text-xs text-iron-grey">No answers yet.</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {values.map((v, i) => (
-            <li key={i} className="text-sm text-bark-brown bg-parchment-dark/40 rounded-md px-3 py-1.5">{String(v)}</li>
-          ))}
-        </ul>
       )}
     </div>
   );

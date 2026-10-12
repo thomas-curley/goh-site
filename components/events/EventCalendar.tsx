@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import { Button } from "@/components/ui/Button";
 import { useIsStaff } from "@/lib/use-is-staff";
+import { CheckInCodeControl } from "@/components/events/CheckInCodeControl";
 
 interface CalendarEvent {
   id: string;
@@ -37,6 +38,8 @@ interface CalendarEvent {
 
 interface EventCalendarProps {
   events: CalendarEvent[];
+  /** Opens this event's details on load and shows its month (from /events?event=<id>). */
+  initialEventId?: string;
 }
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
@@ -58,12 +61,10 @@ const FILTER_TYPES: { key: string; label: string; color: string }[] = [
   { key: "competition", label: "Competitions", color: "#5D3A9E" },
 ];
 
-export function EventCalendar({ events }: EventCalendarProps) {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+export function EventCalendar({ events, initialEventId }: EventCalendarProps) {
+  const initialEvent = initialEventId ? events.find((e) => e.id === initialEventId) ?? null : null;
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(initialEvent);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
-  const [checkInCode, setCheckInCode] = useState<string | null>(null);
-  const [loadingCode, setLoadingCode] = useState(false);
   const isStaff = useIsStaff();
   // Empty = nothing hidden = every type shown by default; clicking a legend
   // chip toggles that type out (or back in) rather than the other way
@@ -86,38 +87,15 @@ export function EventCalendar({ events }: EventCalendarProps) {
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
-  const handleCopyCode = async () => {
-    if (!checkInCode) return;
-    await navigator.clipboard.writeText(checkInCode);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
-  };
-
-  // Staff-only, on-demand -- the code itself is never in the public
-  // calendar payload (see app/events/page.tsx), only whether one's set.
-  useEffect(() => {
-    setCheckInCode(null);
-    setCodeCopied(false);
-    if (!selectedEvent || selectedEvent.extendedProps?.isCompetition || !selectedEvent.extendedProps?.requiresCode || !isStaff) {
-      return;
+  const closeEvent = () => {
+    setSelectedEvent(null);
+    // Drop ?event= so a refresh doesn't pop the same event open again.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("event")) {
+      url.searchParams.delete("event");
+      window.history.replaceState(null, "", url);
     }
-    let cancelled = false;
-    setLoadingCode(true);
-    fetch(`/api/events/${selectedEvent.id}/check-in-code`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled) setCheckInCode(data.code ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) setCheckInCode(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingCode(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedEvent, isStaff]);
+  };
 
   const visibleEvents = events.filter(
     (e) => !hiddenTypes.has(e.extendedProps?.eventType ?? "other")
@@ -159,6 +137,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
           initialView="dayGridMonth"
+          initialDate={initialEvent?.start}
           headerToolbar={{
             left: "prev,next today",
             center: "title",
@@ -181,7 +160,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
       {selectedEvent && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedEvent(null)}
+          onClick={closeEvent}
         >
           <div
             className="card-wood max-w-md w-full p-6"
@@ -192,7 +171,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
                 {selectedEvent.title}
               </h3>
               <button
-                onClick={() => setSelectedEvent(null)}
+                onClick={closeEvent}
                 className="text-iron-grey hover:text-bark-brown cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,29 +297,7 @@ export function EventCalendar({ events }: EventCalendarProps) {
                     {linkCopied ? "Copied!" : "Copy Check-In Link"}
                   </Button>
                 )}
-                {isStaff && selectedEvent.extendedProps?.requiresCode && (
-                  <div className="mt-2 p-2.5 rounded-md bg-parchment-dark/40 border border-parchment-dark flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs text-iron-grey uppercase tracking-wide">Check-In Code</p>
-                      {loadingCode ? (
-                        <p className="text-sm text-iron-grey">Loading...</p>
-                      ) : checkInCode ? (
-                        <p className="font-mono text-gnome-green truncate">{checkInCode}</p>
-                      ) : (
-                        <p className="text-sm text-iron-grey">Couldn&apos;t load the code.</p>
-                      )}
-                    </div>
-                    {checkInCode && (
-                      <button
-                        type="button"
-                        onClick={handleCopyCode}
-                        className="text-xs text-gnome-green hover:underline cursor-pointer shrink-0"
-                      >
-                        {codeCopied ? "Copied!" : "Copy"}
-                      </button>
-                    )}
-                  </div>
-                )}
+                {isStaff && <CheckInCodeControl key={selectedEvent.id} eventId={selectedEvent.id} className="mt-2" />}
               </>
             )}
           </div>

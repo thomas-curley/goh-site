@@ -42,7 +42,11 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   other: "#6B6B6B",
 };
 
-export default async function EventsPage() {
+export default async function EventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ event?: string | string[] }>;
+}) {
   if (!(await checkSectionAccess("events"))) return <SectionUnavailable />;
 
   const [events, competitions] = await Promise.all([getEvents(), getGroupCompetitions()]);
@@ -91,6 +95,9 @@ export default async function EventsPage() {
   }));
 
   const calendarEvents = [...eventEntries, ...competitionEntries];
+  // ?event=<id> (linked from the home page cards) opens that event's details.
+  const { event: requestedEvent } = await searchParams;
+  const initialEventId = typeof requestedEvent === "string" ? requestedEvent : undefined;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -103,7 +110,7 @@ export default async function EventsPage() {
       </p>
 
       {calendarEvents.length > 0 ? (
-        <EventCalendar events={calendarEvents} />
+        <EventCalendar events={calendarEvents} initialEventId={initialEventId} />
       ) : (
         <div className="text-center py-16 text-iron-grey">
           <p className="font-display text-xl mb-2">No events yet</p>

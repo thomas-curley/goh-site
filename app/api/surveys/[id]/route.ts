@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { checkSurveyEligibility, type AccessLevel, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
+import { checkSurveyEligibility, MAX_SURVEY_QUESTIONS as MAX_QUESTIONS, type AccessLevel, type QuestionType, type SurveyQuestion } from "@/lib/surveys";
 
 const VALID_ACCESS_LEVELS: AccessLevel[] = ["anonymous", "verified_player", "clan_member"];
 const VALID_TYPES: QuestionType[] = ["rating", "multiple_choice", "text", "likert"];
-const MAX_QUESTIONS = 20;
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
