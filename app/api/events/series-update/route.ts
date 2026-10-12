@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { checkPermission } from "@/lib/check-permission";
 import { postToDestination, editChannelMessage, resolvePostDestination } from "@/lib/discord";
 import { parseThreadAutoArchive } from "@/lib/thread-archive";
 import { renderTemplate } from "@/lib/post-templates";
@@ -20,6 +21,8 @@ function getServiceClient() {
  * 059_series_update_posts.sql for the tracking table this reads/writes.
  */
 export async function POST(request: NextRequest) {
+  const { allowed } = await checkPermission("manage_events");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
@@ -71,7 +74,8 @@ export async function POST(request: NextRequest) {
 
     if (existing?.discord_message_id && !destinationChanged) {
       try {
-        await editChannelMessage(channelId, existing.discord_message_id, message);
+        // Text-only update: keep any images/link previews already on the post.
+        await editChannelMessage(channelId, existing.discord_message_id, message, null);
       } catch (err) {
         console.error("Series update edit error:", err);
         return NextResponse.json(

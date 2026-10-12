@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { checkPermission } from "@/lib/check-permission";
 import { parseDiscordMessageLink, isDiscordSnowflake } from "@/lib/discord";
 import { getAlertChannel } from "@/lib/alert-channels";
 
@@ -46,6 +47,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { allowed } = await checkPermission("manage_events");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 

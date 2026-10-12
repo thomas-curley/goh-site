@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { checkPermission } from "@/lib/check-permission";
 import { createDiscordEvent, postToDestination, createSignupThread, resolvePostDestination, urlToDataUri, buildRecurrenceRule } from "@/lib/discord";
 import { parseThreadAutoArchive } from "@/lib/thread-archive";
 import { formatDiscordEventDescription } from "@/lib/discord-format";
@@ -34,10 +35,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ events: data });
+  // Check-in codes are only for staff at the event (see
+  // /api/events/[id]/check-in-code) -- never in this unauthenticated list.
+  return NextResponse.json({ events: (data ?? []).map((event) => Object.fromEntries(Object.entries(event).filter(([key]) => key !== "check_in_code"))) });
 }
 
 export async function POST(request: NextRequest) {
+  const { allowed } = await checkPermission("manage_events");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   try {
     const body = await request.json();
     // Forum-post inactivity window, admin-chosen; applies to both the event

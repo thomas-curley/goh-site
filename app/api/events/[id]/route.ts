@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { checkPermission } from "@/lib/check-permission";
 import { updateDiscordEvent, deleteDiscordEvent, editChannelMessage, urlToDataUri, getDiscordEvent, recurrenceFromRule, buildRecurrenceRule } from "@/lib/discord";
 import { renderTemplate } from "@/lib/post-templates";
 import { resolveTemplate } from "@/lib/post-templates-server";
@@ -18,6 +19,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { allowed } = await checkPermission("manage_events");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
 
   if (!supabase) {
@@ -56,6 +59,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { allowed } = await checkPermission("manage_events");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
 
   if (!supabase) {
@@ -83,6 +88,10 @@ export async function PUT(
       recurrence, // lives on the Discord series, not a column -- applied to Discord below
       ...eventFields
     } = body;
+
+    // What was saved before this edit -- images are only re-sent to Discord
+    // when this save actually changes them (see below).
+    const { data: before } = await supabase.from("events").select("banner_url, extra_images").eq("id", id).maybeSingle();
 
     // Update in Supabase
     const { data, error } = await supabase
@@ -119,7 +128,18 @@ export async function PUT(
     // Sync to Discord if event has a linked Discord event
     if (data.discord_event_id) {
       try {
-        const bannerDataUri = data.banner_url ? await urlToDataUri(data.banner_url) : null;
+        // The cover image is only touched when the banner is set (sent if it
+        // can be fetched) or was cleared in this edit (removed). Otherwise
+        // it's left out, so saving an event that has no banner on the site --
+        // e.g. one imported from Discord, or a recurring series -- doesn't
+        // wipe the cover image already on the Discord event.
+        let imageUpdate: { image?: string | null } = {};
+        if (data.banner_url) {
+          const bannerDataUri = await urlToDataUri(data.banner_url);
+          if (bannerDataUri) imageUpdate = { image: bannerDataUri };
+        } else if (before?.banner_url) {
+          imageUpdate = { image: null };
+        }
 
         // Only touch the recurrence when the form actually sent a value the
         // site can express -- "other" (a Discord-only pattern) and an absent
@@ -140,7 +160,7 @@ export async function PUT(
             location: [data.location, data.meet_location].filter(Boolean).join(" — Meet: ") || "In-game",
           },
           privacy_level: 2,
-          image: bannerDataUri,
+          ...imageUpdate,
           ...recurrenceUpdate,
         });
       } catch (discordErr) {
@@ -182,8 +202,13 @@ export async function PUT(
         // The banner only goes on the Discord Scheduled Event's calendar
         // cover (synced above via updateDiscordEvent's image field) -- kept
         // out of the channel message so it doesn't also show up there.
+        // Only replace the post's images when the extra images were changed
+        // in this edit; otherwise leave them (and any older banner or link
+        // previews) as they are.
         const allImages: string[] = Array.isArray(extra_images) ? extra_images.filter(Boolean) : [];
-        await editChannelMessage(channelId, data.discord_message_id, message, allImages.length > 0 ? allImages : undefined);
+        const previousImages: string[] = Array.isArray(before?.extra_images) ? before.extra_images.filter(Boolean) : [];
+        const imagesChanged = JSON.stringify(allImages) !== JSON.stringify(previousImages);
+        await editChannelMessage(channelId, data.discord_message_id, message, imagesChanged ? allImages : null);
         sync.eventPostSynced = true;
       } catch (err) {
         console.error("Event post sync failed:", err);
@@ -201,7 +226,7 @@ export async function PUT(
           host_rsn: data.host_rsn,
           spots: data.spots,
         });
-        await editChannelMessage(data.signup_thread_id, data.signup_thread_message_id, message);
+        await editChannelMessage(data.signup_thread_id, data.signup_thread_message_id, message, null);
         sync.signupThreadSynced = true;
       } catch (err) {
         console.error("Signup thread sync failed:", err);
@@ -220,6 +245,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { allowed } = await checkPermission("manage_events");
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const supabase = getServiceClient();
 
   if (!supabase) {
