@@ -17,25 +17,6 @@ export const SLOT_LABELS: Record<EquipmentSlot, string> = {
   ring: "Ring",
 };
 
-export interface OutfitItem {
-  /** OSRS Wiki item name, e.g. "Gnome goggles" -- also how the icon is found. */
-  name: string;
-}
-
-export type Outfit = Partial<Record<EquipmentSlot, OutfitItem>>;
-
-/** Keeps only known slots with a sensible item name. */
-export function sanitizeOutfit(value: unknown): Outfit {
-  const outfit: Outfit = {};
-  if (!value || typeof value !== "object") return outfit;
-  for (const slot of EQUIPMENT_SLOTS) {
-    const raw = (value as Record<string, unknown>)[slot];
-    const name = raw && typeof raw === "object" ? (raw as { name?: unknown }).name : undefined;
-    if (typeof name === "string" && name.trim() && name.length <= 100) outfit[slot] = { name: name.trim() };
-  }
-  return outfit;
-}
-
 /** The item's inventory icon on the OSRS Wiki (file names use underscores for spaces). */
 export function wikiItemIcon(name: string): string {
   return `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}.png`;

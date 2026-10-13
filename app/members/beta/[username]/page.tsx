@@ -4,12 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 import { SKILLS, BOSSES, SkillProps, BossProps } from "@wise-old-man/utils";
 import { getGroupMembers, getPlayerDetails, getPlayerGains, normalizeRsn } from "@/lib/wom";
 import { getMemberRankings, type MemberRanking } from "@/lib/clan-rankings";
-import { getDefaultOutfit, getUserOutfit, mergeOutfit } from "@/lib/profile-outfits";
+import { getDefaultCharacter, getUserCharacter, mergeCharacter } from "@/lib/profile-characters";
 import { checkStaffViewer } from "@/lib/staff-gate";
 import { ProfileView, type ProfileData, type RankInfo } from "@/components/profiles/ProfileView";
 import type { GainsSet } from "@/components/profiles/GainsPanel";
 import { StaffOnly } from "@/components/profiles/StaffOnly";
-import type { Outfit } from "@/lib/profiles-format";
+import { defaultLook, type Character } from "@/lib/osrs-character";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +61,7 @@ export default async function MemberProfileBetaPage({ params }: Params) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabase = url && key ? createClient(url, key) : null;
 
-  const [rankings, week, month, members, linked, defaultOutfit] = await Promise.all([
+  const [rankings, week, month, members, linked, defaultCharacter] = await Promise.all([
     supabase ? getMemberRankings(supabase, player.displayName) : Promise.resolve(new Map<string, MemberRanking>()),
     getPlayerGains(player.username, "week"),
     getPlayerGains(player.username, "month"),
@@ -69,11 +69,11 @@ export default async function MemberProfileBetaPage({ params }: Params) {
     supabase
       ? supabase.from("user_profiles").select("id, discord_avatar").ilike("rsn", player.displayName).maybeSingle().then((r) => r.data)
       : Promise.resolve(null),
-    supabase ? getDefaultOutfit(supabase) : Promise.resolve({} as Outfit),
+    supabase ? getDefaultCharacter(supabase) : Promise.resolve<Character>({ look: defaultLook(), gear: {} }),
   ]);
 
-  const own = supabase && linked?.id ? await getUserOutfit(supabase, linked.id) : {};
-  const { outfit, usesDefault } = mergeOutfit(own, defaultOutfit);
+  const own = supabase && linked?.id ? await getUserCharacter(supabase, linked.id) : { look: null, gear: {} };
+  const { character, usesDefault } = mergeCharacter(own, defaultCharacter);
   const clanRole = members.find((m) => normalizeRsn(m.displayName) === normalizeRsn(player.displayName))?.role ?? null;
 
   const skillsData = player.latestSnapshot?.data.skills;
@@ -86,8 +86,8 @@ export default async function MemberProfileBetaPage({ params }: Params) {
     accountType: player.type,
     clanRole,
     portraitUrl: linked?.discord_avatar ?? null,
-    outfit,
-    usesDefaultOutfit: usesDefault,
+    character,
+    usesDefaultCharacter: usesDefault,
     summary: [
       { label: "Total level", value: overall ? overall.level.toLocaleString() : "—", rank: rankOf(rankings.get("overall")) },
       { label: "Total XP", value: overall ? compact(overall.experience) : "—", rank: rankOf(rankings.get("overall")) },

@@ -42,16 +42,17 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     audience: "staff",
     title: "Member profiles (beta)",
     summary:
-      "A profile page for every clan member, in the style of Warcraft Logs: their character in a worn-equipment panel, plus every skill and boss coloured by where they rank in the clan (gold is best in the clan, then pink, orange, purple, blue, green and grey). It also shows EHP, EHB and their gains over the last week or month. Members who haven't picked an outfit wear the clan's gnome fashionscape. Staff only while we test it.",
+      "A profile page for every clan member, in the style of Warcraft Logs: their OSRS character in 3D wearing their gear, plus every skill and boss coloured by where they rank in the clan (gold is best in the clan, then pink, orange, purple, blue, green and grey). It also shows EHP, EHB and their gains over the last week or month. Members who haven't made their character show the clan's gnome fashionscape. Staff only while we test it.",
     tryIt: [
       "Open the Member Profiles (Beta) list and search for a member.",
       "Look at the coloured ranks next to each boss and skill, and switch Recent gains between week and month.",
-      "Set your own outfit in My Account, under Profile outfit: click a slot and search for an item.",
-      "Admins: set the clan's default outfit and refresh rankings in Admin › Member Profiles (Beta).",
+      "Drag a character to turn it.",
+      "Make your own in My Account, under Profile character: pick your look like the in-game character creator, then click a gear slot and search for an item.",
+      "Admins: set the clan's default character and refresh rankings in Admin › Member Profiles (Beta).",
     ],
     links: [
       { label: "Member Profiles (Beta)", href: "/members/beta" },
-      { label: "My Account › Profile outfit", href: "/account#outfit" },
+      { label: "My Account › Profile character", href: "/account#outfit" },
       { label: "Admin › Member Profiles (Beta)", href: "/admin/profiles-beta" },
     ],
   },

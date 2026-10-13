@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { RankBadge } from "@/components/ui/RankBadge";
-import { EquipmentPanel } from "@/components/profiles/EquipmentPanel";
 import { GainsPanel, type GainsSet } from "@/components/profiles/GainsPanel";
 import { ParseBadge } from "@/components/profiles/ParseBadge";
-import { ordinal, type Outfit } from "@/lib/profiles-format";
+import { CharacterStage } from "@/components/profiles/CharacterStage";
+import type { Character } from "@/lib/osrs-character";
+import { ordinal } from "@/lib/profiles-format";
 
 export interface RankInfo {
   rank: number;
@@ -16,8 +17,8 @@ export interface ProfileData {
   accountType: string | null;
   clanRole: string | null;
   portraitUrl: string | null;
-  outfit: Outfit;
-  usesDefaultOutfit: boolean;
+  character: Character;
+  usesDefaultCharacter: boolean;
   summary: { label: string; value: string; rank: RankInfo | null }[];
   bosses: { key: string; name: string; kc: number; rank: RankInfo | null }[];
   skills: { key: string; name: string; level: number; xp: number; rank: RankInfo | null }[];
@@ -42,7 +43,7 @@ const PARSE_LEGEND = [
 ];
 
 /**
- * A member's "logs"-style profile: character card with their outfit, the
+ * A member's "logs"-style profile: their 3D character and gear, the
  * headline numbers, every boss and skill coloured by where they rank in the
  * clan, and recent gains.
  */
@@ -56,32 +57,34 @@ export function ProfileView({ data }: { data: ProfileData }) {
         <span className="rounded-full bg-gold/20 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-bark-brown">Beta · staff only</span>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_1fr]">
-        {/* Character card */}
-        <Card hover={false} className="flex flex-col items-center gap-4 text-center">
-          <div className="flex flex-col items-center gap-2">
-            {data.portraitUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={data.portraitUrl} alt="" className="w-20 h-20 rounded-full border-2 border-gold shadow" />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gnome-green flex items-center justify-center font-display text-3xl text-gold-light">
-                {data.displayName.charAt(0).toUpperCase()}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,400px)_1fr]">
+        {/* Character */}
+        <div className="space-y-2 min-w-0">
+          <CharacterStage
+            character={data.character}
+            title={
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  {data.portraitUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.portraitUrl} alt="" className="w-8 h-8 rounded-full border border-gold" />
+                  )}
+                  <h1 className="font-display text-3xl text-gold-light leading-tight drop-shadow">{data.displayName}</h1>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 text-xs">
+                  {data.clanRole && <RankBadge rank={data.clanRole} />}
+                  {data.accountType && data.accountType !== "regular" && (
+                    <span className="rounded-full border border-parchment/40 px-2 py-0.5 text-parchment/90 capitalize">{data.accountType.replace(/_/g, " ")}</span>
+                  )}
+                </div>
               </div>
-            )}
-            <h1 className="font-display text-3xl text-gnome-green leading-tight">{data.displayName}</h1>
-            <div className="flex flex-wrap justify-center gap-2 text-xs">
-              {data.clanRole && <RankBadge rank={data.clanRole} />}
-              {data.accountType && data.accountType !== "regular" && (
-                <span className="rounded-full border border-bark-brown-light/60 px-2 py-0.5 text-bark-brown capitalize">{data.accountType.replace(/_/g, " ")}</span>
-              )}
-            </div>
-          </div>
-          <EquipmentPanel outfit={data.outfit} />
-          <p className="text-xs text-iron-grey">
-            {data.usesDefaultOutfit ? "Wearing the clan's gnome fashionscape." : "Their chosen outfit."} Set yours in{" "}
+            }
+          />
+          <p className="text-xs text-iron-grey text-center">
+            {data.usesDefaultCharacter ? "Wearing the clan's gnome fashionscape." : "Their own character."} Drag to turn. Make yours in{" "}
             <Link href="/account#outfit" className="text-gnome-green hover:underline">My Account</Link>.
           </p>
-        </Card>
+        </div>
 
         {/* Summary */}
         <div className="space-y-4 min-w-0">

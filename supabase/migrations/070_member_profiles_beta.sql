@@ -23,16 +23,19 @@ create table if not exists clan_metric_rankings (
 
 create index if not exists idx_clan_metric_rankings_rsn on clan_metric_rankings (rsn_key);
 
--- Each member's chosen outfit: { "head": { "name": "Gnome goggles" }, ... }
--- keyed by equipment slot. Missing slots fall back to the clan default.
+-- Each member's 3D character. items: gear by equipment slot,
+-- { "head": { "id": 9472, "name": "Gnome goggles" }, ... }; look: body type,
+-- body-part styles and colours (null = use the clan default). Empty gear
+-- slots fall back to the clan default.
 create table if not exists profile_outfits (
   user_id uuid primary key references user_profiles(id) on delete cascade,
   items jsonb not null default '{}',
+  look jsonb,
   updated_at timestamptz not null default now()
 );
 
--- Small key/value store for profile-wide settings; 'default_outfit' holds
--- the clan's gnome fashionscape (same shape as profile_outfits.items).
+-- Small key/value store for profile-wide settings; 'default_character'
+-- holds the clan's gnome fashionscape as { look, gear }.
 create table if not exists profile_settings (
   key text primary key,
   value jsonb not null default '{}',
