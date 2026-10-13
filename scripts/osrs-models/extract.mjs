@@ -209,11 +209,14 @@ function decodeKit(bytes, id) {
   }
 }
 
-// Sequence (animation) definitions; only the frame list is kept.
+// Sequence (animation) definitions; only the frame list is kept, so this
+// stops quietly at anything it doesn't understand (only the stand
+// animation is used, and its frame list comes first).
 function decodeSequence(bytes, id) {
   const r = new Reader(bytes);
   const d = { id, frameLengths: [], frameIds: [], mayaId: -1 };
   for (;;) {
+    if (r.p >= bytes.length) return d;
     const op = r.u8();
     if (op === 0) return d;
     if (op === 1) {
@@ -241,7 +244,7 @@ function decodeSequence(bytes, id) {
       const n = r.u8();
       r.p += n;
     } else if (op === 18) r.str();
-    else throw new Error(`sequence ${id}: unknown opcode ${op}`);
+    else return d;
   }
 }
 
