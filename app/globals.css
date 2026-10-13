@@ -110,6 +110,17 @@ h1, h2, h3 {
 .dark .border-bark-brown-light { border-color: #2a3f5a !important; }
 .dark .border-parchment-dark { border-color: #233044 !important; }
 
+/* Parchment surfaces and borders, including their opacity variants
+   (bg-parchment/80, bg-parchment-dark/30, border-bark-brown-light/40...)
+   and hover states, which the exact-class overrides above don't match --
+   without these, dark mode put light text on a light card. */
+.dark .bg-parchment,
+.dark [class*="bg-parchment/"] { background-color: #1e2d40 !important; }
+.dark [class*="bg-parchment-dark/"] { background-color: rgba(21, 32, 48, 0.6) !important; }
+.dark [class*="hover:bg-parchment-dark"]:hover { background-color: #233044 !important; }
+.dark [class*="border-bark-brown-light/"] { border-color: #2a3f5a !important; }
+.dark [class*="border-parchment-dark/"] { border-color: #233044 !important; }
+
 /* ===== Ticker Animation ===== */
 @keyframes scroll {
   from { transform: translateX(0); }

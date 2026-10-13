@@ -34,7 +34,41 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 13, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-13-member-profiles-beta",
+    date: "2026-10-13",
+    kind: "new",
+    audience: "staff",
+    title: "Member profiles (beta)",
+    summary:
+      "A profile page for every clan member, in the style of Warcraft Logs: their OSRS character in 3D wearing their gear, plus every skill and boss coloured by where they rank in the clan (gold is best in the clan, then pink, orange, purple, blue, green and grey). It also shows EHP, EHB and their gains over the last week or month. Members who haven't made their character show the clan's gnome fashionscape. Staff only while we test it.",
+    tryIt: [
+      "Open the Member Profiles (Beta) list and search for a member.",
+      "Look at the coloured ranks next to each boss and skill, and switch Recent gains between week and month.",
+      "Drag a character to turn it.",
+      "Make your own in My Account, under Profile character: on Appearance, pick your body type, head, jaw, torso, arms, hands, legs and feet, and your hair, clothing and skin colours, like the in-game character creator; on Gear, click a slot and search for an item.",
+      "Admins: set the clan's default outfit in Admin › Default Clan Outfit, and refresh rankings in Admin › Member Profiles (Beta).",
+    ],
+    links: [
+      { label: "Member Profiles (Beta)", href: "/members/beta" },
+      { label: "My Account › Profile character", href: "/account#outfit" },
+      { label: "Admin › Default Clan Outfit", href: "/admin/default-outfit" },
+      { label: "Admin › Member Profiles (Beta)", href: "/admin/profiles-beta" },
+    ],
+  },
   // ── October 12, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-12-dark-mode-text",
+    date: "2026-10-12",
+    kind: "fixed",
+    audience: "everyone",
+    title: "Dark mode text is readable again",
+    summary:
+      "In dark mode some cards kept a light background while their text turned light, so it was hard to read. This showed up on What's New, survey results, the handbook, Clan Rules and other pages. Those cards now switch to dark too.",
+    tryIt: ["Switch to dark mode with the moon button in the top bar.", "Open What's New and check the cards are easy to read."],
+    links: [{ label: "What's New", href: "/whats-new" }],
+  },
   {
     id: "2026-10-12-home-newsletter",
     date: "2026-10-12",
