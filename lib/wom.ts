@@ -124,6 +124,26 @@ export async function getPlayerDetails(username: string) {
   }
 }
 
+/** A player's gains over the last week/month (null on any WOM failure). */
+export async function getPlayerGains(username: string, period: "week" | "month") {
+  try {
+    return await womClient.players.getPlayerGains(username, { period });
+  } catch (error) {
+    console.error(`Failed to fetch ${period} gains for ${username}:`, error);
+    return null;
+  }
+}
+
+/** Every clan member's standing in one metric (WOM group hiscores), or null on failure. */
+export async function getFullGroupHiscores(metric: string) {
+  try {
+    return await womClient.groups.getGroupHiscores(WOM_GROUP_ID, metric as never, { limit: 500 });
+  } catch (error) {
+    console.error(`Failed to fetch group hiscores for ${metric}:`, error);
+    return null;
+  }
+}
+
 export async function getGroupAchievements(limit: number = 20) {
   try {
     return await womClient.groups.getGroupAchievements(WOM_GROUP_ID, { limit });
