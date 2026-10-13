@@ -18,7 +18,7 @@ export function AccountOutfitSection() {
         </div>
         <p className="text-sm text-bark-brown-light mb-4">
           Your OSRS character in 3D, shown on your <Link href="/members/beta" className="text-gnome-green hover:underline">member profile</Link>.
-          Pick your look like the in-game character creator, then dress it in your fashionscape.
+          Set your appearance like the in-game character creator, then dress it in your fashionscape.
         </p>
         <CharacterEditor mode="member" />
       </Card>

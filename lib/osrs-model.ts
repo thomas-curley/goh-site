@@ -256,14 +256,9 @@ export async function buildCharacterMesh(
 
   // Vertex positions for each frame of the stand animation (or unposed).
   const frames = pose?.frames.length ? pose.frames : [null];
-  // Animation frames expect z the other way round from the stored models.
   const posed = frames.map((frame) => {
     const pos = Float64Array.from(base);
-    if (frame && pose) {
-      for (let i = 2; i < pos.length; i += 3) pos[i] = -pos[i];
-      applyFrame(pos, byLabel, pose, frame);
-      for (let i = 2; i < pos.length; i += 3) pos[i] = -pos[i];
-    }
+    if (frame && pose) applyFrame(pos, byLabel, pose, frame);
     return pos;
   });
 

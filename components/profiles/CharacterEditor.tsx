@@ -25,7 +25,8 @@ const CharacterViewer = dynamic(() => import("@/components/profiles/CharacterVie
   loading: () => <div className="w-full h-full" />,
 });
 
-const PART_LABELS = ["Hair", "Beard", "Torso", "Arms", "Hands", "Legs", "Feet"];
+// The in-game character creator's names for each body part.
+const PART_LABELS = ["Head", "Jaw", "Torso", "Arms", "Hands", "Legs", "Feet"];
 
 interface Own {
   look: CharacterLook | null;
@@ -193,7 +194,7 @@ export function CharacterEditor({ mode }: { mode: "member" | "default" }) {
         <div className="flex-1 min-w-0 space-y-4">
           <div className="flex gap-1" role="tablist">
             <button type="button" role="tab" aria-selected={tab === "look"} onClick={() => setTab("look")} className={tabClass("look")}>
-              Look
+              Appearance
             </button>
             <button type="button" role="tab" aria-selected={tab === "gear"} onClick={() => setTab("gear")} className={tabClass("gear")}>
               Gear
@@ -202,7 +203,8 @@ export function CharacterEditor({ mode }: { mode: "member" | "default" }) {
 
           {tab === "look" && data && (
             <div className="space-y-4">
-              {mode === "member" && !own.look && <p className="text-xs text-iron-grey">Using the clan default look. Change anything to make it yours.</p>}
+              {mode === "member" && !own.look && <p className="text-xs text-iron-grey">Using the clan default appearance. Change anything to make it yours.</p>}
+              <p className="text-xs font-semibold uppercase tracking-wide text-iron-grey">Body type</p>
               <div className="flex gap-2">
                 {[false, true].map((female) => (
                   <button
@@ -215,6 +217,7 @@ export function CharacterEditor({ mode }: { mode: "member" | "default" }) {
                   </button>
                 ))}
               </div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-iron-grey">Design</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {BODY_PARTS.map((_, part) => {
                   const options = kitOptions(data.kitList, part, look.female).map((k) => k.id);

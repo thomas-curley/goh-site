@@ -47,7 +47,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       "Open the Member Profiles (Beta) list and search for a member.",
       "Look at the coloured ranks next to each boss and skill, and switch Recent gains between week and month.",
       "Drag a character to turn it.",
-      "Make your own in My Account, under Profile character: pick your look like the in-game character creator, then click a gear slot and search for an item.",
+      "Make your own in My Account, under Profile character: on Appearance, pick your body type, head, jaw, torso, arms, hands, legs and feet, and your hair, clothing and skin colours, like the in-game character creator; on Gear, click a slot and search for an item.",
       "Admins: set the clan's default character and refresh rankings in Admin › Member Profiles (Beta).",
     ],
     links: [
