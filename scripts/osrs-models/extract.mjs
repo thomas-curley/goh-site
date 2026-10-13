@@ -303,7 +303,8 @@ const seen = new Set();
 const items = [];
 for (const d of itemDefs) {
   if (d.wearPos1 < 0 || !d.name || d.name === "null" || d.noted || d.template) continue;
-  if (d.m[0] < 0 && d.f[0] < 0) continue;
+  // Rings (12) and ammo (13) aren't drawn on the player but still fill an equipment slot.
+  if (d.m[0] < 0 && d.f[0] < 0 && d.wearPos1 !== 12 && d.wearPos1 !== 13) continue;
   const key = JSON.stringify([d.name.toLowerCase(), d.wearPos1, d.m, d.f, d.rf, d.rr, d.tf, d.tr]);
   if (seen.has(key)) continue;
   seen.add(key);
