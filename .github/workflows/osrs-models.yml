@@ -1,0 +1,72 @@
+# Rebuilds the OSRS character data in public/osrs (wearable items, body
+# kits and 3D models) from the latest game cache, for the 3D characters on
+# member profiles.
+#
+# - Pushing a change to the extractor rebuilds the data on that branch.
+# - Every Thursday (after Wednesday's game update), or when run by hand, it
+#   rebuilds on master and opens a pull request if anything changed.
+name: OSRS character models
+
+on:
+  push:
+    branches-ignore: [master, osrs-models-update]
+    paths: ["scripts/osrs-models/**", ".github/workflows/osrs-models.yml"]
+  schedule:
+    - cron: "17 9 * * 4"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: osrs-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install extractor
+        working-directory: scripts/osrs-models
+        run: npm ci
+
+      - name: Extract from the latest cache
+        working-directory: scripts/osrs-models
+        run: node --max-old-space-size=6000 extract.mjs .cache/out
+
+      - name: Copy into public/osrs
+        run: |
+          mkdir -p public/osrs/models
+          rsync -a --delete scripts/osrs-models/.cache/out/models/ public/osrs/models/
+          cp scripts/osrs-models/.cache/out/{items,kits,textures,meta}.json public/osrs/
+
+      - name: Commit changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add -A public/osrs
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          cache_id=$(node -p "require('./public/osrs/meta.json').cacheId")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update OSRS character models (cache $cache_id)"
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          else
+            git push -f origin HEAD:refs/heads/osrs-models-update
+            gh pr create --base "$GITHUB_REF_NAME" --head osrs-models-update \
+              --title "Update OSRS character models (cache $cache_id)" \
+              --body "Automatic update of the 3D character data in public/osrs from the latest OSRS game cache." \
+              || echo "Pull request already open, or Actions can't open pull requests in this repo."
+          fi

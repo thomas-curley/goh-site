@@ -1,0 +1,13 @@
+{
+  "name": "goh-osrs-models",
+  "private": true,
+  "type": "module",
+  "description": "Extracts player-model data from the OSRS cache for the member profile character viewer.",
+  "scripts": {
+    "extract": "node extract.mjs .cache/out"
+  },
+  "dependencies": {
+    "lodash": "4.17.21",
+    "osrscachereader": "1.1.3"
+  }
+}
