@@ -5,6 +5,7 @@
   "items": 5652,
   "kits": 307,
   "models": 4813,
-  "modelBytes": 14218573,
-  "missingModels": 1
+  "modelBytes": 15474473,
+  "missingModels": 1,
+  "poseFrames": 0
 }
