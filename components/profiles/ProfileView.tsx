@@ -33,13 +33,13 @@ function formatDate(iso: string | null) {
 }
 
 const PARSE_LEGEND = [
-  { label: "100", bg: "#e5cc80", fg: "#3b2f05" },
-  { label: "99", bg: "#e268a8", fg: "#fff" },
-  { label: "95+", bg: "#ff8000", fg: "#1f1000" },
-  { label: "75+", bg: "#a335ee", fg: "#fff" },
-  { label: "50+", bg: "#0070dd", fg: "#fff" },
-  { label: "25+", bg: "#1eaa3a", fg: "#fff" },
-  { label: "0+", bg: "#6b6b6b", fg: "#fff" },
+  { label: "Best", bg: "#e5cc80", fg: "#3b2f05" },
+  { label: "Top 1%", bg: "#e268a8", fg: "#fff" },
+  { label: "Top 5%", bg: "#ff8000", fg: "#1f1000" },
+  { label: "Top 25%", bg: "#a335ee", fg: "#fff" },
+  { label: "Top half", bg: "#0070dd", fg: "#fff" },
+  { label: "Bottom half", bg: "#1eaa3a", fg: "#fff" },
+  { label: "Bottom 25%", bg: "#6b6b6b", fg: "#fff" },
 ];
 
 /**
@@ -112,12 +112,19 @@ export function ProfileView({ data }: { data: ProfileData }) {
             <GainsPanel week={data.gains.week} month={data.gains.month} />
           </Card>
 
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-iron-grey">
-            <span>Clan percentile:</span>
-            {PARSE_LEGEND.map((l) => (
-              <span key={l.label} className="rounded px-1.5 font-bold" style={{ backgroundColor: l.bg, color: l.fg }}>{l.label}</span>
-            ))}
-          </div>
+          {data.rankingsUpdatedAt ? (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-iron-grey">
+              <span>Badge colour = where they rank in the clan:</span>
+              {PARSE_LEGEND.map((l) => (
+                <span key={l.label} className="rounded px-1.5 font-bold" style={{ backgroundColor: l.bg, color: l.fg }}>{l.label}</span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-iron-grey">
+              Clan ranks haven&apos;t been worked out yet, so no badges show. They fill in at the next daily refresh, or straight away
+              when an admin presses Refresh rankings now in Admin › Member Profiles (Beta).
+            </p>
+          )}
         </div>
       </div>
 

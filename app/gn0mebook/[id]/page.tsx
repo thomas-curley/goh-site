@@ -7,6 +7,8 @@ import { createClient } from "@supabase/supabase-js";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { Card } from "@/components/ui/Card";
 import { ProfileAvatar } from "@/components/gn0mebook/ProfileAvatar";
+import { CharacterStage } from "@/components/profiles/CharacterStage";
+import { getDefaultCharacter, getUserCharacter, mergeCharacter } from "@/lib/profile-characters";
 import type { Metadata } from "next";
 
 function getServiceClient() {
@@ -42,6 +44,14 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
     ? await serviceClient.from("user_alt_rsns").select("rsn").eq("user_id", profile.user_id).order("linked_at", { ascending: true })
     : { data: null };
   const alts = (altRows ?? []).map((a) => a.rsn);
+
+  // The member's 3D character (beta), only if they've opted in.
+  const character =
+    profile.show_character && serviceClient && eligibility.eligible
+      ? await Promise.all([getUserCharacter(serviceClient, profile.user_id), getDefaultCharacter(serviceClient)]).then(
+          ([own, fallback]) => mergeCharacter(own, fallback).character,
+        )
+      : null;
 
   const avatarUrl = profile.avatar_url || profile.discord_avatar;
   const name = profile.rsn || profile.discord_username;
@@ -94,6 +104,20 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         </Card>
       ) : (
         <div className="space-y-6">
+          {character && (
+            <div className="max-w-[420px] mx-auto">
+              <CharacterStage
+                character={character}
+                title={
+                  <div className="flex items-center justify-center gap-2">
+                    <h2 className="font-display text-2xl text-gold-light">{name}</h2>
+                    <span className="rounded-full bg-gold/25 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold-light">Beta</span>
+                  </div>
+                }
+              />
+              <p className="mt-1 text-center text-xs text-iron-grey">Drag to turn.</p>
+            </div>
+          )}
           {profile.about && (
             <Card hover={false}>
               <h2 className="font-display text-lg text-bark-brown mb-2">About Me</h2>

@@ -36,6 +36,25 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 13, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-13-gn0mebook-character",
+    date: "2026-10-13",
+    kind: "new",
+    audience: "everyone",
+    title: "Show your 3D character on your Gn0meBook profile (beta)",
+    summary:
+      "Every member can now design their OSRS character in 3D in My Account (appearance like the in-game character creator, plus gear in every slot) and choose to show it on their Gn0meBook profile. It's off until you turn it on. Anyone who hasn't designed one yet shows the clan's gnome outfit.",
+    tryIt: [
+      "Open My Account and scroll to Profile character. Set your appearance and gear, then save.",
+      "Open My Gn0meBook Profile, tick \"Show my OSRS character on my profile\" and save.",
+      "View your Gn0meBook profile and drag the character to turn it.",
+    ],
+    links: [
+      { label: "My Gn0meBook Profile", href: "/gn0mebook/edit" },
+      { label: "My Account › Profile character", href: "/account#outfit" },
+      { label: "Gn0meBook", href: "/gn0mebook" },
+    ],
+  },
+  {
     id: "2026-10-13-member-profiles-beta",
     date: "2026-10-13",
     kind: "new",
