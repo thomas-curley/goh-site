@@ -79,6 +79,7 @@ export async function PUT(request: NextRequest) {
     banner_url: typeof body.bannerUrl === "string" ? body.bannerUrl.trim() || null : null,
     social_links: socialLinks,
     is_published: body.isPublished !== false,
+    show_character: body.showCharacter === true,
     visibility: VALID_VISIBILITY.includes(body.visibility) ? body.visibility : "anonymous",
     updated_at: new Date().toISOString(),
   };

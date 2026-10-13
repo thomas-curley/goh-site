@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -32,6 +33,7 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initialProfile?.social_links ?? []);
   const [isPublished, setIsPublished] = useState(initialProfile?.is_published ?? true);
   const [visibility, setVisibility] = useState<AccessLevel>(initialProfile?.visibility ?? "anonymous");
+  const [showCharacter, setShowCharacter] = useState(initialProfile?.show_character ?? false);
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -68,7 +70,7 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
         playSchedule, inGameFocus,
         avatarUrl, bannerUrl,
         socialLinks: socialLinks.filter((l) => l.label.trim() && l.url.trim()),
-        isPublished, visibility,
+        isPublished, visibility, showCharacter,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -170,6 +172,22 @@ export function ProfileEditForm({ initialProfile, profileId }: { initialProfile:
           ))}
         </div>
         <button type="button" onClick={addSocialLink} className="text-xs text-gnome-green hover:underline mt-2 cursor-pointer">+ Add link</button>
+      </Card>
+
+      <Card hover={false}>
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <span className="text-sm font-semibold text-bark-brown">My 3D character</span>
+          <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-bark-brown">Beta</span>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
+          <input type="checkbox" checked={showCharacter} onChange={(e) => setShowCharacter(e.target.checked)} className="accent-gnome-green" />
+          Show my OSRS character on my profile
+        </label>
+        <p className="text-xs text-iron-grey mt-1">
+          Design your character&apos;s appearance and gear in{" "}
+          <Link href="/account#outfit" className="text-gnome-green hover:underline">My Account</Link>. Until you do, it wears the clan&apos;s
+          gnome outfit.
+        </p>
       </Card>
 
       <Card hover={false}>

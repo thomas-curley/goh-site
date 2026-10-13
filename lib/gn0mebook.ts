@@ -36,6 +36,8 @@ export interface MemberProfile {
   is_published: boolean;
   visibility: "anonymous" | "verified_player" | "clan_member";
   hidden_by_admin: boolean;
+  /** Show the member's 3D character on the profile (beta, opt-in). */
+  show_character: boolean;
   created_at: string;
   updated_at: string;
   // Joined from user_profiles for display -- never editable here.
