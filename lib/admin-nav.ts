@@ -43,6 +43,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   { href: "/admin/gn0mebook", label: "Gn0meBook Profiles", group: "Members", permission: "manage_member_profiles" },
   { href: "/admin/profiles-beta", label: "Member Profiles (Beta)", group: "Members", permission: "manage_member_profiles" },
+  { href: "/admin/default-outfit", label: "Default Clan Outfit", group: "Members", permission: "manage_member_profiles" },
   { href: "/admin/loans", label: "Loans", group: "Members", permission: "manage_loans" },
 
   { href: "/admin/newsletter", label: "Newsletter", group: "Content", permission: "manage_newsletter" },

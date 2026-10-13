@@ -48,11 +48,12 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       "Look at the coloured ranks next to each boss and skill, and switch Recent gains between week and month.",
       "Drag a character to turn it.",
       "Make your own in My Account, under Profile character: on Appearance, pick your body type, head, jaw, torso, arms, hands, legs and feet, and your hair, clothing and skin colours, like the in-game character creator; on Gear, click a slot and search for an item.",
-      "Admins: set the clan's default character and refresh rankings in Admin › Member Profiles (Beta).",
+      "Admins: set the clan's default outfit in Admin › Default Clan Outfit, and refresh rankings in Admin › Member Profiles (Beta).",
     ],
     links: [
       { label: "Member Profiles (Beta)", href: "/members/beta" },
       { label: "My Account › Profile character", href: "/account#outfit" },
+      { label: "Admin › Default Clan Outfit", href: "/admin/default-outfit" },
       { label: "Admin › Member Profiles (Beta)", href: "/admin/profiles-beta" },
     ],
   },
