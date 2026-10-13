@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir -p public/osrs/models
           rsync -a --delete scripts/osrs-models/.cache/out/models/ public/osrs/models/
-          cp scripts/osrs-models/.cache/out/{items,kits,textures,meta}.json public/osrs/
+          cp scripts/osrs-models/.cache/out/*.json public/osrs/
 
       - name: Commit changes
         env:

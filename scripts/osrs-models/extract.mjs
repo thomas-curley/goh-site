@@ -209,6 +209,18 @@ function decodeKit(bytes, id) {
   }
 }
 
+// Only the frame list of a sequence (opcode 1, always first for player anims).
+function decodeSequenceFrames(bytes, id) {
+  const r = new Reader(bytes);
+  const d = { id, frameLengths: [], frameIds: [] };
+  if (r.u8() !== 1) return d;
+  const n = r.u16();
+  for (let i = 0; i < n; i++) d.frameLengths.push(r.u16());
+  for (let i = 0; i < n; i++) d.frameIds.push(r.u16());
+  for (let i = 0; i < n; i++) d.frameIds[i] += r.u16() << 16;
+  return d;
+}
+
 class ItemLoader {
   load(bytes, id) {
     return decodeItem(bytes, id);
@@ -221,16 +233,26 @@ class KitLoader {
 }
 ConfigType.ITEM.loader = ItemLoader;
 ConfigType.IDENTKIT.loader = KitLoader;
+ConfigType.SEQUENCE.loader = class {
+  load(bytes, id) {
+    return decodeSequenceFrames(bytes, id);
+  }
+};
+
+/** The player's standing animation, used to pose the character. */
+const STAND_ANIMATION = 808;
 
 /**
  * Compact model file (little-endian):
- *   "OSM1", u32 vertexCount, u32 faceCount, u8 flags (1 alpha, 2 textures, 4 int32 vertices)
+ *   "OSM1", u32 vertexCount, u32 faceCount,
+ *   u8 flags (1 alpha, 2 textures, 4 int32 vertices, 8 vertex labels)
  *   vertices: x,y,z per vertex (int16, or int32 with flag 4)
  *   faces:    a,b,c per face (uint16 if vertexCount <= 65536, else uint32)
  *   colours:  uint16 HSL per face
  *   types:    uint8 render type per face
  *   alphas:   uint8 per face (flag 1; 0 = opaque)
  *   textures: int16 per face (flag 2; -1 = none)
+ *   labels:   uint16 per vertex (flag 8; which animation group moves it)
  */
 function packModel(m) {
   const vc = m.vertexCount;
@@ -241,16 +263,24 @@ function packModel(m) {
   for (const arr of [m.vertexPositionsX, m.vertexPositionsY, m.vertexPositionsZ]) {
     for (let i = 0; i < vc; i++) if (arr[i] < -32768 || arr[i] > 32767) wide = true;
   }
+  const labels = new Uint16Array(vc);
+  let hasLabels = false;
+  (m.vertexGroups ?? []).forEach((group, label) => {
+    for (const v of group ?? []) {
+      if (v < vc) labels[v] = label;
+      if (label) hasLabels = true;
+    }
+  });
   const vBytes = wide ? 4 : 2;
   const iBytes = vc > 65536 ? 4 : 2;
-  const size = 13 + vc * 3 * vBytes + fc * 3 * iBytes + fc * 2 + fc + (hasAlpha ? fc : 0) + (hasTex ? fc * 2 : 0);
+  const size = 13 + vc * 3 * vBytes + fc * 3 * iBytes + fc * 2 + fc + (hasAlpha ? fc : 0) + (hasTex ? fc * 2 : 0) + (hasLabels ? vc * 2 : 0);
   const buf = Buffer.alloc(size);
   let p = 0;
   buf.write("OSM1", 0, "ascii");
   p = 4;
   buf.writeUInt32LE(vc, p);
   buf.writeUInt32LE(fc, p + 4);
-  buf.writeUInt8((hasAlpha ? 1 : 0) | (hasTex ? 2 : 0) | (wide ? 4 : 0), p + 8);
+  buf.writeUInt8((hasAlpha ? 1 : 0) | (hasTex ? 2 : 0) | (wide ? 4 : 0) | (hasLabels ? 8 : 0), p + 8);
   p += 9;
   for (let i = 0; i < vc; i++) {
     for (const arr of [m.vertexPositionsX, m.vertexPositionsY, m.vertexPositionsZ]) {
@@ -270,6 +300,7 @@ function packModel(m) {
   for (let i = 0; i < fc; i++, p += 1) buf.writeUInt8((m.faceRenderTypes?.[i] ?? 0) & 0xff, p);
   if (hasAlpha) for (let i = 0; i < fc; i++, p += 1) buf.writeUInt8((m.faceAlphas[i] ?? 0) & 0xff, p);
   if (hasTex) for (let i = 0; i < fc; i++, p += 2) buf.writeInt16LE(m.faceTextures[i] ?? -1, p);
+  if (hasLabels) for (let i = 0; i < vc; i++, p += 2) buf.writeUInt16LE(labels[i], p);
   return buf;
 }
 
@@ -364,6 +395,26 @@ for (const id of modelIds) {
 const missingSet = new Set(missing);
 const usable = items.filter((it) => ![...it.m, ...it.f].some((m) => missingSet.has(m)));
 
+// Standing pose: every frame of the stand animation, against its skeleton.
+let pose = null;
+try {
+  const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, STAND_ANIMATION);
+  const frames = [];
+  let skeleton = null;
+  for (let i = 0; i < seq.frameIds.length; i++) {
+    const frameId = seq.frameIds[i];
+    const frame = await cache.getDef(IndexType.FRAMES, frameId >>> 16, frameId & 0xffff);
+    skeleton ??= frame.framemap;
+    frames.push({
+      length: seq.frameLengths[i],
+      steps: frame.indexFrameIds.map((g, j) => [g, frame.translator_x[j], frame.translator_y[j], frame.translator_z[j]]),
+    });
+  }
+  pose = { animation: STAND_ANIMATION, types: skeleton.types, groups: skeleton.frameMaps, frames };
+} catch (err) {
+  console.warn("Couldn't extract the stand animation:", err);
+}
+
 const meta = {
   cacheId: info.id,
   cacheTimestamp: info.timestamp,
@@ -373,10 +424,12 @@ const meta = {
   models: written,
   modelBytes: bytes,
   missingModels: missing.length,
+  poseFrames: pose?.frames.length ?? 0,
 };
 fs.writeFileSync(path.join(OUT, "items.json"), JSON.stringify(usable));
 fs.writeFileSync(path.join(OUT, "kits.json"), JSON.stringify(kits));
 fs.writeFileSync(path.join(OUT, "textures.json"), JSON.stringify(textures));
+if (pose) fs.writeFileSync(path.join(OUT, "pose.json"), JSON.stringify(pose));
 fs.writeFileSync(path.join(OUT, "meta.json"), JSON.stringify(meta, null, 2));
 console.log(meta);
 process.exit(0);
