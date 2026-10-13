@@ -209,16 +209,40 @@ function decodeKit(bytes, id) {
   }
 }
 
-// Only the frame list of a sequence (opcode 1, always first for player anims).
-function decodeSequenceFrames(bytes, id) {
+// Sequence (animation) definitions; only the frame list is kept.
+function decodeSequence(bytes, id) {
   const r = new Reader(bytes);
-  const d = { id, frameLengths: [], frameIds: [] };
-  if (r.u8() !== 1) return d;
-  const n = r.u16();
-  for (let i = 0; i < n; i++) d.frameLengths.push(r.u16());
-  for (let i = 0; i < n; i++) d.frameIds.push(r.u16());
-  for (let i = 0; i < n; i++) d.frameIds[i] += r.u16() << 16;
-  return d;
+  const d = { id, frameLengths: [], frameIds: [], mayaId: -1 };
+  for (;;) {
+    const op = r.u8();
+    if (op === 0) return d;
+    if (op === 1) {
+      const n = r.u16();
+      for (let i = 0; i < n; i++) d.frameLengths.push(r.u16());
+      for (let i = 0; i < n; i++) d.frameIds.push(r.u16());
+      for (let i = 0; i < n; i++) d.frameIds[i] += r.u16() * 65536;
+    } else if (op === 2 || op === 6 || op === 7) r.u16();
+    else if (op === 3) {
+      const n = r.u8();
+      r.p += n;
+    } else if (op === 4 || op === 19) {
+      // flags
+    } else if (op === 5 || (op >= 8 && op <= 11)) r.u8();
+    else if (op === 12) {
+      const n = r.u8();
+      r.p += n * 4;
+    } else if (op === 13) d.mayaId = r.i32();
+    else if (op === 14) {
+      const n = r.u16();
+      r.p += n * 7;
+    } else if (op === 15) r.p += 4;
+    else if (op === 16) r.i8();
+    else if (op === 17) {
+      const n = r.u8();
+      r.p += n;
+    } else if (op === 18) r.str();
+    else throw new Error(`sequence ${id}: unknown opcode ${op}`);
+  }
 }
 
 class ItemLoader {
@@ -235,7 +259,7 @@ ConfigType.ITEM.loader = ItemLoader;
 ConfigType.IDENTKIT.loader = KitLoader;
 ConfigType.SEQUENCE.loader = class {
   load(bytes, id) {
-    return decodeSequenceFrames(bytes, id);
+    return decodeSequence(bytes, id);
   }
 };
 
@@ -399,6 +423,7 @@ const usable = items.filter((it) => ![...it.m, ...it.f].some((m) => missingSet.h
 let pose = null;
 try {
   const seq = await cache.getDef(IndexType.CONFIGS, ConfigType.SEQUENCE, STAND_ANIMATION);
+  if (!seq.frameIds.length) throw new Error(`no frames (skeletal animation ${seq.mayaId})`);
   const frames = [];
   let skeleton = null;
   for (let i = 0; i < seq.frameIds.length; i++) {
