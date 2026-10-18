@@ -1,10 +1,10 @@
 import { Client, GatewayIntentBits, Collection, Events, ChannelType } from "discord.js";
 import { config } from "dotenv";
-import { resolve } from "path";
+import { fileURLToPath } from "url";
 import type { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 // Load .env from project root
-config({ path: resolve(import.meta.dirname, "../../.env.local") });
+config({ path: fileURLToPath(new URL("../../.env.local", import.meta.url)) });
 
 // Types
 export interface BotCommand {
