@@ -3,10 +3,12 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { drawWinners, presetDates, rangeFromDates, type RafflePreset } from "@/lib/raffle";
 
-type Preset = "week" | "month" | "custom";
+type Preset = RafflePreset | "custom";
 
-const PRESETS: { key: Preset; label: string }[] = [
+const PRESETS: { key: RafflePreset; label: string }[] = [
+  { key: "lastWeek", label: "Last Week" },
   { key: "week", label: "This Week" },
   { key: "month", label: "This Month" },
 ];
@@ -16,12 +18,8 @@ interface Attendee {
   count: number;
 }
 
-function presetRange(preset: Preset): { start: string; end: string } {
-  const end = new Date();
-  const start = new Date();
-  if (preset === "week") start.setDate(start.getDate() - 7);
-  else start.setMonth(start.getMonth() - 1);
-  return { start: start.toISOString(), end: end.toISOString() };
+function formatDay(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
 const inputClass = "px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
@@ -38,13 +36,19 @@ export function AttendanceExport() {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [range, setRange] = useState<{ from: string; to: string } | null>(null);
+  const [winnerCount, setWinnerCount] = useState(1);
+  const [winners, setWinners] = useState<Attendee[]>([]);
+  const [winnersCopied, setWinnersCopied] = useState(false);
 
-  const load = useCallback(async (start: string, end: string) => {
+  const load = useCallback(async (from: string, to: string) => {
     setLoading(true);
     setError(null);
     setCopied(false);
+    setWinners([]);
+    setRange({ from, to });
     try {
-      const params = new URLSearchParams({ start, end });
+      const params = new URLSearchParams(rangeFromDates(from, to));
       const res = await fetch(`/api/attendance/export?${params.toString()}`);
       const data = await res.json();
       if (res.ok) {
@@ -61,17 +65,41 @@ export function AttendanceExport() {
     }
   }, []);
 
-  const selectPreset = (p: Preset) => {
+  // Presets fill in the date pickers with the range they use.
+  const selectPreset = (p: RafflePreset) => {
     setPreset(p);
-    const { start, end } = presetRange(p);
-    load(start, end);
+    const { from, to } = presetDates(p);
+    setCustomStart(from);
+    setCustomEnd(to);
+    load(from, to);
   };
 
   const applyCustomRange = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customStart || !customEnd) return;
+    if (customEnd < customStart) {
+      setError("The To date is before the From date.");
+      return;
+    }
     setPreset("custom");
-    load(new Date(customStart).toISOString(), new Date(`${customEnd}T23:59:59`).toISOString());
+    load(customStart, customEnd);
+  };
+
+  const totalEntries = attendees.reduce((sum, a) => sum + a.count, 0);
+
+  const draw = () => {
+    setWinners(drawWinners(attendees, Math.max(1, Math.min(winnerCount, attendees.length))));
+    setWinnersCopied(false);
+  };
+
+  const copyWinners = async () => {
+    try {
+      await navigator.clipboard.writeText(winners.map((w) => w.name).join("\n"));
+      setWinnersCopied(true);
+      setTimeout(() => setWinnersCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy automatically -- select the winners and copy manually.");
+    }
   };
 
   const nameList = mode === "unique"
@@ -118,6 +146,11 @@ export function AttendanceExport() {
             Apply Range
           </Button>
         </form>
+        <p className="text-xs text-iron-grey mt-2">
+          {range
+            ? `Showing events from ${formatDay(range.from)} to ${formatDay(range.to)} (both days included).`
+            : "Weeks run Sunday to Saturday; This Month is the whole calendar month. Each button fills in the dates above."}
+        </p>
       </Card>
 
       {error && (
@@ -164,6 +197,49 @@ export function AttendanceExport() {
                 <p className="text-xs text-iron-grey">One name per line, ready to paste into wheelofnames.com or similar.</p>
               </div>
             </>
+          )}
+        </Card>
+      )}
+
+      {!loading && loaded && attendees.length > 0 && (
+        <Card hover={false} className="mt-6">
+          <h3 className="font-display text-lg text-bark-brown mb-1">Random draw</h3>
+          <p className="text-sm text-bark-brown-light mb-3">
+            Picks different winners from this list. Everyone gets one entry per event they attended in this range ({totalEntries} entries
+            across {attendees.length} {attendees.length === 1 ? "person" : "people"}), and a winner&apos;s entries leave the draw so nobody wins twice.
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label htmlFor="winner-count" className="block text-xs text-iron-grey mb-1">Number of winners</label>
+              <input
+                id="winner-count"
+                type="number"
+                min={1}
+                max={attendees.length}
+                value={winnerCount}
+                onChange={(e) => setWinnerCount(Math.max(1, Math.min(Number(e.target.value) || 1, attendees.length)))}
+                className={`${inputClass} w-28`}
+              />
+            </div>
+            <Button size="sm" onClick={draw}>{winners.length ? "Draw again" : "Draw winners"}</Button>
+          </div>
+          {winners.length > 0 && (
+            <div className="mt-4">
+              <ol className="space-y-1">
+                {winners.map((w, i) => (
+                  <li key={w.name} className="flex items-baseline gap-2 text-bark-brown">
+                    <span className="font-display text-gold w-6 text-right">{i + 1}.</span>
+                    <span className="font-semibold">{w.name}</span>
+                    <span className="text-xs text-iron-grey">
+                      {w.count} {w.count === 1 ? "entry" : "entries"}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <Button size="sm" variant="secondary" className="mt-3" onClick={copyWinners}>
+                {winnersCopied ? "Copied!" : "Copy winners"}
+              </Button>
+            </div>
           )}
         </Card>
       )}

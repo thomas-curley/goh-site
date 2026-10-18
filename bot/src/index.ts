@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
+import { Client, GatewayIntentBits, Collection, Events, ChannelType } from "discord.js";
 import { config } from "dotenv";
 import { resolve } from "path";
 import type { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
@@ -39,6 +39,8 @@ async function loadCommands() {
     await import("./commands/banner.js"),
     await import("./commands/attendance.js"),
     await import("./commands/command.js"),
+    await import("./commands/create-room.js"),
+    await import("./commands/room.js"),
   ];
 
   for (const file of commandFiles) {
@@ -80,11 +82,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
+// Temp rooms: when someone leaves one, it may need deleting straight away.
+client.on(Events.VoiceStateUpdate, async (oldState) => {
+  const left = oldState.channel;
+  if (!left || left.type !== ChannelType.GuildVoice || oldState.channelId === oldState.member?.voice.channelId) return;
+  const { onVoiceLeave } = await import("./lib/temp-rooms.js");
+  await onVoiceLeave(left).catch((err) => console.error("Temp room check failed:", err));
+});
+
 // Ready
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
   console.log(`\n🏰 Gn0me Home Bot online as ${c.user.tag}`);
   console.log(`   Serving ${c.guilds.cache.size} guild(s)`);
   console.log(`   ${commands.size} commands loaded\n`);
+
+  // Remove empty /create-room rooms now and every 30 minutes.
+  const { startRoomCleanup } = await import("./lib/temp-rooms.js");
+  startRoomCleanup(c);
 });
 
 // Start

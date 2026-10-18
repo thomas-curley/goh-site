@@ -9,6 +9,8 @@ interface ChannelSelectorProps {
   label?: string;
   /** Renders a "Use default" blank option first, for optional destination fields. */
   allowBlank?: boolean;
+  /** Text for that blank option (default "Use default"). */
+  blankLabel?: string;
   /** Hide forum channels themselves (their posts stay listed) -- for things that can't start a forum post, like polls. */
   excludeForums?: boolean;
 }
@@ -18,7 +20,7 @@ const KIND_ICON = { text: "#", announcement: "📢", forum: "💬" } as const;
 // Every selector on a page shares one request (the alert channels page
 // renders 15+ of them).
 let channelListRequest: Promise<ChannelListResult | null> | null = null;
-function loadChannelList(): Promise<ChannelListResult | null> {
+export function loadChannelList(): Promise<ChannelListResult | null> {
   if (!channelListRequest) {
     channelListRequest = fetch("/api/discord/channels")
       .then((res) => (res.ok ? (res.json() as Promise<ChannelListResult>) : null))
@@ -32,7 +34,7 @@ function loadChannelList(): Promise<ChannelListResult | null> {
   return channelListRequest;
 }
 
-export function ChannelSelector({ value, onChange, label = "Post to Channel", allowBlank = false, excludeForums = false }: ChannelSelectorProps) {
+export function ChannelSelector({ value, onChange, label = "Post to Channel", allowBlank = false, blankLabel = "Use default", excludeForums = false }: ChannelSelectorProps) {
   const [list, setList] = useState<ChannelListResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -97,7 +99,7 @@ export function ChannelSelector({ value, onChange, label = "Post to Channel", al
           className="flex-1 min-w-0 px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green cursor-pointer"
         >
           {allowBlank ? (
-            <option value="">Use default</option>
+            <option value="">{blankLabel}</option>
           ) : (
             <option value="" disabled>
               {optionCount === 0 ? "No channels match the filter" : "Select a channel..."}

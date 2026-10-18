@@ -34,6 +34,37 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 18, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-18-raffle-draw",
+    date: "2026-10-18",
+    kind: "improved",
+    audience: "admin",
+    title: "Raffle attendance: Sunday-to-Saturday weeks and a built-in draw",
+    summary:
+      "On the Raffles page, weeks now run Sunday to Saturday: This Week is the current week and the new Last Week is the full week before it. This Month covers the whole calendar month. Each button fills in the From and To dates so you can see exactly what's included. A new Random draw picks as many different winners as you ask for, giving everyone one entry per event they attended in that range.",
+    tryIt: [
+      "Go to Admin › Raffles and scroll to Attendance for the Draw.",
+      "Press Last Week (or This Week) and check the dates it fills in.",
+      "Under Random draw, set the number of winners and press Draw winners.",
+    ],
+    links: [{ label: "Admin › Raffles", href: "/admin/raffles" }],
+  },
+  {
+    id: "2026-10-18-voice-rooms",
+    date: "2026-10-18",
+    kind: "new",
+    audience: "admin",
+    title: "Temporary muted voice rooms in Discord",
+    summary:
+      "Members can type /create-room in Discord to make a temporary voice room. Everyone joins muted except the creator and staff, who can let people speak with /room speak and mute them again with /room mute. Rooms can also be locked, renamed, resized or handed over, and empty rooms are removed automatically. Admins choose the category rooms go in, who can create them, who counts as staff, cleanup timing and a log channel.",
+    tryIt: [
+      "Go to Admin › Voice Rooms, pick the category for new rooms, and save.",
+      "In Discord, type /create-room, then join the room it makes.",
+      "From inside the room, try /room speak @someone, /room lock and /room info.",
+    ],
+    links: [{ label: "Admin › Voice Rooms", href: "/admin/voice-rooms" }],
+  },
   // ── October 13, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-13-gn0mebook-character",
