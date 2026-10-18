@@ -3,11 +3,12 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { drawWinners, presetDates, rangeFromDates } from "@/lib/raffle";
+import { drawWinners, presetDates, rangeFromDates, type RafflePreset } from "@/lib/raffle";
 
-type Preset = "week" | "month" | "custom";
+type Preset = RafflePreset | "custom";
 
-const PRESETS: { key: Preset; label: string }[] = [
+const PRESETS: { key: RafflePreset; label: string }[] = [
+  { key: "lastWeek", label: "Last Week" },
   { key: "week", label: "This Week" },
   { key: "month", label: "This Month" },
 ];
@@ -65,7 +66,7 @@ export function AttendanceExport() {
   }, []);
 
   // Presets fill in the date pickers with the range they use.
-  const selectPreset = (p: Exclude<Preset, "custom">) => {
+  const selectPreset = (p: RafflePreset) => {
     setPreset(p);
     const { from, to } = presetDates(p);
     setCustomStart(from);
@@ -127,7 +128,7 @@ export function AttendanceExport() {
       <Card hover={false} className="mb-6">
         <div className="flex flex-wrap items-center gap-3 mb-3">
           {PRESETS.map((p) => (
-            <Button key={p.key} size="sm" variant={preset === p.key ? "primary" : "ghost"} onClick={() => selectPreset(p.key as Exclude<Preset, "custom">)}>
+            <Button key={p.key} size="sm" variant={preset === p.key ? "primary" : "ghost"} onClick={() => selectPreset(p.key)}>
               {p.label}
             </Button>
           ))}
@@ -148,7 +149,7 @@ export function AttendanceExport() {
         <p className="text-xs text-iron-grey mt-2">
           {range
             ? `Showing events from ${formatDay(range.from)} to ${formatDay(range.to)} (both days included).`
-            : "This Week runs Sunday to Sunday; This Month is the whole calendar month. Both fill in the dates above."}
+            : "Weeks run Sunday to Saturday; This Month is the whole calendar month. Each button fills in the dates above."}
         </p>
       </Card>
 
