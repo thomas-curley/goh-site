@@ -39,6 +39,8 @@ async function loadCommands() {
     await import("./commands/banner.js"),
     await import("./commands/attendance.js"),
     await import("./commands/command.js"),
+    await import("./commands/create-room.js"),
+    await import("./commands/room.js"),
   ];
 
   for (const file of commandFiles) {
@@ -81,10 +83,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 // Ready
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
   console.log(`\n🏰 Gn0me Home Bot online as ${c.user.tag}`);
   console.log(`   Serving ${c.guilds.cache.size} guild(s)`);
   console.log(`   ${commands.size} commands loaded\n`);
+
+  // Remove empty /create-room rooms now and every 30 minutes.
+  const { startRoomCleanup } = await import("./lib/temp-rooms.js");
+  startRoomCleanup(c);
 });
 
 // Start
