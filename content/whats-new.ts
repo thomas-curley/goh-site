@@ -36,6 +36,21 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 18, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-18-raffle-draw",
+    date: "2026-10-18",
+    kind: "improved",
+    audience: "admin",
+    title: "Raffle attendance: Sunday-to-Sunday weeks and a built-in draw",
+    summary:
+      "On the Raffles page, This Week now runs Sunday to Sunday and This Month covers the whole calendar month, and both fill in the From and To dates so you can see exactly what's included. A new Random draw picks as many different winners as you ask for, giving everyone one entry per event they attended in that range.",
+    tryIt: [
+      "Go to Admin › Raffles and scroll to Attendance for the Draw.",
+      "Press This Week and check the dates it fills in.",
+      "Under Random draw, set the number of winners and press Draw winners.",
+    ],
+    links: [{ label: "Admin › Raffles", href: "/admin/raffles" }],
+  },
+  {
     id: "2026-10-18-voice-rooms",
     date: "2026-10-18",
     kind: "new",
