@@ -1,8 +1,8 @@
 import { REST, Routes } from "discord.js";
 import { config } from "dotenv";
-import { resolve } from "path";
+import { fileURLToPath } from "url";
 
-config({ path: resolve(import.meta.dirname, "../../.env.local") });
+config({ path: fileURLToPath(new URL("../../.env.local", import.meta.url)) });
 
 const commands = [
   (await import("./commands/link.js")).default,
