@@ -28,6 +28,8 @@ export interface ChannelListResult {
   groups: { category: string | null; channels: ChannelListChannel[] }[];
   /** Active threads whose parent isn't listed above (e.g. a voice channel's text chat). */
   otherThreads: ChannelListThread[];
+  /** Every category, in sidebar order (for settings that pick a category). */
+  categories: { id: string; name: string }[];
 }
 
 interface RawChannel {
@@ -112,7 +114,11 @@ export async function GET() {
       ...categories.map((cat) => ({ category: cat.name, channels: postableIn(cat.id) })),
     ].filter((g) => g.channels.length > 0);
 
-    const data: ChannelListResult = { groups, otherThreads: otherThreads.sort(newestFirst) };
+    const data: ChannelListResult = {
+      groups,
+      otherThreads: otherThreads.sort(newestFirst),
+      categories: categories.map((c) => ({ id: c.id, name: c.name })),
+    };
     cache = { data, fetchedAt: Date.now() };
     return NextResponse.json(data);
   } catch {

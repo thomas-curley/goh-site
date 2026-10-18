@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection, Events } from "discord.js";
+import { Client, GatewayIntentBits, Collection, Events, ChannelType } from "discord.js";
 import { config } from "dotenv";
 import { resolve } from "path";
 import type { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
@@ -80,6 +80,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.reply(reply);
     }
   }
+});
+
+// Temp rooms: when someone leaves one, it may need deleting straight away.
+client.on(Events.VoiceStateUpdate, async (oldState) => {
+  const left = oldState.channel;
+  if (!left || left.type !== ChannelType.GuildVoice || oldState.channelId === oldState.member?.voice.channelId) return;
+  const { onVoiceLeave } = await import("./lib/temp-rooms.js");
+  await onVoiceLeave(left).catch((err) => console.error("Temp room check failed:", err));
 });
 
 // Ready
