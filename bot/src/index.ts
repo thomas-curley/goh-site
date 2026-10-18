@@ -96,6 +96,18 @@ client.once(Events.ClientReady, async (c) => {
   console.log(`   Serving ${c.guilds.cache.size} guild(s)`);
   console.log(`   ${commands.size} commands loaded\n`);
 
+  // Keep Discord's slash command list in step with this build, so a deploy
+  // needs no separate "npm run register".
+  const guildId = process.env.DISCORD_GUILD_ID;
+  if (guildId) {
+    try {
+      await c.application.commands.set(commands.map((cmd) => cmd.data.toJSON()), guildId);
+      console.log(`   Registered ${commands.size} slash commands`);
+    } catch (err) {
+      console.error("Slash command registration failed:", err);
+    }
+  }
+
   // Remove empty /create-room rooms now and every 30 minutes.
   const { startRoomCleanup } = await import("./lib/temp-rooms.js");
   startRoomCleanup(c);
@@ -105,7 +117,7 @@ client.once(Events.ClientReady, async (c) => {
 async function main() {
   const token = process.env.DISCORD_BOT_TOKEN;
   if (!token) {
-    console.error("DISCORD_BOT_TOKEN not set in .env.local");
+    console.error("DISCORD_BOT_TOKEN is not set (.env.local locally, or the host's environment variables)");
     process.exit(1);
   }
 
