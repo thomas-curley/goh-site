@@ -173,7 +173,7 @@ export function BoardStep({ data, onChanged, onNext }: { data: AdminBingo; onCha
             </div>
           )}
 
-          <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+          <div className="grid gap-1.5 sm:gap-2 p-0.5" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
             {Array.from({ length: squares }, (_, p) => {
               const tile = byPos.get(p) ?? null;
               return (

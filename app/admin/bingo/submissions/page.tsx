@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
 import { TileIcon } from "@/components/bingo/TileFace";
 import { inputClass } from "@/components/admin/bingo/BasicsStep";
-import type { BingoIconKind, BingoSubmissionStatus } from "@/lib/bingo";
+import type { BingoIconKind, BingoSubmissionStatus, BingoTileKind } from "@/lib/bingo";
 
 interface Submission {
   id: string;
@@ -30,7 +30,7 @@ interface Submission {
     title: string;
     description: string | null;
     points: number;
-    kind: string;
+    kind: BingoTileKind;
     required_count: number;
     accepted_items: string[];
     icon_kind: BingoIconKind;

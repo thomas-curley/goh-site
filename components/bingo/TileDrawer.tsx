@@ -121,7 +121,7 @@ export function TileDrawer({
             <ul className="grid grid-cols-2 gap-1.5">
               {tile.accepted_items.map((name) => (
                 <li key={name} className="flex items-center gap-1.5 text-sm text-bark-brown min-w-0">
-                  <TileIcon tile={{ icon_kind: "item", icon_ref: name, icon_item_id: null }} className="w-5 h-5 shrink-0" />
+                  <TileIcon tile={{ icon_kind: "item", icon_ref: name, icon_item_id: null }} className="w-5 h-5 shrink-0" placeholder={false} />
                   <span className="truncate">{name}</span>
                 </li>
               ))}

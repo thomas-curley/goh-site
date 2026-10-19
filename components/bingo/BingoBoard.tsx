@@ -309,7 +309,7 @@ export function BingoBoard({ eventId }: { eventId: string }) {
                     {teamScore?.blackout && " · 🏆 blackout!"}
                   </p>
                 )}
-                <div className="grid gap-1.5 sm:gap-2" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+                <div className="grid gap-1.5 sm:gap-2.5 p-0.5" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
                   {Array.from({ length: n * n }, (_, p) => {
                     const tile = byPos.get(p) ?? null;
                     if (!tile) return <TileFace key={p} tile={null} state="empty" />;
@@ -327,22 +327,22 @@ export function BingoBoard({ eventId }: { eventId: string }) {
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-iron-grey">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded border-2 border-gnome-green bg-gnome-green/20" /> Done
+                    <span className="w-3 h-3 rounded border-2 border-gnome-green bg-gnome-green/[0.14]" /> Done
                   </span>
                   {isMine && (
                     <>
                       <span className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded border-2 border-gold bg-gold/15" /> Waiting on staff
+                        <span className="w-3 h-3 rounded border-2 border-gold bg-gold/10" /> Waiting on staff
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded border-2 border-red-accent bg-red-accent/10" /> Sent back
+                        <span className="w-3 h-3 rounded border-2 border-red-accent/80 bg-red-accent/[0.07]" /> Sent back
                       </span>
                     </>
                   )}
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded border-2 border-bark-brown-light/60 shadow-[inset_0_0_0_2px_var(--color-gold-display)]" /> Finished line (+{event.line_bonus})
+                    <span className="w-3 h-3 rounded border-2 border-bark-brown-light/40 ring-2 ring-gold-display" /> Finished line (+{event.line_bonus})
                   </span>
-                  <span>Corner number = points</span>
+                  <span>Number in the corner = points</span>
                 </div>
                 {viewer.canSubmit && isMine && <p className="text-sm text-bark-brown-light">Tap a tile to see what counts and send a screenshot.</p>}
                 {viewer.signedIn && !viewer.teamId && event.status === "active" && <p className="text-sm text-iron-grey">You&apos;re not on a team for this bingo. Ask staff if you should be.</p>}
