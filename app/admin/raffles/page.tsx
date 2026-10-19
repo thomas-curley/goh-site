@@ -37,6 +37,7 @@ export default function RafflesPage() {
   const [notifyWinners, setNotifyWinners] = useState(false);
 
   const [raffles, setRaffles] = useState<Raffle[]>([]);
+  const [defaultPrizeAmount, setDefaultPrizeAmount] = useState<number | null>(null);
   const [raffleTitle, setRaffleTitle] = useState("");
   const [raffleDate, setRaffleDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [creatingRaffle, setCreatingRaffle] = useState(false);
@@ -58,6 +59,7 @@ export default function RafflesPage() {
     const res = await fetch("/api/admin/raffles");
     const data = await res.json().catch(() => ({}));
     setRaffles(res.ok ? data.raffles ?? [] : []);
+    if (res.ok) setDefaultPrizeAmount(data.defaultPrizeAmount ?? null);
   }, []);
 
   useEffect(() => {
@@ -123,14 +125,25 @@ export default function RafflesPage() {
     <div>
       <h1 className="font-display text-3xl text-gnome-green mb-1">Raffles</h1>
       <p className="text-bark-brown-light mb-6">
-        Create the week&apos;s raffle and record its winners (they&apos;re added to{" "}
-        <Link href="/admin/payouts" className="text-gnome-green hover:underline">Prize Payouts</Link> to track payment). The
-        winners are announced on Discord from{" "}
-        <Link href="/admin/weekly-competition" className="text-gnome-green hover:underline">Weekly SOTW/BotW</Link>.
+        Pick the week, draw the winners from event attendance, and save it as the week&apos;s raffle. Winners go to{" "}
+        <Link href="/admin/payouts" className="text-gnome-green hover:underline">Prize Payouts</Link> to track payment, and{" "}
+        <Link href="/admin/weekly-competition" className="text-gnome-green hover:underline">Weekly SOTW/BotW</Link> fills its raffle
+        post from the latest raffle.
       </p>
 
+      <section className="mb-8">
+        <AttendanceExport
+          defaultPrizeAmount={defaultPrizeAmount}
+          onRaffleSaved={() => {
+            loadRaffles();
+            load();
+          }}
+        />
+      </section>
+
       <Card hover={false} className="mb-8">
-        <h2 className="font-display text-xl text-bark-brown mb-4">Weekly Raffles</h2>
+        <h2 className="font-display text-xl text-bark-brown mb-1">Weekly Raffles</h2>
+        <p className="text-xs text-iron-grey mb-4">Raffles saved from the draw above, newest first. You can also start one by hand and add its winners yourself.</p>
         <form onSubmit={handleCreateRaffle} className="flex flex-col sm:flex-row gap-2 mb-6">
           <input
             type="text"
@@ -249,10 +262,6 @@ export default function RafflesPage() {
           </div>
         )}
       </Card>
-
-      <section>
-        <AttendanceExport />
-      </section>
     </div>
   );
 }

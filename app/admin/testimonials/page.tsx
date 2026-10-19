@@ -47,6 +47,8 @@ export default function AdminTestimonialsPage() {
 
   useEffect(() => { load(tab); }, [tab, load]);
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const selectTab = (t: Tab) => {
     setTab(t);
     setExpandedId(null);
@@ -66,6 +68,23 @@ export default function AdminTestimonialsPage() {
       await load(tab);
     } else {
       setActionStatus(data.error ?? "Failed to update. Try again.");
+    }
+    setBusyId(null);
+  };
+
+  // Removes it everywhere it shows (testimonials page, homepage, About).
+  const remove = async (t: Testimonial) => {
+    setBusyId(t.id);
+    setActionStatus(null);
+    const res = await fetch(`/api/admin/testimonials/${t.id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setActionStatus(`Deleted ${t.rsn}'s testimonial.`);
+      setConfirmDeleteId(null);
+      setExpandedId(null);
+      await load(tab);
+    } else {
+      setActionStatus(data.error ?? "Failed to delete. Try again.");
     }
     setBusyId(null);
   };
@@ -93,6 +112,7 @@ export default function AdminTestimonialsPage() {
       <p className="text-bark-brown-light mb-6">
         Approve or reject public clan testimonials. Approved ones can be marked Featured to show on the Homepage and
         About page -- the full approved list always shows on <span className="font-mono text-xs">/testimonials</span>.
+        Open any testimonial to delete it, for example one made for testing.
       </p>
 
       {actionStatus && (
@@ -188,6 +208,26 @@ export default function AdminTestimonialsPage() {
                         </div>
                       </div>
                     )}
+
+                    <div className="pt-3 border-t border-parchment-dark">
+                      {confirmDeleteId === t.id ? (
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <span className="text-bark-brown">
+                            Delete this testimonial for good?{t.status === "approved" ? " It comes off the site straight away." : ""}
+                          </span>
+                          <Button size="sm" variant="ghost" className="text-red-accent hover:bg-red-accent/10" disabled={busyId === t.id} onClick={() => remove(t)}>
+                            {busyId === t.id ? "Deleting..." : "Yes, delete it"}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(null)}>
+                            Keep it
+                          </Button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => setConfirmDeleteId(t.id)} className="text-xs text-red-accent hover:underline cursor-pointer">
+                          Delete testimonial
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </Card>

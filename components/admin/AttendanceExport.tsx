@@ -24,8 +24,18 @@ function formatDay(date: string) {
 
 const inputClass = "px-3 py-2 rounded-md border border-bark-brown-light bg-parchment text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-gnome-green";
 
-/** Attendee names for a date range of events, for drawing the weekly raffle. Shown on the Raffles page. */
-export function AttendanceExport() {
+/** "Oct 11" */
+function shortDay(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/**
+ * Attendee names for a date range of events, and the weekly raffle draw.
+ * Shown on the Raffles page; a draw can be saved as that week's raffle
+ * (winners go to Prize Payouts), which the Weekly SOTW/BotW page then
+ * picks up for its raffle post.
+ */
+export function AttendanceExport({ defaultPrizeAmount = null, onRaffleSaved }: { defaultPrizeAmount?: number | null; onRaffleSaved?: () => void }) {
   const [preset, setPreset] = useState<Preset>("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -40,12 +50,20 @@ export function AttendanceExport() {
   const [winnerCount, setWinnerCount] = useState(1);
   const [winners, setWinners] = useState<Attendee[]>([]);
   const [winnersCopied, setWinnersCopied] = useState(false);
+  // "Save as raffle" form. The title follows the range until it's typed in.
+  const [raffleTitle, setRaffleTitle] = useState<string | null>(null);
+  const [prize, setPrize] = useState<string | null>(null);
+  const [notify, setNotify] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
 
   const load = useCallback(async (from: string, to: string) => {
     setLoading(true);
     setError(null);
     setCopied(false);
     setWinners([]);
+    setSaved(null);
+    setRaffleTitle(null);
     setRange({ from, to });
     try {
       const params = new URLSearchParams(rangeFromDates(from, to));
@@ -90,6 +108,45 @@ export function AttendanceExport() {
   const draw = () => {
     setWinners(drawWinners(attendees, Math.max(1, Math.min(winnerCount, attendees.length))));
     setWinnersCopied(false);
+    setSaved(null);
+  };
+
+  const titleValue = raffleTitle ?? (range ? `Raffle: ${shortDay(range.from)} – ${shortDay(range.to)}` : "Weekly raffle");
+  const prizeValue = prize ?? `${(defaultPrizeAmount ?? 1_000_000).toLocaleString("en-US")} GP`;
+
+  // Creates the raffle, then adds the winners to it through Prize Payouts
+  // (the same path as adding winners by hand).
+  const saveRaffle = async () => {
+    if (!range || winners.length === 0 || !titleValue.trim() || !prizeValue.trim()) return;
+    setSaving(true);
+    setError(null);
+    const res = await fetch("/api/admin/raffles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: titleValue.trim(), occurredOn: range.to }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.raffle?.id) {
+      setSaving(false);
+      return setError(data.error ?? "Couldn't create the raffle.");
+    }
+    const winnersRes = await fetch("/api/admin/payouts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entries: winners.map((w) => ({ recipient_rsn: w.name, prize: prizeValue.trim(), category: "raffle" })),
+        raffleId: data.raffle.id,
+        notifyWinners: notify,
+      }),
+    });
+    setSaving(false);
+    if (!winnersRes.ok) {
+      const w = await winnersRes.json().catch(() => ({}));
+      setError(`The raffle was created, but its winners couldn't be saved (${w.error ?? "unknown error"}). Add them with "+ Add Winner" on it below.`);
+    } else {
+      setSaved(titleValue.trim());
+    }
+    onRaffleSaved?.();
   };
 
   const copyWinners = async () => {
@@ -120,9 +177,9 @@ export function AttendanceExport() {
 
   return (
     <div>
-      <h2 className="font-display text-xl text-bark-brown mb-1">Attendance for the Draw</h2>
+      <h2 className="font-display text-xl text-bark-brown mb-1">Draw the weekly raffle</h2>
       <p className="text-sm text-bark-brown-light mb-4">
-        Pull attendee names from a date range of events, ready to paste into a raffle wheel or spreadsheet.
+        Pick the week, then draw winners from everyone who attended events in it. You can also copy the name list for a raffle wheel.
       </p>
 
       <Card hover={false} className="mb-6">
@@ -239,6 +296,40 @@ export function AttendanceExport() {
               <Button size="sm" variant="secondary" className="mt-3" onClick={copyWinners}>
                 {winnersCopied ? "Copied!" : "Copy winners"}
               </Button>
+
+              <div className="mt-5 border-t border-bark-brown-light/30 pt-4">
+                {saved ? (
+                  <p className="text-sm text-gnome-green">
+                    Saved as <span className="font-semibold">{saved}</span>. The winners are in Prize Payouts, and the Weekly SOTW/BotW page will
+                    fill its raffle post from it.
+                  </p>
+                ) : (
+                  <>
+                    <h4 className="font-semibold text-bark-brown text-sm mb-1">Save as this week&apos;s raffle</h4>
+                    <p className="text-xs text-iron-grey mb-3">
+                      Adds the raffle to the list on this page with these winners (unpaid in Prize Payouts). The Weekly SOTW/BotW post pulls the
+                      winners from the latest raffle.
+                    </p>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div className="flex-1 min-w-48">
+                        <label htmlFor="raffle-title" className="block text-xs text-iron-grey mb-1">Raffle name</label>
+                        <input id="raffle-title" value={titleValue} maxLength={120} onChange={(e) => setRaffleTitle(e.target.value)} className={`${inputClass} w-full`} />
+                      </div>
+                      <div>
+                        <label htmlFor="raffle-prize" className="block text-xs text-iron-grey mb-1">Prize per winner</label>
+                        <input id="raffle-prize" value={prizeValue} onChange={(e) => setPrize(e.target.value)} className={`${inputClass} w-40`} />
+                      </div>
+                      <Button size="sm" disabled={saving || !titleValue.trim() || !prizeValue.trim()} onClick={saveRaffle}>
+                        {saving ? "Saving..." : `Save raffle with ${winners.length} ${winners.length === 1 ? "winner" : "winners"}`}
+                      </Button>
+                    </div>
+                    <label className="mt-2 flex items-center gap-2 text-xs text-bark-brown cursor-pointer">
+                      <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-gnome-green" />
+                      Also tell the winners by Discord DM
+                    </label>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </Card>
