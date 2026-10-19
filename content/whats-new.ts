@@ -57,10 +57,10 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     audience: "admin",
     title: "Temporary muted voice rooms in Discord",
     summary:
-      "Members can type /create-room in Discord to make a temporary voice room. Everyone joins muted except the creator and staff, who can let people speak with /room speak and mute them again with /room mute. Rooms can also be locked, renamed, resized or handed over, and empty rooms are removed automatically. Admins choose the category rooms go in, who can create them, who counts as staff, cleanup timing and a log channel.",
+      "Members can type /vc in Discord to make a temporary voice room. Everyone joins muted except the creator and staff, who can let people speak with /room speak and mute them again with /room mute. Rooms can also be locked, renamed, resized or handed over, and empty rooms are removed automatically. Admins choose the category rooms go in, who can create them, who counts as staff, cleanup timing and a log channel.",
     tryIt: [
       "Go to Admin › Voice Rooms, pick the category for new rooms, and save.",
-      "In Discord, type /create-room, then join the room it makes.",
+      "In Discord, type /vc, then join the room it makes.",
       "From inside the room, try /room speak @someone, /room lock and /room info.",
     ],
     links: [{ label: "Admin › Voice Rooms", href: "/admin/voice-rooms" }],

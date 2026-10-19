@@ -125,7 +125,7 @@ export default function VoiceRoomsSettingsPage() {
       <div>
         <h1 className="font-display text-3xl text-gnome-green mb-1">Voice Rooms</h1>
         <p className="text-bark-brown-light">
-          Settings for the Discord bot&apos;s <code className="font-mono">/create-room</code> rooms: temporary voice channels where
+          Settings for the Discord bot&apos;s <code className="font-mono">/vc</code> rooms: temporary voice channels where
           everyone joins muted except the creator, staff, and people they let speak.
         </p>
       </div>
@@ -133,7 +133,7 @@ export default function VoiceRoomsSettingsPage() {
       <Card hover={false} className="space-y-4">
         <label className="flex items-center gap-2 text-sm text-bark-brown cursor-pointer">
           <input type="checkbox" checked={settings.enabled} onChange={(e) => set("enabled", e.target.checked)} className="accent-gnome-green" />
-          Members can create rooms with <code className="font-mono">/create-room</code>
+          Members can create rooms with <code className="font-mono">/vc</code>
         </label>
 
         <Field label="Category for new rooms" hint="Rooms already open stay where they are if you change this.">

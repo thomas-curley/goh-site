@@ -4,7 +4,7 @@ import { canCreateRooms, createRoom, getRoomSettings, isStaff, logRoom, ownedRoo
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("create-room")
+    .setName("vc")
     .setDescription("Create a temporary voice room where only you and staff can speak")
     .addIntegerOption((opt) =>
       opt.setName("max_people").setDescription("Most people allowed in the room").setMinValue(1).setMaxValue(99).setRequired(false)

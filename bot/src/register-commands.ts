@@ -16,7 +16,7 @@ const commands = [
   (await import("./commands/banner.js")).default,
   (await import("./commands/attendance.js")).default,
   (await import("./commands/command.js")).default,
-  (await import("./commands/create-room.js")).default,
+  (await import("./commands/vc.js")).default,
   (await import("./commands/room.js")).default,
 ];
 
