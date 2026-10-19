@@ -18,6 +18,7 @@ const commands = [
   (await import("./commands/command.js")).default,
   (await import("./commands/vc.js")).default,
   (await import("./commands/room.js")).default,
+  (await import("./commands/bingo.js")).default,
 ];
 
 const token = process.env.DISCORD_BOT_TOKEN!;

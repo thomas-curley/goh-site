@@ -18,7 +18,7 @@ export const ALERT_CHANNEL_FEATURES: AlertChannelFeature[] = [
   { key: "loans", label: "Loan Requests" },
   { key: "gnomie_reviews", label: "Gn0mie Shoutouts (Approved Highlights)", envVar: "DISCORD_GNOMIE_REVIEWS_CHANNEL_ID" },
   { key: "gnomie_reviews_staff", label: "Gn0mie Shoutouts (Staff Heads-Up)", envVar: "DISCORD_GNOMIE_REVIEWS_STAFF_CHANNEL_ID" },
-  { key: "bingo_completions", label: "Bingo Tile Completions" },
+  { key: "bingo_completions", label: "Bingo Announcements (Completed Tiles, Lines, Results)" },
   { key: "weekly_competition_announcements", label: "Weekly SOTW/BotW Announcements (Raffle Winners)" },
   { key: "skill_or_kill_forum", label: "Skill or Kill of the Week Forum" },
   { key: "plugin_activity", label: "Plugin Activity (Level-ups, Quests, KC Milestones, Clues)" },

@@ -121,6 +121,15 @@ h1, h2, h3 {
 .dark [class*="border-bark-brown-light/"] { border-color: #2a3f5a !important; }
 .dark [class*="border-parchment-dark/"] { border-color: #233044 !important; }
 
+/* Bingo tiles: the state tints are baked from the light palette, so give
+   dark mode its own (components/bingo/TileFace.tsx sets data-tile-state). */
+.dark [data-tile-state="done"] { background-color: rgba(107, 191, 59, 0.16) !important; border-color: #6BBF3B !important; }
+.dark [data-tile-state="pending"] { background-color: rgba(218, 165, 32, 0.14) !important; border-color: #DAA520 !important; }
+.dark [data-tile-state="rejected"] { background-color: rgba(232, 85, 85, 0.12) !important; border-color: #E85555 !important; }
+.dark .bingo-points { background-color: rgba(232, 213, 168, 0.1) !important; }
+.dark .bingo-placeholder { color: rgba(196, 180, 142, 0.6) !important; }
+.dark .bingo-bar { background-color: #6BBF3B !important; }
+
 /* ===== Ticker Animation ===== */
 @keyframes scroll {
   from { transform: translateX(0); }

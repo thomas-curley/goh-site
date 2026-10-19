@@ -34,6 +34,41 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 19, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-19-bingo-builder",
+    date: "2026-10-19",
+    kind: "improved",
+    audience: "admin",
+    title: "Bingo: a new board builder, team balancing and review queue",
+    summary:
+      "Bingo has been rebuilt. Start a board blank or as a copy of an old one, and it saves as you go, so you can fill a few tiles at a time. Click a square and search for an item, boss or skill: the name, icon and tracking fill in for you. Boss KC, XP and clue tiles now track themselves from Wise Old Man, and tiles can be worth different points, with bonuses for finished lines and blackouts. Open sign-ups to let members join, then press Balance teams to spread players evenly by their efficient hours. The review queue shows one screenshot at a time, with A to approve and S to send back with a reason.",
+    tryIt: [
+      "Go to Admin › Bingo and press New bingo.",
+      "On the Board step, click a square and type something like \"vorkath\" or \"whip\".",
+      "On Sign-ups & teams, open sign-ups or add players, then press Balance teams.",
+      "On Launch, check the list and press Go live when it's ready.",
+    ],
+    links: [
+      { label: "Admin › Bingo", href: "/admin/bingo" },
+      { label: "Bingo submissions", href: "/admin/bingo/submissions" },
+    ],
+  },
+  {
+    id: "2026-10-19-bingo-board",
+    date: "2026-10-19",
+    kind: "improved",
+    audience: "everyone",
+    title: "Bingo: join from the site, track your team, send proof from Discord",
+    summary:
+      "The Bingo page now opens on your team's board, with your score, rank and a countdown. Tiles show item and boss icons, progress bars, and what's waiting on staff or was sent back. Tap a tile to see what counts and drop or paste a screenshot. Members can also join a bingo during sign-ups, follow the race on the Standings, All teams and Activity tabs, and send proof from Discord with /bingo submit, or check their team with /bingo board.",
+    tryIt: [
+      "Open Bingo from the menu.",
+      "When a bingo has sign-ups open, press Join this bingo.",
+      "Once it's live, tap a tile on your board and paste a screenshot with Ctrl+V.",
+    ],
+    links: [{ label: "Bingo", href: "/bingo" }],
+  },
   // ── October 18, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-18-raffle-draw",

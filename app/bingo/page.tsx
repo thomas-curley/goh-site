@@ -1,11 +1,11 @@
-import { BingoList } from "@/components/bingo/BingoList";
+import { BingoHome } from "@/components/bingo/BingoHome";
 import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Bingo Events",
-  description: "Clan bingo boards -- team up and race to complete every tile.",
+  title: "Clan Bingo",
+  description: "Team bingo boards: join, check your team's progress and race the other teams.",
 };
 
 export const dynamic = "force-dynamic"; // gated per-viewer, can't be statically cached
@@ -13,5 +13,5 @@ export const dynamic = "force-dynamic"; // gated per-viewer, can't be statically
 export default async function BingoIndexPage() {
   if (!(await checkSectionAccess("bingo"))) return <SectionUnavailable />;
 
-  return <BingoList />;
+  return <BingoHome />;
 }
