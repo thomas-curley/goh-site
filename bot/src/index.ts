@@ -39,7 +39,7 @@ async function loadCommands() {
     await import("./commands/banner.js"),
     await import("./commands/attendance.js"),
     await import("./commands/command.js"),
-    await import("./commands/create-room.js"),
+    await import("./commands/vc.js"),
     await import("./commands/room.js"),
   ];
 
@@ -108,7 +108,7 @@ client.once(Events.ClientReady, async (c) => {
     }
   }
 
-  // Remove empty /create-room rooms now and every 30 minutes.
+  // Remove empty /vc rooms now and every 30 minutes.
   const { startRoomCleanup } = await import("./lib/temp-rooms.js");
   startRoomCleanup(c);
 });

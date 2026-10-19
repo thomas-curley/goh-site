@@ -9,7 +9,7 @@ import {
   type VoiceChannel,
 } from "discord.js";
 
-// Temporary "stage-style" voice rooms made with /create-room. Everyone who
+// Temporary "stage-style" voice rooms made with /vc. Everyone who
 // joins is muted except the room's creator, staff, and anyone the creator or
 // staff let speak. Settings come from the website (Admin › Voice Rooms).
 //
@@ -110,7 +110,7 @@ async function getRoomsCategory(guild: Guild, settings: RoomSettings): Promise<C
     (c): c is CategoryChannel => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === DEFAULT_CATEGORY_NAME.toLowerCase(),
   );
   if (existing) return existing;
-  return guild.channels.create({ name: DEFAULT_CATEGORY_NAME, type: ChannelType.GuildCategory, reason: "Category for /create-room rooms" });
+  return guild.channels.create({ name: DEFAULT_CATEGORY_NAME, type: ChannelType.GuildCategory, reason: "Category for /vc rooms" });
 }
 
 export function isTempRoom(channel: VoiceChannel): boolean {
@@ -166,7 +166,7 @@ export async function createRoom(owner: GuildMember, maxPeople: number, name: st
     type: ChannelType.GuildVoice,
     parent: category,
     userLimit: maxPeople,
-    reason: `/create-room by ${owner.user.tag}`,
+    reason: `/vc by ${owner.user.tag}`,
     permissionOverwrites: [
       // Everyone joins muted.
       { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.Speak] },

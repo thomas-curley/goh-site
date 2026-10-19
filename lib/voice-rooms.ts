@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Settings for the bot's /create-room temporary voice rooms (voice_room_settings). */
+/** Settings for the bot's /vc temporary voice rooms (voice_room_settings). */
 export interface VoiceRoomSettings {
   enabled: boolean;
   categoryId: string | null;

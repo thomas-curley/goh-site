@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-// GET / PUT - settings for the bot's /create-room voice rooms.
+// GET / PUT - settings for the bot's /vc voice rooms.
 export async function GET() {
   const { allowed } = await checkPermission("manage_settings");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
