@@ -49,5 +49,5 @@ export function Confetti({ fire }: { fire: number }) {
     return () => cancelAnimationFrame(raf);
   }, [fire]);
 
-  return <canvas ref={canvas} className="pointer-events-none fixed inset-0 z-50" aria-hidden />;
+  return <canvas ref={canvas} className="pointer-events-none fixed inset-0 z-[70]" aria-hidden />;
 }

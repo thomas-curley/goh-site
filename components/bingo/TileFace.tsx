@@ -72,7 +72,7 @@ export function TileFace({
     <>
       <span className="absolute top-0.5 right-1 font-mono text-[9px] sm:text-[10px] text-iron-grey">{tile.points}</span>
       <TileIcon tile={tile} className="w-6 h-6 sm:w-8 sm:h-8" />
-      <span className="text-[9px] sm:text-[11px] font-semibold leading-tight line-clamp-3 break-words">{tile.title}</span>
+      <span lang="en" className="text-[9px] sm:text-[11px] font-semibold leading-tight line-clamp-3 [overflow-wrap:anywhere] hyphens-auto">{tile.title}</span>
       {showBar && (
         <span className="w-4/5 h-1 rounded-full bg-bark-brown-light/25 overflow-hidden" aria-hidden>
           <span className="block h-full bg-gnome-green" style={{ width: `${pct}%` }} />

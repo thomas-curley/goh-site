@@ -88,7 +88,7 @@ export function TileDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end sm:items-stretch sm:justify-end" role="dialog" aria-modal="true" aria-labelledby="tile-drawer-title">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-stretch sm:justify-end" role="dialog" aria-modal="true" aria-labelledby="tile-drawer-title">
       <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 cursor-default" />
       <div className="relative w-full sm:max-w-md max-h-[88vh] sm:max-h-none overflow-y-auto bg-parchment card-wood rounded-t-2xl sm:rounded-none sm:rounded-l-2xl p-5 space-y-5 shadow-2xl">
         <div className="flex items-start gap-3">
