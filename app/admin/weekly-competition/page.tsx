@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RolePingSelector } from "@/components/admin/RolePingSelector";
@@ -68,6 +69,20 @@ function defaultPoll(competitions: Competition[], nextIds: number[]): { week: st
     week: nyDateInput(new Date(new Date(next.startsAt).getTime() + WEEK_MS)),
     type: next.type === "sotw" ? "botw" : "sotw",
   };
+}
+
+interface LatestRaffle {
+  id: string;
+  title: string;
+  occurred_on: string;
+  winners: { rsn: string; prize: string }[];
+}
+
+/** "1,000,000 GP" -> 1000000; null when the prizes differ or can't be read. */
+function sharedPrizeAmount(winners: LatestRaffle["winners"]): number | null {
+  const amounts = winners.map((w) => Number(w.prize.replace(/[^\d.]/g, "")));
+  if (amounts.length === 0 || amounts.some((a) => !a) || new Set(amounts).size !== 1) return null;
+  return amounts[0];
 }
 
 function lines(text: string): string[] {
@@ -153,6 +168,9 @@ export default function WeeklyCompetitionPage() {
   const [pingRoleIds, setPingRoleIds] = useState<string[]>([]);
   const [raffleText, setRaffleText] = useState("");
   const [raffleAmount, setRaffleAmount] = useState("1000000");
+  const [latestRaffle, setLatestRaffle] = useState<LatestRaffle | null>(null);
+  // Which raffle the winners box was filled from (cleared once it's edited by hand).
+  const [raffleSource, setRaffleSource] = useState<string | null>(null);
   const [votingThread, setVotingThread] = useState("");
   const [pollOptionsText, setPollOptionsText] = useState("");
   const [pollWeek, setPollWeek] = useState("");
@@ -172,9 +190,17 @@ export default function WeeklyCompetitionPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const applyLoaded = (data: { config?: WeeklyConfig; competitions?: Competition[] }) => {
+  const applyRaffle = (raffle: LatestRaffle) => {
+    setRaffleText(raffle.winners.map((w) => w.rsn).join("\n"));
+    const amount = sharedPrizeAmount(raffle.winners);
+    if (amount) setRaffleAmount(String(amount));
+    setRaffleSource(raffle.id);
+  };
+
+  const applyLoaded = (data: { config?: WeeklyConfig; competitions?: Competition[]; latestRaffle?: LatestRaffle | null }, first = false) => {
     const c = data.config;
     const comps = data.competitions ?? [];
+    setLatestRaffle(data.latestRaffle ?? null);
     setCompetitions(comps);
     setLoadedAt(Date.now());
     if (c) {
@@ -184,6 +210,10 @@ export default function WeeklyCompetitionPage() {
       if (c.raffle_prize_amount != null) setRaffleAmount(String(Number(c.raffle_prize_amount)));
       setVotingThread(c.voting_thread_id ?? "");
     }
+    // On first load, fill the raffle winners from the latest raffle if it's
+    // from the last two weeks and has winners.
+    const recent = data.latestRaffle && Date.now() - Date.parse(`${data.latestRaffle.occurred_on}T12:00:00`) < 14 * 86_400_000;
+    if (first && recent && data.latestRaffle!.winners.length > 0) applyRaffle(data.latestRaffle!);
     const picks = defaultPicks(comps, c?.current_competition_ids ?? []);
     setFinishedIds(picks.finished);
     setNextIds(picks.next);
@@ -201,7 +231,7 @@ export default function WeeklyCompetitionPage() {
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
         if (cancelled) return;
-        if (ok) applyLoaded(data);
+        if (ok) applyLoaded(data, true);
         else {
           setError(data.error ?? "Failed to load.");
           setLoading(false);
@@ -366,8 +396,40 @@ export default function WeeklyCompetitionPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-semibold text-bark-brown mb-1">Raffle winners (one per line)</label>
-              <textarea value={raffleText} onChange={(e) => setRaffleText(e.target.value)} rows={4} className={inputClass} placeholder={"Gn0me Rika\nKryssyWolf\nGn0me Pack"} />
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+                <label className="block text-sm font-semibold text-bark-brown">Raffle winners (one per line)</label>
+                {latestRaffle && latestRaffle.winners.length > 0 && raffleSource !== latestRaffle.id && (
+                  <button type="button" onClick={() => applyRaffle(latestRaffle)} className="text-xs text-gnome-green hover:underline cursor-pointer">
+                    Use {latestRaffle.title}
+                  </button>
+                )}
+              </div>
+              <textarea
+                value={raffleText}
+                onChange={(e) => {
+                  setRaffleText(e.target.value);
+                  setRaffleSource(null);
+                }}
+                rows={4}
+                className={inputClass}
+                placeholder={"Gn0me Rika\nKryssyWolf\nGn0me Pack"}
+              />
+              <p className="text-xs text-iron-grey mt-1">
+                {raffleSource && latestRaffle && raffleSource === latestRaffle.id ? (
+                  <>
+                    Filled in from <span className="font-semibold">{latestRaffle.title}</span> ({new Date(`${latestRaffle.occurred_on}T12:00:00`).toLocaleDateString()}).
+                  </>
+                ) : latestRaffle && latestRaffle.winners.length === 0 ? (
+                  <>
+                    The latest raffle, {latestRaffle.title}, has no winners yet. Draw them on the{" "}
+                    <Link href="/admin/raffles" className="text-gnome-green hover:underline">Raffles page</Link>.
+                  </>
+                ) : (
+                  <>
+                    Draw the winners on the <Link href="/admin/raffles" className="text-gnome-green hover:underline">Raffles page</Link> and they fill in here.
+                  </>
+                )}
+              </p>
             </div>
             <div className="sm:w-48">
               <label className="block text-sm font-semibold text-bark-brown mb-1">GP per raffle winner</label>

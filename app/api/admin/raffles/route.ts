@@ -11,9 +11,10 @@ function getServiceClient() {
 
 const MAX_TITLE_LENGTH = 120;
 
-// GET - every raffle, most recent first. Winners live on prize_payouts
-// (raffle_id set), fetched separately by the admin page rather than joined
-// here, since it already loads the full payouts list anyway.
+// GET - every raffle, most recent first, plus the usual GP per winner (the
+// weekly SOTW/BotW setting) for the draw's "save as raffle" form. Winners
+// live on prize_payouts (raffle_id set), fetched separately by the admin
+// page rather than joined here, since it already loads the full payouts list.
 export async function GET() {
   const { allowed } = await checkPermission("manage_payouts");
   if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -21,10 +22,14 @@ export async function GET() {
   const supabase = getServiceClient();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
-  const { data, error } = await supabase.from("raffles").select("*").order("occurred_on", { ascending: false });
+  const [{ data, error }, { data: config }] = await Promise.all([
+    supabase.from("raffles").select("*").order("occurred_on", { ascending: false }).order("created_at", { ascending: false }),
+    supabase.from("weekly_competition_config").select("raffle_prize_amount").eq("id", 1).maybeSingle(),
+  ]);
   if (error) return NextResponse.json({ error: "Failed to load raffles." }, { status: 500 });
 
-  return NextResponse.json({ raffles: data ?? [] });
+  const amount = Number(config?.raffle_prize_amount);
+  return NextResponse.json({ raffles: data ?? [], defaultPrizeAmount: Number.isFinite(amount) && amount > 0 ? amount : null });
 }
 
 // POST - create a raffle. Winners are added afterward via the existing

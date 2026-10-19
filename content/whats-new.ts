@@ -36,6 +36,38 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 19, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-19-raffle-to-weekly-post",
+    date: "2026-10-19",
+    kind: "improved",
+    audience: "admin",
+    title: "Save the raffle draw, and the weekly post picks up the winners",
+    summary:
+      "After drawing winners on the Raffles page, you can now save the draw as that week's raffle in one step. It gets a name and prize filled in for you, the winners go to Prize Payouts as unpaid (with an optional Discord DM), and it appears in the raffle list. The Weekly SOTW/BotW page then fills its raffle winners and GP amount from the latest raffle, so nobody has to retype names. The draw has moved to the top of the Raffles page.",
+    tryIt: [
+      "Go to Admin › Raffles, press Last Week, set the number of winners and press Draw winners.",
+      "Check the name and prize, then press Save raffle.",
+      "Open Admin › Weekly SOTW/BotW: the raffle winners box is already filled in from it.",
+    ],
+    links: [
+      { label: "Admin › Raffles", href: "/admin/raffles" },
+      { label: "Weekly SOTW/BotW", href: "/admin/weekly-competition" },
+    ],
+  },
+  {
+    id: "2026-10-19-date-presets-fill-boxes",
+    date: "2026-10-19",
+    kind: "improved",
+    audience: "everyone",
+    title: "This Week and This Month now show their dates",
+    summary:
+      "On the attendance leaderboard and the admin Player Activity page, pressing This Week or This Month now fills in the From and To dates, so you can see exactly what's being counted. Weeks run Sunday to Saturday and months are the whole calendar month, the same as the Raffles page. All Time clears the dates.",
+    tryIt: ["Open the leaderboard and press This Week: the From and To boxes show Sunday to Saturday."],
+    links: [
+      { label: "Leaderboard", href: "/leaderboard" },
+      { label: "Admin › Player Activity", href: "/admin/activity" },
+    ],
+  },
+  {
     id: "2026-10-19-bingo-builder",
     date: "2026-10-19",
     kind: "improved",
@@ -79,7 +111,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     summary:
       "On the Raffles page, weeks now run Sunday to Saturday: This Week is the current week and the new Last Week is the full week before it. This Month covers the whole calendar month. Each button fills in the From and To dates so you can see exactly what's included. A new Random draw picks as many different winners as you ask for, giving everyone one entry per event they attended in that range.",
     tryIt: [
-      "Go to Admin › Raffles and scroll to Attendance for the Draw.",
+      "Go to Admin › Raffles; the draw is at the top of the page.",
       "Press Last Week (or This Week) and check the dates it fills in.",
       "Under Random draw, set the number of winners and press Draw winners.",
     ],
