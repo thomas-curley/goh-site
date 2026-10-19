@@ -51,7 +51,69 @@ function ordinal(n: number) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-const ACTIVITY_ICON: Record<BingoActivity["kind"], string> = { tile: "✓", line: "★", blackout: "🏆", submitted: "📸", rejected: "↩" };
+/** Small white glyph for each kind of activity, drawn inside the team-coloured circle. */
+function ActivityGlyph({ kind }: { kind: BingoActivity["kind"] }) {
+  const common = { fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  return (
+    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" aria-hidden {...common}>
+      {kind === "tile" && <path d="M3.5 8.5l3 3 6-7" />}
+      {kind === "line" && <path d="M8 2.5l1.7 3.6 3.8.5-2.8 2.6.7 3.8L8 11.2l-3.4 1.8.7-3.8-2.8-2.6 3.8-.5z" strokeWidth={1.6} />}
+      {kind === "blackout" && <path d="M5 3h6v3a3 3 0 01-6 0zM8 9v3M5.5 13h5M5 4H3v1a2 2 0 002 2M11 4h2v1a2 2 0 01-2 2" strokeWidth={1.6} />}
+      {kind === "submitted" && (
+        <>
+          <rect x="2.5" y="4.5" width="11" height="8" rx="1.5" strokeWidth={1.6} />
+          <circle cx="8" cy="8.5" r="2" strokeWidth={1.6} />
+        </>
+      )}
+      {kind === "rejected" && <path d="M6 4L3 7l3 3M3 7h6.5a3.5 3.5 0 010 7H8" strokeWidth={1.8} />}
+    </svg>
+  );
+}
+
+/**
+ * One entry in the activity feed: who (bold, with the points it earned),
+ * what they did on its own line, then the team and how long ago. Built from
+ * the entry's fields rather than its stored sentence so every row lines up.
+ */
+function ActivityRow({ a, teams, tiles, compact = false }: { a: BingoActivity; teams: BingoTeam[]; tiles: BingoTile[]; compact?: boolean }) {
+  const team = teams.find((t) => t.id === a.team_id);
+  const tile = tiles.find((t) => t.id === a.tile_id);
+  const tileName = tile?.title ?? "a tile";
+  const teamName = team?.name ?? "";
+  const who = (a.kind === "line" || a.kind === "blackout" ? teamName : a.rsn) || teamName || "Someone";
+  const lineText = teamName && a.message.startsWith(teamName) ? a.message.slice(teamName.length).trim() : a.message;
+  const action = {
+    tile: `Completed ${tileName}`,
+    line: lineText.charAt(0).toUpperCase() + lineText.slice(1),
+    blackout: "Finished the whole board!",
+    submitted: `Sent proof for ${tileName}`,
+    rejected: `Proof sent back for ${tileName}`,
+  }[a.kind];
+  const muted = a.kind === "submitted" || a.kind === "rejected";
+  return (
+    <li className={`flex items-start gap-2.5 ${compact ? "py-2" : "py-3"}`}>
+      <span
+        className={`mt-0.5 shrink-0 rounded-full flex items-center justify-center text-white ${compact ? "w-6 h-6" : "w-7 h-7"} ${muted ? "opacity-70" : ""}`}
+        style={{ background: a.kind === "rejected" ? "var(--color-red-accent)" : team?.color ?? "var(--color-gnome-green)" }}
+      >
+        <ActivityGlyph kind={a.kind} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <p className={`font-semibold text-bark-brown truncate ${compact ? "text-[13px]" : "text-sm"}`}>{who}</p>
+          {a.points > 0 && (
+            <span className="shrink-0 rounded-full bg-gnome-green/15 px-1.5 py-px text-[11px] font-semibold text-gnome-green tabular-nums">+{a.points}</span>
+          )}
+        </div>
+        <p className={`text-bark-brown-light leading-snug ${compact ? "text-xs line-clamp-2" : "text-sm"}`}>{action}</p>
+        <p className="text-[11px] text-iron-grey mt-0.5">
+          {who !== teamName && teamName ? `${teamName} · ` : ""}
+          {ago(a.created_at)} ago
+        </p>
+      </div>
+    </li>
+  );
+}
 
 /** Read-only miniature of a team's board, for the All teams tab. */
 function MiniBoard({ tiles, gridSize, done }: { tiles: BingoTile[]; gridSize: number; done: Set<string> }) {
@@ -374,17 +436,19 @@ export function BingoBoard({ eventId }: { eventId: string }) {
                   </ol>
                 </Card>
                 {data.activity.length > 0 && (
-                  <Card hover={false} className="space-y-2">
-                    <h2 className="font-semibold text-bark-brown text-sm">Latest</h2>
-                    <ul className="space-y-1.5">
+                  <Card hover={false} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-semibold text-bark-brown text-sm">Latest</h2>
+                      <button type="button" onClick={() => setTab("activity")} className="text-xs text-gnome-green hover:underline cursor-pointer">
+                        See all
+                      </button>
+                    </div>
+                    <ul className="divide-y divide-bark-brown-light/20">
                       {data.activity
                         .filter((a) => a.kind === "tile" || a.kind === "line" || a.kind === "blackout")
                         .slice(0, 6)
                         .map((a) => (
-                          <li key={a.id} className="text-xs text-bark-brown-light">
-                            {ACTIVITY_ICON[a.kind]} {a.message}
-                            {a.points > 0 && <span className="text-gnome-green font-semibold"> +{a.points}</span>} <span className="text-iron-grey">{ago(a.created_at)}</span>
-                          </li>
+                          <ActivityRow key={a.id} a={a} teams={teams} tiles={tiles} compact />
                         ))}
                     </ul>
                   </Card>
@@ -468,23 +532,10 @@ export function BingoBoard({ eventId }: { eventId: string }) {
               {data.activity.length === 0 ? (
                 <p className="text-sm text-iron-grey text-center py-6">Nothing yet. The first completed tile will show up here.</p>
               ) : (
-                <ul className="divide-y divide-bark-brown-light/20">
-                  {data.activity.map((a) => {
-                    const t = teams.find((x) => x.id === a.team_id);
-                    return (
-                      <li key={a.id} className="flex items-start gap-3 py-2.5 text-sm">
-                        <span className="w-6 text-center shrink-0" aria-hidden>
-                          {ACTIVITY_ICON[a.kind]}
-                        </span>
-                        <span className="flex-1 min-w-0 text-bark-brown">
-                          {t && <span className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle" style={{ background: t.color ?? "#999" }} />}
-                          {a.message}
-                          {a.points > 0 && <span className="text-gnome-green font-semibold"> +{a.points}</span>}
-                        </span>
-                        <span className="text-xs text-iron-grey shrink-0">{ago(a.created_at)}</span>
-                      </li>
-                    );
-                  })}
+                <ul className="divide-y divide-bark-brown-light/20 -my-1">
+                  {data.activity.map((a) => (
+                    <ActivityRow key={a.id} a={a} teams={teams} tiles={tiles} />
+                  ))}
                 </ul>
               )}
             </Card>
