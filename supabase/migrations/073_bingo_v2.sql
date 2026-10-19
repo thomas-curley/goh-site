@@ -3,15 +3,19 @@
 -- Auto-tracked tiles now read Wise Old Man group gains for the event's
 -- dates instead of creating one WOM competition per tile.
 --
--- The v1 tables (049) never held an event, so they're rebuilt rather than
--- altered. This also drops 049's "any signed-in user can write" policies:
--- every read and write goes through the site's API with the service role.
+-- The v1 tables (049) never held an event, so they're replaced rather than
+-- altered. They're moved to the bingo_v1_archive schema (not exposed by the
+-- API) instead of dropped, and can be dropped by hand later. Moving them also
+-- retires 049's "any signed-in user can write" policies: every read and
+-- write of the new tables goes through the site's API with the service role.
+-- Applied to production as 073a_archive_bingo_v1 + 073b_bingo_v2.
 
-drop table if exists bingo_tile_completions cascade;
-drop table if exists bingo_tiles cascade;
-drop table if exists bingo_team_members cascade;
-drop table if exists bingo_teams cascade;
-drop table if exists bingo_events cascade;
+create schema if not exists bingo_v1_archive;
+alter table public.bingo_tile_completions set schema bingo_v1_archive;
+alter table public.bingo_tiles set schema bingo_v1_archive;
+alter table public.bingo_team_members set schema bingo_v1_archive;
+alter table public.bingo_teams set schema bingo_v1_archive;
+alter table public.bingo_events set schema bingo_v1_archive;
 
 create table bingo_events (
   id uuid primary key default gen_random_uuid(),
