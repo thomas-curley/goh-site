@@ -36,6 +36,17 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 19, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-19-delete-testimonials",
+    date: "2026-10-19",
+    kind: "improved",
+    audience: "admin",
+    title: "Delete testimonials",
+    summary:
+      "Testimonials can now be deleted from the admin page, whether they're waiting, approved, featured or rejected. Handy for clearing out ones made for testing. An approved one comes off the site straight away.",
+    tryIt: ["Go to Admin › Testimonials, open one with View, and press Delete testimonial, then Yes, delete it."],
+    links: [{ label: "Admin › Testimonials", href: "/admin/testimonials" }],
+  },
+  {
     id: "2026-10-19-raffle-to-weekly-post",
     date: "2026-10-19",
     kind: "improved",
