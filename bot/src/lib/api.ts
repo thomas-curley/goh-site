@@ -43,3 +43,33 @@ export async function getLinkedRsn(discordId: string): Promise<string | null> {
   const user = await lookupUser(discordId);
   return user?.rsn ?? null;
 }
+
+export interface BingoBoardSummary {
+  eventId: string;
+  name: string;
+  endsAt: string | null;
+  url: string;
+  teamId: string;
+  teamName: string;
+  standings: { rank: number; name: string; total: number; tilesDone: number; lines: number; mine: boolean }[];
+  tiles: { id: string; position: number; title: string; kind: "proof" | "auto"; points: number; done: boolean; progress: string }[];
+}
+
+/** The live bingo boards a Discord user is on (empty if not linked or on none). */
+export async function getBingoBoards(discordId: string): Promise<{ linked: boolean; boards: BingoBoardSummary[] }> {
+  const res = await apiCall(`/api/bot/bingo?discordId=${encodeURIComponent(discordId)}`);
+  if (!res.ok) return { linked: false, boards: [] };
+  return res.json();
+}
+
+/** Sends a bingo proof screenshot for review. */
+export async function submitBingoProof(payload: { discordId: string; tileId: string; attachmentUrls: string[]; quantity?: number; note?: string | null }) {
+  const res = await apiCall("/api/bot/bingo", { method: "POST", body: JSON.stringify({ action: "submit", ...payload }) });
+  const json = await res.json().catch(() => ({}));
+  return { ok: res.ok, ...json } as { ok: boolean; error?: string; tileTitle?: string; eventName?: string; teamName?: string };
+}
+
+/** Asks the site to refresh live boards' tracked tiles (it skips fresh ones). */
+export async function syncBingo() {
+  await apiCall("/api/bot/bingo", { method: "POST", body: JSON.stringify({ action: "sync" }) }).catch(() => undefined);
+}

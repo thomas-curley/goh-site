@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Collection, Events, ChannelType } from "discord.js";
 import { config } from "dotenv";
 import { fileURLToPath } from "url";
-import type { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import type { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 // Load .env from project root
 config({ path: fileURLToPath(new URL("../../.env.local", import.meta.url)) });
@@ -10,6 +10,7 @@ config({ path: fileURLToPath(new URL("../../.env.local", import.meta.url)) });
 export interface BotCommand {
   data: SlashCommandBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
 
 // Extend client with commands collection
@@ -41,6 +42,7 @@ async function loadCommands() {
     await import("./commands/command.js"),
     await import("./commands/vc.js"),
     await import("./commands/room.js"),
+    await import("./commands/bingo.js"),
   ];
 
   for (const file of commandFiles) {
@@ -61,6 +63,10 @@ async function loadCommands() {
 
 // Handle interactions
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isAutocomplete()) {
+    await commands.get(interaction.commandName)?.autocomplete?.(interaction).catch((err) => console.error(`Autocomplete for /${interaction.commandName} failed:`, err));
+    return;
+  }
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.get(interaction.commandName);
@@ -111,6 +117,11 @@ client.once(Events.ClientReady, async (c) => {
   // Remove empty /vc rooms now and every 30 minutes.
   const { startRoomCleanup } = await import("./lib/temp-rooms.js");
   startRoomCleanup(c);
+
+  // Keep live bingo boards' tracked tiles fresh (the site skips boards it updated recently).
+  const { syncBingo } = await import("./lib/api.js");
+  syncBingo();
+  setInterval(syncBingo, 30 * 60 * 1000);
 });
 
 // Start

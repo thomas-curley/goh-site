@@ -1,157 +1,125 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
-import { editWomCompetition } from "@/lib/wom";
+import { announceResults, bingoServiceClient, launchProblems, loadBingoBundle } from "@/lib/bingo-server";
+import { computeStandings, GRID_SIZES, type BingoEventStatus } from "@/lib/bingo";
+import { normalizeRsn } from "@/lib/wom";
+import type { BingoBundle } from "@/lib/bingo-server";
 
-function getServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key);
+const STATUSES: BingoEventStatus[] = ["draft", "signups", "active", "completed"];
+
+async function guard() {
+  const { allowed, user } = await checkPermission("manage_bingo");
+  if (!allowed) return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  const supabase = bingoServiceClient();
+  if (!supabase) return { error: NextResponse.json({ error: "Supabase not configured" }, { status: 503 }) };
+  return { supabase, user };
 }
 
-// GET - full board detail for the admin edit page: event, teams+members, tiles.
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// GET - the whole board for the builder: event, tiles, teams, sign-ups,
+// standings and what's left before it can go live.
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { allowed } = await checkPermission("manage_bingo");
-  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const ctx = await guard();
+  if ("error" in ctx) return ctx.error;
+  const { supabase } = ctx;
 
-  const supabase = getServiceClient();
-  if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+  const bundle = await loadBingoBundle(supabase, id);
+  if (!bundle) return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
 
-  const { data: event } = await supabase.from("bingo_events").select("*").eq("id", id).maybeSingle();
-  if (!event) return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
-
-  const { data: teams } = await supabase.from("bingo_teams").select("*").eq("event_id", id).order("created_at");
-  const { data: members } = await supabase
-    .from("bingo_team_members")
-    .select("*")
-    .in("team_id", (teams ?? []).map((t) => t.id));
-  const { data: tiles } = await supabase.from("bingo_tiles").select("*").eq("event_id", id).order("position");
+  const { data: signups } = await supabase.from("bingo_signups").select("user_id, rsn, note, created_at").eq("event_id", id).order("created_at");
+  const onTeam = new Set(bundle.teams.flatMap((t) => t.members.map((m) => normalizeRsn(m.rsn))));
+  const { count: pendingCount } = await supabase.from("bingo_submissions").select("*", { count: "exact", head: true }).eq("event_id", id).eq("status", "pending");
 
   return NextResponse.json({
-    event,
-    teams: (teams ?? []).map((t) => ({ ...t, members: (members ?? []).filter((m) => m.team_id === t.id) })),
-    tiles: tiles ?? [],
+    ...bundle,
+    standings: computeStandings(bundle.event, bundle.tiles, bundle.teams.map((t) => t.id), bundle.progress),
+    signups: (signups ?? []).map((s) => ({ rsn: s.rsn, note: s.note, created_at: s.created_at, onTeam: onTeam.has(normalizeRsn(s.rsn)) })),
+    pendingCount: pendingCount ?? 0,
+    launchProblems: launchProblems(bundle),
   });
 }
 
-// PATCH - update event metadata, tile task text, and team rosters. Doesn't
-// support changing a tile's tracking type/WOM link, or the board's grid size
-// -- those are a delete-and-recreate for V1 (see plan's "explicitly out of
-// scope"). Roster edits wholesale-replace each WOM-tracked tile's competition
-// teams via editWomCompetition so tracking stays in sync with who's actually
-// on each team.
+// PATCH - change the board's settings or status. Going live checks the
+// board is complete first. Changing the size of a draft keeps each tile in
+// the same row and column, dropping any that no longer fit.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { allowed } = await checkPermission("manage_bingo");
-  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const ctx = await guard();
+  if ("error" in ctx) return ctx.error;
+  const { supabase } = ctx;
 
-  const supabase = getServiceClient();
-  if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
-
-  const { data: event } = await supabase.from("bingo_events").select("id, status").eq("id", id).maybeSingle();
-  if (!event) return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
-
+  const bundle = await loadBingoBundle(supabase, id);
+  if (!bundle) return NextResponse.json({ error: "Bingo event not found." }, { status: 404 });
   const body = await request.json().catch(() => ({}));
+  const update: Record<string, unknown> = {};
 
-  const eventUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (typeof body.name === "string" && body.name.trim()) eventUpdate.name = body.name.trim().slice(0, 100);
-  if (typeof body.description === "string") eventUpdate.description = body.description.trim().slice(0, 2000) || null;
-  if (typeof body.bannerUrl === "string") eventUpdate.banner_url = body.bannerUrl.trim() || null;
-  if (typeof body.startsAt === "string") eventUpdate.starts_at = body.startsAt || null;
-  if (typeof body.endsAt === "string") eventUpdate.ends_at = body.endsAt || null;
-  if (["draft", "active", "completed"].includes(body.status)) eventUpdate.status = body.status;
-
-  const { error: eventError } = await supabase.from("bingo_events").update(eventUpdate).eq("id", id);
-  if (eventError) return NextResponse.json({ error: "Failed to update the event." }, { status: 500 });
-
-  // Tile task text edits, keyed by tile id.
-  if (Array.isArray(body.tiles)) {
-    for (const t of body.tiles) {
-      if (typeof t !== "object" || !t || typeof t.id !== "string") continue;
-      const tileUpdate: Record<string, unknown> = {};
-      if (typeof t.taskTitle === "string" && t.taskTitle.trim()) tileUpdate.task_title = t.taskTitle.trim();
-      if (typeof t.taskDescription === "string") tileUpdate.task_description = t.taskDescription.trim() || null;
-      if (Number.isFinite(t.womTargetValue)) tileUpdate.wom_target_value = t.womTargetValue;
-      if (Object.keys(tileUpdate).length > 0) {
-        await supabase.from("bingo_tiles").update(tileUpdate).eq("id", t.id).eq("event_id", id);
-      }
+  const text = (key: string, max: number) => {
+    if (key in body) update[key] = typeof body[key] === "string" ? body[key].trim().slice(0, max) || null : null;
+  };
+  if ("name" in body) {
+    const name = typeof body.name === "string" ? body.name.trim().slice(0, 100) : "";
+    if (!name) return NextResponse.json({ error: "The bingo needs a name." }, { status: 400 });
+    update.name = name;
+  }
+  text("description", 2000);
+  text("rules", 4000);
+  text("banner_url", 1000);
+  for (const key of ["starts_at", "ends_at"]) {
+    if (key in body) {
+      const v = body[key];
+      if (v !== null && (typeof v !== "string" || Number.isNaN(Date.parse(v)))) return NextResponse.json({ error: "That date isn't valid." }, { status: 400 });
+      update[key] = v;
     }
   }
+  if ("win_rule" in body) update.win_rule = body.win_rule === "blackout" ? "blackout" : "points";
+  for (const key of ["line_bonus", "blackout_bonus"]) {
+    if (key in body) update[key] = Math.max(0, Math.min(1000, Math.floor(Number(body[key]) || 0)));
+  }
+  if ("hide_other_teams" in body) update.hide_other_teams = !!body.hide_other_teams;
 
-  // Team roster edits: replace each team's member list, then re-sync any
-  // WOM-tracked tile's competition to the rebuilt team rosters.
-  if (Array.isArray(body.teams)) {
-    const incomingTeams: { id: string; name?: string; members: string[] }[] = body.teams
-      .filter((t: unknown): t is Record<string, unknown> => typeof t === "object" && t !== null && typeof (t as Record<string, unknown>).id === "string")
-      .map((t: Record<string, unknown>) => ({
-        id: t.id as string,
-        name: typeof t.name === "string" ? t.name.trim() : undefined,
-        members: Array.isArray(t.members) ? t.members.map((m) => (typeof m === "string" ? m.trim() : "")).filter(Boolean) : [],
-      }));
-
-    for (const team of incomingTeams) {
-      const teamUpdate: Record<string, unknown> = {};
-      if (team.name) teamUpdate.name = team.name;
-      if (Object.keys(teamUpdate).length > 0) await supabase.from("bingo_teams").update(teamUpdate).eq("id", team.id).eq("event_id", id);
-
-      await supabase.from("bingo_team_members").delete().eq("team_id", team.id);
-      if (team.members.length > 0) {
-        await supabase.from("bingo_team_members").insert(team.members.map((rsn) => ({ team_id: team.id, rsn })));
-      }
+  if ("grid_size" in body && body.grid_size !== bundle.event.grid_size) {
+    if (!(GRID_SIZES as readonly number[]).includes(body.grid_size)) return NextResponse.json({ error: "Pick a board size from 3×3 to 7×7." }, { status: 400 });
+    if (bundle.event.status !== "draft") return NextResponse.json({ error: "The board size can only change while it's a draft." }, { status: 400 });
+    const oldN = bundle.event.grid_size;
+    const newN = body.grid_size as number;
+    // Delete the tiles that fall off, then move the rest in two passes
+    // (offset first) so no two tiles ever share a position mid-update.
+    const keep = bundle.tiles.filter((t) => t.position % oldN < newN && Math.floor(t.position / oldN) < newN);
+    const drop = bundle.tiles.filter((t) => !keep.includes(t));
+    if (drop.length) await supabase.from("bingo_tiles").delete().in("id", drop.map((t) => t.id));
+    for (const t of keep) await supabase.from("bingo_tiles").update({ position: t.position + 1000 }).eq("id", t.id);
+    for (const t of keep) {
+      const r = Math.floor(t.position / oldN);
+      const c = t.position % oldN;
+      await supabase.from("bingo_tiles").update({ position: r * newN + c }).eq("id", t.id);
     }
-
-    // Rebuild the full teams payload (name + roster) for WOM re-sync.
-    const { data: allTeams } = await supabase.from("bingo_teams").select("id, name").eq("event_id", id);
-    const { data: allMembers } = await supabase
-      .from("bingo_team_members")
-      .select("team_id, rsn")
-      .in("team_id", (allTeams ?? []).map((t) => t.id));
-    const teamsPayload = (allTeams ?? []).map((t) => ({
-      name: t.name,
-      participants: (allMembers ?? []).filter((m) => m.team_id === t.id).map((m) => m.rsn),
-    }));
-
-    const { data: womTiles } = await supabase
-      .from("bingo_tiles")
-      .select("wom_competition_id")
-      .eq("event_id", id)
-      .eq("tracking_type", "wom")
-      .not("wom_competition_id", "is", null);
-
-    const womCompetitionIds = [...new Set((womTiles ?? []).map((t) => t.wom_competition_id as string))];
-    const syncErrors: string[] = [];
-    for (const womCompId of womCompetitionIds) {
-      const { data: comp } = await supabase.from("wom_competitions").select("wom_id, verification_code").eq("id", womCompId).maybeSingle();
-      if (!comp) continue;
-      try {
-        await editWomCompetition(comp.wom_id, { teams: teamsPayload }, comp.verification_code);
-      } catch (err) {
-        syncErrors.push(err instanceof Error ? err.message : `Failed to sync competition ${comp.wom_id}.`);
-      }
-    }
-    if (syncErrors.length > 0) {
-      return NextResponse.json({ updated: true, warning: `Rosters saved, but some WOM competitions failed to sync: ${syncErrors.join("; ")}` });
-    }
+    update.grid_size = newN;
   }
 
-  return NextResponse.json({ updated: true });
+  if ("status" in body) {
+    if (!STATUSES.includes(body.status)) return NextResponse.json({ error: "Unknown status." }, { status: 400 });
+    if (body.status === "active" && bundle.event.status !== "active") {
+      const merged = { ...bundle, event: { ...bundle.event, ...update } } as BingoBundle;
+      const problems = launchProblems(merged);
+      if (problems.length) return NextResponse.json({ error: "This board isn't ready to go live yet.", problems }, { status: 400 });
+    }
+    update.status = body.status;
+  }
+
+  if (Object.keys(update).length === 0) return NextResponse.json({ saved: true });
+  update.updated_at = new Date().toISOString();
+  const { error } = await supabase.from("bingo_events").update(update).eq("id", id);
+  if (error) return NextResponse.json({ error: "Couldn't save the bingo." }, { status: 500 });
+  if (update.status === "completed" && bundle.event.status === "active") await announceResults(supabase, bundle);
+  return NextResponse.json({ saved: true });
 }
 
-// DELETE - remove the board entirely (cascades to teams/members/tiles/completions).
-// Does not delete linked WOM competitions -- those stay on WOM/wom_competitions,
-// manage them from Admin > WOM Competitions if they should be removed too.
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// DELETE - remove a board and everything on it.
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { allowed } = await checkPermission("manage_bingo");
-  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const supabase = getServiceClient();
-  if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
-
-  const { error } = await supabase.from("bingo_events").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: "Failed to delete the event." }, { status: 500 });
-
+  const ctx = await guard();
+  if ("error" in ctx) return ctx.error;
+  const { error } = await ctx.supabase.from("bingo_events").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: "Couldn't delete the bingo." }, { status: 500 });
   return NextResponse.json({ deleted: true });
 }
