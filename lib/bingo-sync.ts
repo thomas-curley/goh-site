@@ -33,9 +33,15 @@ export async function syncEventAutoTiles(
   const end = new Date(Math.min(Date.now(), event.ends_at ? Date.parse(event.ends_at) : Date.now()));
   if (end <= start) return { tilesSynced: 0, errors: [] };
 
-  // RSN (normalised) -> team, and each team's display names.
+  // RSN (normalised) -> team and the name as written on the team list.
   const teamOf = new Map<string, string>();
-  for (const team of bundle.teams) for (const m of team.members) teamOf.set(normalizeRsn(m.rsn), team.id);
+  const rosterName = new Map<string, string>();
+  for (const team of bundle.teams) {
+    for (const m of team.members) {
+      teamOf.set(normalizeRsn(m.rsn), team.id);
+      rosterName.set(normalizeRsn(m.rsn), m.rsn);
+    }
+  }
 
   const errors: string[] = [];
   const gainsByMetric = new Map<string, Awaited<ReturnType<typeof getGroupGains>>>();
@@ -52,8 +58,9 @@ export async function syncEventAutoTiles(
       const contributors: Record<string, number> = {};
       for (const g of gains) {
         if (g.gained <= 0) continue;
-        if (teamOf.get(normalizeRsn(g.displayName)) !== team.id && teamOf.get(normalizeRsn(g.username)) !== team.id) continue;
-        contributors[g.displayName] = g.gained;
+        const key = teamOf.has(normalizeRsn(g.displayName)) ? normalizeRsn(g.displayName) : normalizeRsn(g.username);
+        if (teamOf.get(key) !== team.id) continue;
+        contributors[rosterName.get(key) ?? g.displayName] = g.gained;
       }
       const values = Object.values(contributors);
       const progress = tile.auto_mode === "single_player" ? Math.max(0, ...values) : values.reduce((s, v) => s + v, 0);
