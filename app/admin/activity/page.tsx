@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { presetDates, toDateInput } from "@/lib/raffle";
 import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
@@ -62,10 +63,22 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
   );
 }
 
+/**
+ * The dates a preset covers: This Week is Sunday to Saturday and This Month
+ * the calendar month (as on the Raffles page), cut off at today because
+ * there are no gains from the future yet. All Time has no dates.
+ */
+function rangeFor(p: Preset): { from: string; to: string } {
+  if (p !== "week" && p !== "month") return { from: "", to: "" };
+  const { from, to } = presetDates(p);
+  const today = toDateInput(new Date());
+  return { from, to: to > today ? today : to };
+}
+
 export default function AdminActivityPage() {
   const [preset, setPreset] = useState<Preset>("month");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
+  const [customStart, setCustomStart] = useState(() => rangeFor("month").from);
+  const [customEnd, setCustomEnd] = useState(() => rangeFor("month").to);
   const [members, setMembers] = useState<ActivityMember[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,11 +94,12 @@ export default function AdminActivityPage() {
 
   const loadSkillsBosses = useCallback(async (activePreset: Preset, start: string, end: string) => {
     const params = new URLSearchParams();
-    if (activePreset === "custom") {
+    // Presets fill the date boxes, so every range but All Time is sent as dates.
+    if (activePreset === "all") {
+      params.set("period", "all");
+    } else {
       if (start) params.set("start", new Date(start).toISOString());
       if (end) params.set("end", new Date(end + "T23:59:59").toISOString());
-    } else {
-      params.set("period", activePreset);
     }
 
     try {
@@ -105,11 +119,12 @@ export default function AdminActivityPage() {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams();
-    if (activePreset === "custom") {
+    // Presets fill the date boxes, so every range but All Time is sent as dates.
+    if (activePreset === "all") {
+      params.set("period", "all");
+    } else {
       if (start) params.set("start", new Date(start).toISOString());
       if (end) params.set("end", new Date(end + "T23:59:59").toISOString());
-    } else {
-      params.set("period", activePreset);
     }
 
     try {
@@ -135,8 +150,11 @@ export default function AdminActivityPage() {
 
   const selectPreset = (p: Preset) => {
     setPreset(p);
-    load(p, customStart, customEnd);
-    loadSkillsBosses(p, customStart, customEnd);
+    const { from, to } = rangeFor(p);
+    setCustomStart(from);
+    setCustomEnd(to);
+    load(p, from, to);
+    loadSkillsBosses(p, from, to);
   };
 
   const captureNow = async () => {

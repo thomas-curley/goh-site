@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { presetDates } from "@/lib/raffle";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -44,11 +45,10 @@ export function AttendanceLeaderboard() {
   const load = useCallback(async (activePreset: Preset, start: string, end: string) => {
     setLoading(true);
     const params = new URLSearchParams({ limit: "50" });
-    if (activePreset === "custom") {
+    // Presets fill the date boxes, so every range but All Time is sent as dates.
+    if (activePreset !== "all") {
       if (start) params.set("start", new Date(start).toISOString());
       if (end) params.set("end", new Date(end + "T23:59:59").toISOString());
-    } else {
-      params.set("period", activePreset);
     }
 
     try {
@@ -66,9 +66,15 @@ export function AttendanceLeaderboard() {
 
   useEffect(() => { load(preset, customStart, customEnd); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // This Week is Sunday to Saturday and This Month the whole calendar month
+  // (same as the Raffles page); the dates go into the boxes so it's clear
+  // what's counted. All Time clears them.
   const selectPreset = (p: Preset) => {
     setPreset(p);
-    load(p, customStart, customEnd);
+    const { from, to } = p === "week" || p === "month" ? presetDates(p) : { from: "", to: "" };
+    setCustomStart(from);
+    setCustomEnd(to);
+    load(p, from, to);
   };
 
   const applyCustomRange = (e: React.FormEvent) => {

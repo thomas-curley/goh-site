@@ -1,4 +1,5 @@
-// Date presets and the weighted draw for the Raffles page's attendance tool.
+// Date presets (shared with the attendance leaderboard and the admin
+// activity page) and the weighted draw for the Raffles page's attendance tool.
 
 /** A date as YYYY-MM-DD in local time (for <input type="date">). */
 export function toDateInput(d: Date): string {
