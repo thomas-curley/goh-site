@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { bingoServiceClient, createSubmission, findTeamFor, loadBingoBundle, userRsns, MAX_SUBMISSION_IMAGES } from "@/lib/bingo-server";
+import { bingoServiceClient, createSubmission, findTeamFor, loadBingoBundle, storeRemoteImages, userRsns } from "@/lib/bingo-server";
 import { syncEventAutoTiles } from "@/lib/bingo-sync";
 import { computeStandings, progressText } from "@/lib/bingo";
 
@@ -64,27 +64,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ linked: true, boards });
 }
 
-const DISCORD_CDN = /^https:\/\/(cdn\.discordapp\.com|media\.discordapp\.net)\//;
-const MAX_BYTES = 10 * 1024 * 1024;
-
-/** Copies Discord attachments into site storage (Discord's links expire). */
-async function storeAttachments(supabase: SupabaseClient, urls: string[]): Promise<string[]> {
-  const stored: string[] = [];
-  for (const url of urls.slice(0, MAX_SUBMISSION_IMAGES)) {
-    if (!DISCORD_CDN.test(url)) continue;
-    const res = await fetch(url).catch(() => null);
-    const type = res?.headers.get("content-type") ?? "";
-    if (!res?.ok || !type.startsWith("image/")) continue;
-    const buffer = await res.arrayBuffer();
-    if (buffer.byteLength > MAX_BYTES) continue;
-    const ext = type.split("/")[1]?.split(";")[0] || "png";
-    const fileName = `bingo_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("banners").upload(fileName, buffer, { contentType: type, cacheControl: "31536000" });
-    if (!error) stored.push(supabase.storage.from("banners").getPublicUrl(fileName).data.publicUrl);
-  }
-  return stored;
-}
-
 // POST
 //   { action: "submit", discordId, tileId, attachmentUrls, quantity?, note? }
 //   { action: "sync" }  refresh every live board's tracked tiles (skips fresh ones)
@@ -115,7 +94,7 @@ export async function POST(request: NextRequest) {
   const mine = bundle ? findTeamFor(bundle.teams, player.rsns) : null;
   if (!bundle || !mine) return NextResponse.json({ error: "You aren't on a team for that bingo." }, { status: 403 });
 
-  const imageUrls = await storeAttachments(supabase, Array.isArray(body.attachmentUrls) ? body.attachmentUrls : []);
+  const imageUrls = await storeRemoteImages(supabase, Array.isArray(body.attachmentUrls) ? body.attachmentUrls : []);
   if (imageUrls.length === 0) return NextResponse.json({ error: "Attach a screenshot (PNG or JPG, under 10 MB)." }, { status: 400 });
 
   const result = await createSubmission(supabase, bundle, {

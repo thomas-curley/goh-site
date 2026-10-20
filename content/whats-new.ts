@@ -34,6 +34,25 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 20, 2026 (later) ──────────────────────────────────────
+  {
+    id: "2026-10-20-clan-feed",
+    date: "2026-10-20",
+    kind: "new",
+    audience: "admin",
+    title: "Clan Feed: DropTracker drops and clan broadcasts count automatically",
+    summary:
+      "The bot can now read the Discord channels where DropTracker (or a clan-chat forwarder) posts. When a player on a bingo team gets an item that's on a tile's item list, the tile ticks off by itself, or goes to the review queue if you'd rather check first. Quest completions posted there count for quest event players too, even if they don't use WikiSync or Discord. A log shows every post the bot read and what it counted for, and you can paste a post to test it.",
+    tryIt: [
+      "Go to Admin › Settings › Clan Feed (DropTracker) and add your DropTracker channel.",
+      "Paste a post into Try a message to see what it would count for.",
+      "On a bingo's Basics step, choose what happens to drops from the feed: count them, send them for review, or ignore them.",
+    ],
+    links: [
+      { label: "Admin › Clan Feed", href: "/admin/clan-feed" },
+      { label: "Admin › Bingo", href: "/admin/bingo" },
+    ],
+  },
   // ── October 20, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-20-quest-events",

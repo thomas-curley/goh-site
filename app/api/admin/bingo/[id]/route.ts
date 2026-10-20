@@ -76,6 +76,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (key in body) update[key] = Math.max(0, Math.min(1000, Math.floor(Number(body[key]) || 0)));
   }
   if ("hide_other_teams" in body) update.hide_other_teams = !!body.hide_other_teams;
+  if ("feed_mode" in body) update.feed_mode = ["off", "review", "approve"].includes(body.feed_mode) ? body.feed_mode : "approve";
 
   if ("grid_size" in body && body.grid_size !== bundle.event.grid_size) {
     if (!(GRID_SIZES as readonly number[]).includes(body.grid_size)) return NextResponse.json({ error: "Pick a board size from 3×3 to 7×7." }, { status: 400 });

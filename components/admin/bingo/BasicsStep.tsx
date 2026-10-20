@@ -42,6 +42,7 @@ export function BasicsStep({ data, onSaved, onNext }: { data: AdminBingo; onSave
     lineBonus: event.line_bonus,
     blackoutBonus: event.blackout_bonus,
     hideOthers: event.hide_other_teams,
+    feedMode: event.feed_mode ?? "approve",
   });
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
@@ -69,6 +70,7 @@ export function BasicsStep({ data, onSaved, onNext }: { data: AdminBingo; onSave
         line_bonus: form.lineBonus,
         blackout_bonus: form.blackoutBonus,
         hide_other_teams: form.hideOthers,
+        feed_mode: form.feedMode,
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -172,6 +174,29 @@ export function BasicsStep({ data, onSaved, onNext }: { data: AdminBingo; onSave
             <span className="block text-xs text-iron-grey">Teams still see the standings (points only). Every board is revealed when the bingo finishes.</span>
           </span>
         </label>
+        <Field
+          label="Drops from the clan feed"
+          hint="When DropTracker (or another feed in Admin › Clan Feed) posts a drop that's on a tile's item list, for a player on a team."
+        >
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(
+              [
+                ["approve", "Count them", "The tile ticks off straight away. Staff can still undo it in the review queue."],
+                ["review", "Send for review", "They land in the review queue with the drop's details, like a screenshot would."],
+                ["off", "Ignore them", "Only screenshots and tracked tiles count."],
+              ] as const
+            ).map(([value, title, text]) => (
+              <label
+                key={value}
+                className={`rounded-md border p-3 cursor-pointer text-sm ${form.feedMode === value ? "border-gnome-green bg-gnome-green/10" : "border-bark-brown-light/40 hover:bg-parchment-dark/40"}`}
+              >
+                <input type="radio" name="feedMode" className="sr-only" checked={form.feedMode === value} onChange={() => set("feedMode", value)} />
+                <span className="font-semibold text-bark-brown">{title}</span>
+                <span className="block text-xs text-iron-grey mt-0.5">{text}</span>
+              </label>
+            ))}
+          </div>
+        </Field>
       </Card>
 
       <div className="flex flex-wrap items-center gap-3">

@@ -33,6 +33,8 @@ export interface BingoEvent {
   line_bonus: number;
   blackout_bonus: number;
   hide_other_teams: boolean;
+  /** What to do with a matching drop from the clan feed (DropTracker etc.). */
+  feed_mode: "off" | "review" | "approve";
   last_synced_at: string | null;
   created_at: string;
   updated_at: string;
@@ -81,7 +83,7 @@ export interface BingoSubmission {
   tile_id: string;
   team_id: string;
   submitter_rsn: string;
-  source: "web" | "discord";
+  source: "web" | "discord" | "feed";
   image_urls: string[];
   quantity: number;
   note: string | null;

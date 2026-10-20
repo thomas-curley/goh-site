@@ -118,6 +118,10 @@ client.once(Events.ClientReady, async (c) => {
   const { startRoomCleanup } = await import("./lib/temp-rooms.js");
   startRoomCleanup(c);
 
+  // Read drops and quest completions from the clan feed channels.
+  const { startClanFeed } = await import("./lib/clan-feed.js");
+  startClanFeed(c);
+
   // Keep live bingo boards' tracked tiles fresh (the site skips boards it updated recently).
   // Same for quest events' WikiSync checks.
   const { syncBingo, syncQuests } = await import("./lib/api.js");

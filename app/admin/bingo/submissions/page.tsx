@@ -14,7 +14,7 @@ interface Submission {
   id: string;
   event_id: string;
   submitter_rsn: string;
-  source: "web" | "discord";
+  source: "web" | "discord" | "feed";
   image_urls: string[];
   quantity: number;
   note: string | null;
@@ -214,7 +214,7 @@ function ReviewQueue() {
                 <span className="font-semibold">{current.bingo_teams?.name}</span> · {current.submitter_rsn}
               </p>
               <p className="text-xs text-iron-grey">
-                Sent {ago(current.created_at)} from {current.source === "discord" ? "Discord" : "the website"}
+                Sent {ago(current.created_at)} from {current.source === "discord" ? "Discord" : current.source === "feed" ? "the clan feed (DropTracker)" : "the website"}
                 {tile.required_count > 1 && ` · team has ${current.teamProgress} of ${tile.required_count}`}
               </p>
               {current.note && <p className="text-sm italic text-bark-brown-light">&ldquo;{current.note}&rdquo;</p>}

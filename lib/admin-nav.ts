@@ -56,6 +56,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
 
   { href: "/admin/alert-channels", label: "Discord Channels", group: "Settings", permission: "manage_settings" },
   { href: "/admin/voice-rooms", label: "Voice Rooms", group: "Settings", permission: "manage_settings" },
+  { href: "/admin/clan-feed", label: "Clan Feed (DropTracker)", group: "Settings", permission: "manage_settings" },
   { href: "/admin/prize-defaults", label: "Prize & DM Defaults", group: "Settings", permission: "manage_payouts" },
   { href: "/admin/points", label: "Points Rules", group: "Settings", permission: "manage_points" },
   { href: "/admin/permissions", label: "Roles & Access", group: "Settings", permission: ["manage_permissions", "manage_sections"], alsoActiveOn: ["/admin/sections"] },
