@@ -1,0 +1,2147 @@
+{
+ "source": "https://oldschool.runescape.wiki/w/Quests/List",
+ "wikiSyncNames": [
+  ".",
+  "A Kingdom Divided",
+  "A Night at the Theatre",
+  "A Porcine of Interest",
+  "A Ruff Situation",
+  "A Soul's Bane",
+  "A Tail of Two Cats",
+  "A Taste of Hope",
+  "Alfred Grimhand's Barcrawl",
+  "Animal Magnetism",
+  "Another Slice of H.A.M.",
+  "At First Light",
+  "Barbarian Training",
+  "Bear Your Soul",
+  "Below Ice Mountain",
+  "Beneath Cursed Sands",
+  "Between a Rock...",
+  "Big Chompy Bird Hunting",
+  "Biohazard",
+  "Black Knights' Fortress",
+  "Bone Voyage",
+  "Cabin Fever",
+  "Children of the Sun",
+  "Client of Kourend",
+  "Clock Tower",
+  "Cold War",
+  "Contact!",
+  "Cook's Assistant",
+  "Crab Quest",
+  "Creature of Fenkenstrain",
+  "Current Affairs",
+  "Curse of the Empty Lord",
+  "Daddy's Home",
+  "Darkness of Hallowvale",
+  "Death Plateau",
+  "Death on the Isle",
+  "Death to the Dorgeshuun",
+  "Defender of Varrock",
+  "Demon Slayer",
+  "Desert Treasure I",
+  "Desert Treasure II - The Fallen Empire",
+  "Devious Minds",
+  "Doric's Quest",
+  "Dragon Slayer I",
+  "Dragon Slayer II",
+  "Dream Mentor",
+  "Druidic Ritual",
+  "Dwarf Cannon",
+  "Eadgar's Ruse",
+  "Eagles' Peak",
+  "Elemental Workshop I",
+  "Elemental Workshop II",
+  "Enakhra's Lament",
+  "Enlightened Journey",
+  "Enter the Abyss",
+  "Ernest the Chicken",
+  "Ethically Acquired Antiquities",
+  "Fairytale I - Growing Pains",
+  "Fairytale II - Cure a Queen",
+  "Fallen From Grace",
+  "Family Crest",
+  "Family Pest",
+  "Fight Arena",
+  "Fishing Contest",
+  "Forgettable Tale...",
+  "Garden of Tranquillity",
+  "Gertrude's Cat",
+  "Getting Ahead",
+  "Ghosts Ahoy",
+  "Goblin Diplomacy",
+  "Grim Tales",
+  "Haunted Mine",
+  "Hazeel Cult",
+  "Heroes' Quest",
+  "His Faithful Servants",
+  "Holy Grail",
+  "Hopespear's Will",
+  "Horror from the Deep",
+  "Icthlarin's Little Helper",
+  "Imp Catcher",
+  "In Aid of the Myreque",
+  "In Search of Knowledge",
+  "In Search of the Myreque",
+  "Into the Tombs",
+  "Jungle Potion",
+  "King's Ransom",
+  "Lair of Tarn Razorlor",
+  "Land of the Goblins",
+  "Learning the Ropes",
+  "Legends' Quest",
+  "Lost City",
+  "Lunar Diplomacy",
+  "Mage Arena I",
+  "Mage Arena II",
+  "Making Friends with My Arm",
+  "Making History",
+  "Meat and Greet",
+  "Merlin's Crystal",
+  "Misthalin Mystery",
+  "Monk's Friend",
+  "Monkey Madness I",
+  "Monkey Madness II",
+  "Mountain Daughter",
+  "Mourning's End Part I",
+  "Mourning's End Part II",
+  "Murder Mystery",
+  "My Arm's Big Adventure",
+  "Nature Spirit",
+  "Observatory Quest",
+  "Olaf's Quest",
+  "One Small Favour",
+  "Pandemonium",
+  "Perilous Moons",
+  "Pirate's Treasure",
+  "Plague City",
+  "Priest in Peril",
+  "Prince Ali Rescue",
+  "Prying Times",
+  "Rag and Bone Man I",
+  "Rag and Bone Man II",
+  "Ratcatchers",
+  "Recipe for Disaster",
+  "Recipe for Disaster - Another Cook's Quest",
+  "Recipe for Disaster - Culinaromancer",
+  "Recipe for Disaster - Evil Dave",
+  "Recipe for Disaster - King Awowogei",
+  "Recipe for Disaster - Lumbridge Guide",
+  "Recipe for Disaster - Mountain Dwarf",
+  "Recipe for Disaster - Pirate Pete",
+  "Recipe for Disaster - Sir Amik Varze",
+  "Recipe for Disaster - Skrach Uglogwee",
+  "Recipe for Disaster - Wartface & Bentnoze",
+  "Recruitment Drive",
+  "Regicide",
+  "Romeo & Juliet",
+  "Roving Elves",
+  "Royal Trouble",
+  "Rum Deal",
+  "Rune Mysteries",
+  "Scorpion Catcher",
+  "Scrambled!",
+  "Sea Slug",
+  "Secrets of the North",
+  "Shades of Mort'ton",
+  "Shadow of the Storm",
+  "Shadows of Custodia",
+  "Sheep Herder",
+  "Sheep Shearer",
+  "Shield of Arrav",
+  "Shilo Village",
+  "Sins of the Father",
+  "Skippy and the Mogres",
+  "Sleeping Giants",
+  "Song of the Elves",
+  "Spirits of the Elid",
+  "Swan Song",
+  "Tai Bwo Wannai Trio",
+  "Tale of the Righteous",
+  "Tears of Guthix",
+  "Temple of Ikov",
+  "Temple of the Eye",
+  "The Ascent of Arceuus",
+  "The Blood Moon Rises",
+  "The Corsair Curse",
+  "The Curse of Arrav",
+  "The Depths of Despair",
+  "The Dig Site",
+  "The Enchanted Key",
+  "The Eyes of Glouphrie",
+  "The Feud",
+  "The Final Dawn",
+  "The Forsaken Tower",
+  "The Fremennik Exiles",
+  "The Fremennik Isles",
+  "The Fremennik Trials",
+  "The Frozen Door",
+  "The Garden of Death",
+  "The General's Shadow",
+  "The Giant Dwarf",
+  "The Golem",
+  "The Grand Tree",
+  "The Great Brain Robbery",
+  "The Hand in the Sand",
+  "The Heart of Darkness",
+  "The Ides of Milk",
+  "The Knight's Sword",
+  "The Lost Tribe",
+  "The Path of Glouphrie",
+  "The Queen of Thieves",
+  "The Red Reef",
+  "The Restless Ghost",
+  "The Ribbiting Tale of a Lily Pad Labour Dispute",
+  "The Slug Menace",
+  "The Tourist Trap",
+  "Throne of Miscellania",
+  "Tower of Life",
+  "Tree Gnome Village",
+  "Tribal Totem",
+  "Troll Romance",
+  "Troll Stronghold",
+  "Troubled Tortugans",
+  "Twilight's Promise",
+  "Underground Pass",
+  "Vale Totems",
+  "Vampyre Slayer",
+  "Wanted!",
+  "Watchtower",
+  "Waterfall Quest",
+  "What Lies Below",
+  "While Guthix Sleeps",
+  "Witch's House",
+  "Witch's Potion",
+  "X Marks the Spot",
+  "Zogre Flesh Eaters"
+ ],
+ "quests": [
+  {
+   "name": "A Kingdom Divided",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Great Kourend , #4"
+  },
+  {
+   "name": "A Night at the Theatre",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "A Porcine of Interest",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "A Ruff Situation",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "A Soul's Bane",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "A Tail of Two Cats",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Dragonkin , #2"
+  },
+  {
+   "name": "A Taste of Hope",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Myreque , #4"
+  },
+  {
+   "name": "Alfred Grimhand's Barcrawl",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Animal Magnetism",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Another Slice of H.A.M.",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Dorgeshuun , #3"
+  },
+  {
+   "name": "At First Light",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Barbarian Training",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Bear Your Soul",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Short",
+   "series": "Great Kourend"
+  },
+  {
+   "name": "Below Ice Mountain",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Beneath Cursed Sands",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Kharidian , #4"
+  },
+  {
+   "name": "Between a Rock...",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Big Chompy Bird Hunting",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Biohazard",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Elf , #2"
+  },
+  {
+   "name": "Black Knights' Fortress",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Bone Voyage",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Cabin Fever",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Pirate , #2"
+  },
+  {
+   "name": "Children of the Sun",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "Twilight Emissaries , #1"
+  },
+  {
+   "name": "Client of Kourend",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Great Kourend , #2"
+  },
+  {
+   "name": "Clock Tower",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Cold War",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Penguin , #1"
+  },
+  {
+   "name": "Contact!",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Kharidian , #3"
+  },
+  {
+   "name": "Cook's Assistant",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Crab Quest",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Creature of Fenkenstrain",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Current Affairs",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Curse of the Empty Lord",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "Mahjarrat , #8"
+  },
+  {
+   "name": "Daddy's Home",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Darkness of Hallowvale",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Myreque , #3"
+  },
+  {
+   "name": "Death on the Isle",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Death Plateau",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Troll , #1"
+  },
+  {
+   "name": "Death to the Dorgeshuun",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Dorgeshuun , #2"
+  },
+  {
+   "name": "Defender of Varrock",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Mahjarrat , #6"
+  },
+  {
+   "name": "Demon Slayer",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Demon Slayer , #1"
+  },
+  {
+   "name": "Desert Treasure I",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Mahjarrat , #7"
+  },
+  {
+   "name": "Desert Treasure II - The Fallen Empire",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "Mahjarrat , #14"
+  },
+  {
+   "name": "Devious Minds",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Mahjarrat , #11"
+  },
+  {
+   "name": "Doric's Quest",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Dragon Slayer I",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Dragonkin , #1"
+  },
+  {
+   "name": "Dragon Slayer II",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "Dragonkin , #3"
+  },
+  {
+   "name": "Dream Mentor",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Druidic Ritual",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Dwarf Cannon",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Eadgar's Ruse",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Troll , #3"
+  },
+  {
+   "name": "Eagles' Peak",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Elemental Workshop I",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "Elemental Workshop , #1"
+  },
+  {
+   "name": "Elemental Workshop II",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Elemental Workshop , #2"
+  },
+  {
+   "name": "Enakhra's Lament",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Mahjarrat , #4"
+  },
+  {
+   "name": "Enlightened Journey",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Enter the Abyss",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Very Short",
+   "series": "Order of Wizards , #2"
+  },
+  {
+   "name": "Ernest the Chicken",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Ethically Acquired Antiquities",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Fairytale I - Growing Pains",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Fairytale , #1"
+  },
+  {
+   "name": "Fairytale II - Cure a Queen",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Fairytale , #2"
+  },
+  {
+   "name": "Fallen From Grace",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Family Crest",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Family Pest",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Fight Arena",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Mahjarrat , #3"
+  },
+  {
+   "name": "Fishing Contest",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Forgettable Tale...",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Red Axe , #2"
+  },
+  {
+   "name": "Garden of Tranquillity",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "N/A"
+  },
+  {
+   "name": "Gertrude's Cat",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Getting Ahead",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Twisted Tales"
+  },
+  {
+   "name": "Ghosts Ahoy",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Goblin Diplomacy",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Grim Tales",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Haunted Mine",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Hazeel Cult",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "Mahjarrat , #2"
+  },
+  {
+   "name": "Heroes' Quest",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "His Faithful Servants",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Very Short",
+   "series": "Mahjarrat , #12"
+  },
+  {
+   "name": "Holy Grail",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Camelot , #2"
+  },
+  {
+   "name": "Hopespear's Will",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Horror from the Deep",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Icthlarin's Little Helper",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Kharidian , #2"
+  },
+  {
+   "name": "Imp Catcher",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "In Aid of the Myreque",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Myreque , #2"
+  },
+  {
+   "name": "In Search of Knowledge",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "In Search of the Myreque",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Myreque , #1"
+  },
+  {
+   "name": "Into the Tombs",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "Kharidian , #5"
+  },
+  {
+   "name": "Jungle Potion",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "King's Ransom",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Camelot , #3"
+  },
+  {
+   "name": "Lair of Tarn Razorlor",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Land of the Goblins",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Dorgeshuun , #4"
+  },
+  {
+   "name": "Learning the Ropes",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Legends' Quest",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "N/A"
+  },
+  {
+   "name": "Lost City",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Lunar Diplomacy",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Fremennik , #3"
+  },
+  {
+   "name": "Mage Arena I",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Mage Arena II",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Making Friends with My Arm",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Troll , #5"
+  },
+  {
+   "name": "Making History",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Meat and Greet",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Merlin's Crystal",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Camelot , #1"
+  },
+  {
+   "name": "Misthalin Mystery",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Monk's Friend",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Monkey Madness I",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Gnome , #4"
+  },
+  {
+   "name": "Monkey Madness II",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "Gnome , #5"
+  },
+  {
+   "name": "Mountain Daughter",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Mourning's End Part I",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Elf , #6"
+  },
+  {
+   "name": "Mourning's End Part II",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Elf , #7"
+  },
+  {
+   "name": "Murder Mystery",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "My Arm's Big Adventure",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Troll , #4"
+  },
+  {
+   "name": "Nature Spirit",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Observatory Quest",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Olaf's Quest",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "One Small Favour",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "N/A"
+  },
+  {
+   "name": "Pandemonium",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Perilous Moons",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Pirate's Treasure",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Plague City",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "Elf , #1"
+  },
+  {
+   "name": "Priest in Peril",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Prince Ali Rescue",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Kharidian , #1"
+  },
+  {
+   "name": "Prying Times",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Rag and Bone Man I",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Rag and Bone Man , #1"
+  },
+  {
+   "name": "Rag and Bone Man II",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Rag and Bone Man , #2"
+  },
+  {
+   "name": "Ratcatchers",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Another Cook's Quest",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Defeating the Culinaromancer",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing Evil Dave",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing King Awowogei",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing Pirate Pete",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing Sir Amik Varze",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing Skrach Uglogwee",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing the Goblin generals",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing the Lumbridge Guide",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Recipe for Disaster/Freeing the Mountain Dwarf",
+   "difficulty": "Special",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Recruitment Drive",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Temple Knight , #1"
+  },
+  {
+   "name": "Regicide",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Elf , #4"
+  },
+  {
+   "name": "Romeo & Juliet",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Roving Elves",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Elf , #5"
+  },
+  {
+   "name": "Royal Trouble",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Miscellania , #2"
+  },
+  {
+   "name": "Rum Deal",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Pirate , #1"
+  },
+  {
+   "name": "Rune Mysteries",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Order of Wizards , #1"
+  },
+  {
+   "name": "Scorpion Catcher",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Scrambled!",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Sea Slug",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Temple Knight , #3"
+  },
+  {
+   "name": "Secrets of the North",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Mahjarrat , #13"
+  },
+  {
+   "name": "Shades of Mort'ton",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Shadow of the Storm",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Demon Slayer , #2"
+  },
+  {
+   "name": "Shadows of Custodia",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Sheep Herder",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Sheep Shearer",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Shield of Arrav",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Shilo Village",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Sins of the Father",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Myreque , #5"
+  },
+  {
+   "name": "Skippy and the Mogres",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Sleeping Giants",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Song of the Elves",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "Elf , #8"
+  },
+  {
+   "name": "Spirits of the Elid",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Swan Song",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Tai Bwo Wannai Trio",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Tale of the Righteous",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Great Kourend , #3E"
+  },
+  {
+   "name": "Tears of Guthix",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Temple of Ikov",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Mahjarrat , #5"
+  },
+  {
+   "name": "Temple of the Eye",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Order of Wizards , #3"
+  },
+  {
+   "name": "The Ascent of Arceuus",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Great Kourend , #3C"
+  },
+  {
+   "name": "The Blood Moon Rises",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "Myreque , #6"
+  },
+  {
+   "name": "The Corsair Curse",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Curse of Arrav",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Mahjarrat , #10"
+  },
+  {
+   "name": "The Depths of Despair",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Great Kourend , #3B"
+  },
+  {
+   "name": "The Dig Site",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Mahjarrat , #1"
+  },
+  {
+   "name": "The Enchanted Key",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "The Eyes of Glouphrie",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Gnome , #2"
+  },
+  {
+   "name": "The Feud",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "The Final Dawn",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Twilight Emissaries , #4"
+  },
+  {
+   "name": "The Forsaken Tower",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Great Kourend , #3D"
+  },
+  {
+   "name": "The Fractured Archive (miniquest)",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "The Fremennik Exiles",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Fremennik , #4"
+  },
+  {
+   "name": "The Fremennik Isles",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Fremennik , #2"
+  },
+  {
+   "name": "The Fremennik Trials",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Fremennik , #1"
+  },
+  {
+   "name": "The Frozen Door",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Garden of Death",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Twisted Tales"
+  },
+  {
+   "name": "The General's Shadow",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Medium",
+   "series": "Mahjarrat , #9"
+  },
+  {
+   "name": "The Giant Dwarf",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Red Axe , #1"
+  },
+  {
+   "name": "The Golem",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Grand Tree",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Gnome , #1"
+  },
+  {
+   "name": "The Great Brain Robbery",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Pirate , #3"
+  },
+  {
+   "name": "The Hand in the Sand",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Heart of Darkness",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Twilight Emissaries , #3"
+  },
+  {
+   "name": "The Ides of Milk",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Knight's Sword",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Lost Tribe",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Dorgeshuun , #1"
+  },
+  {
+   "name": "The Path of Glouphrie",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Gnome , #3"
+  },
+  {
+   "name": "The Queen of Thieves",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "Great Kourend , #3A"
+  },
+  {
+   "name": "The Red Reef",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Tortugan , #2"
+  },
+  {
+   "name": "The Restless Ghost",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Ribbiting Tale of a Lily Pad Labour Dispute",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "The Slug Menace",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Temple Knight , #4"
+  },
+  {
+   "name": "The Tourist Trap",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Throne of Miscellania",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Miscellania , #1"
+  },
+  {
+   "name": "Tower of Life",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Tree Gnome Village",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Gnome quest series"
+  },
+  {
+   "name": "Tribal Totem",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Troll Romance",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Troll Stronghold",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Troll , #2"
+  },
+  {
+   "name": "Troubled Tortugans",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Tortugan , #1"
+  },
+  {
+   "name": "Twilight's Promise",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "Twilight Emissaries , #2"
+  },
+  {
+   "name": "Underground Pass",
+   "difficulty": "Experienced",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Long",
+   "series": "Elf , #3"
+  },
+  {
+   "name": "Vale Totems (miniquest)",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": true,
+   "miniquest": true,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Vampyre Slayer",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Wanted!",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "Temple Knight , #2"
+  },
+  {
+   "name": "Watchtower",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": "N/A"
+  },
+  {
+   "name": "Waterfall Quest",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "What Lies Below",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  },
+  {
+   "name": "While Guthix Sleeps",
+   "difficulty": "Master",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Long",
+   "series": "Mahjarrat , #15"
+  },
+  {
+   "name": "Witch's House",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "Witch's Potion",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "N/A"
+  },
+  {
+   "name": "X Marks the Spot",
+   "difficulty": "Novice",
+   "qp": 0,
+   "members": false,
+   "miniquest": false,
+   "length": "Very Short",
+   "series": "Great Kourend , #1"
+  },
+  {
+   "name": "Zogre Flesh Eaters",
+   "difficulty": "Intermediate",
+   "qp": 0,
+   "members": true,
+   "miniquest": false,
+   "length": "Short",
+   "series": "N/A"
+  }
+ ]
+}
