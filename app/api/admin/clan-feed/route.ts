@@ -16,18 +16,16 @@ async function context() {
   return { supabase: createClient(url, key) };
 }
 
-// GET - the watched channels and the last 100 posts read from them.
+// GET - the watched channels and the DropTracker API status (the log is /log).
 export async function GET() {
   const ctx = await context();
   if ("error" in ctx) return ctx.error;
-  const [{ data: channels }, { data: messages }, { data: source }] = await Promise.all([
+  const [{ data: channels }, { data: source }] = await Promise.all([
     ctx.supabase.from("clan_feed_channels").select("channel_id, label, created_at").order("created_at"),
-    ctx.supabase.from("clan_feed_messages").select("id, channel_id, author_name, posted_at, text, image_urls, events, outcomes").order("posted_at", { ascending: false }).limit(100),
     ctx.supabase.from("clan_feed_sources").select("last_polled_at, last_result").eq("source", DROPTRACKER_CHANNEL).maybeSingle(),
   ]);
   return NextResponse.json({
     channels: channels ?? [],
-    messages: messages ?? [],
     droptracker: { configured: droptrackerConfigured(), lastPolledAt: source?.last_polled_at ?? null, lastResult: source?.last_result ?? null },
   });
 }
