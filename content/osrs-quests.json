@@ -1,7 +1,6 @@
 {
  "source": "https://oldschool.runescape.wiki/w/Quests/List",
  "wikiSyncNames": [
-  ".",
   "A Kingdom Divided",
   "A Night at the Theatre",
   "A Porcine of Interest",
@@ -219,114 +218,127 @@
  "quests": [
   {
    "name": "A Kingdom Divided",
+   "wikiPage": "A Kingdom Divided",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Great Kourend , #4"
+   "series": "Great Kourend #4"
   },
   {
    "name": "A Night at the Theatre",
+   "wikiPage": "A Night at the Theatre",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "A Porcine of Interest",
+   "wikiPage": "A Porcine of Interest",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "A Ruff Situation",
+   "wikiPage": "A Ruff Situation",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "A Soul's Bane",
+   "wikiPage": "A Soul's Bane",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "A Tail of Two Cats",
+   "wikiPage": "A Tail of Two Cats",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Dragonkin , #2"
+   "series": "Dragonkin #2"
   },
   {
    "name": "A Taste of Hope",
+   "wikiPage": "A Taste of Hope",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Myreque , #4"
+   "series": "Myreque #4"
   },
   {
    "name": "Alfred Grimhand's Barcrawl",
+   "wikiPage": "Alfred Grimhand's Barcrawl",
    "difficulty": "Novice",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Animal Magnetism",
+   "wikiPage": "Animal Magnetism",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Another Slice of H.A.M.",
+   "wikiPage": "Another Slice of H.A.M.",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Dorgeshuun , #3"
+   "series": "Dorgeshuun #3"
   },
   {
    "name": "At First Light",
+   "wikiPage": "At First Light",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Barbarian Training",
+   "wikiPage": "Barbarian Training",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Bear Your Soul",
+   "wikiPage": "Bear Your Soul",
    "difficulty": "Intermediate",
    "qp": 0,
    "members": true,
@@ -336,485 +348,539 @@
   },
   {
    "name": "Below Ice Mountain",
+   "wikiPage": "Below Ice Mountain",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Beneath Cursed Sands",
+   "wikiPage": "Beneath Cursed Sands",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Kharidian , #4"
+   "series": "Kharidian #4"
   },
   {
    "name": "Between a Rock...",
+   "wikiPage": "Between a Rock...",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Big Chompy Bird Hunting",
+   "wikiPage": "Big Chompy Bird Hunting",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Biohazard",
+   "wikiPage": "Biohazard",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Elf , #2"
+   "series": "Elf #2"
   },
   {
    "name": "Black Knights' Fortress",
+   "wikiPage": "Black Knights' Fortress",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 3,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Bone Voyage",
+   "wikiPage": "Bone Voyage",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Cabin Fever",
+   "wikiPage": "Cabin Fever",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Pirate , #2"
+   "series": "Pirate #2"
   },
   {
    "name": "Children of the Sun",
+   "wikiPage": "Children of the Sun",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "Twilight Emissaries , #1"
+   "series": "Twilight Emissaries #1"
   },
   {
    "name": "Client of Kourend",
+   "wikiPage": "Client of Kourend",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Great Kourend , #2"
+   "series": "Great Kourend #2"
   },
   {
    "name": "Clock Tower",
+   "wikiPage": "Clock Tower",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Cold War",
+   "wikiPage": "Cold War",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Penguin , #1"
+   "series": "Penguin #1"
   },
   {
    "name": "Contact!",
+   "wikiPage": "Contact!",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Kharidian , #3"
+   "series": "Kharidian #3"
   },
   {
    "name": "Cook's Assistant",
+   "wikiPage": "Cook's Assistant",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Crab Quest",
+   "wikiPage": "Crab Quest",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Creature of Fenkenstrain",
+   "wikiPage": "Creature of Fenkenstrain",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Current Affairs",
+   "wikiPage": "Current Affairs",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Curse of the Empty Lord",
+   "wikiPage": "Curse of the Empty Lord",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "Mahjarrat , #8"
+   "series": "Mahjarrat #8"
   },
   {
    "name": "Daddy's Home",
+   "wikiPage": "Daddy's Home",
    "difficulty": "Novice",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Darkness of Hallowvale",
+   "wikiPage": "Darkness of Hallowvale",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Myreque , #3"
+   "series": "Myreque #3"
   },
   {
    "name": "Death on the Isle",
+   "wikiPage": "Death on the Isle",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Death Plateau",
+   "wikiPage": "Death Plateau",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Troll , #1"
+   "series": "Troll #1"
   },
   {
    "name": "Death to the Dorgeshuun",
+   "wikiPage": "Death to the Dorgeshuun",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Dorgeshuun , #2"
+   "series": "Dorgeshuun #2"
   },
   {
    "name": "Defender of Varrock",
+   "wikiPage": "Defender of Varrock",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Mahjarrat , #6"
+   "series": "Mahjarrat #6"
   },
   {
    "name": "Demon Slayer",
+   "wikiPage": "Demon Slayer",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 3,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "Demon Slayer , #1"
+   "series": "Demon Slayer #1"
   },
   {
    "name": "Desert Treasure I",
+   "wikiPage": "Desert Treasure I",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Mahjarrat , #7"
+   "series": "Mahjarrat #7"
   },
   {
    "name": "Desert Treasure II - The Fallen Empire",
-   "difficulty": "Master",
-   "qp": 0,
+   "wikiPage": "Desert Treasure II - The Fallen Empire",
+   "difficulty": "Grandmaster",
+   "qp": 5,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "Mahjarrat , #14"
+   "series": "Mahjarrat #14"
   },
   {
    "name": "Devious Minds",
+   "wikiPage": "Devious Minds",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Mahjarrat , #11"
+   "series": "Mahjarrat #11"
   },
   {
    "name": "Doric's Quest",
+   "wikiPage": "Doric's Quest",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Dragon Slayer I",
+   "wikiPage": "Dragon Slayer I",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": false,
    "miniquest": false,
    "length": "Medium",
-   "series": "Dragonkin , #1"
+   "series": "Dragonkin #1"
   },
   {
    "name": "Dragon Slayer II",
-   "difficulty": "Master",
-   "qp": 0,
+   "wikiPage": "Dragon Slayer II",
+   "difficulty": "Grandmaster",
+   "qp": 5,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "Dragonkin , #3"
+   "series": "Dragonkin #3"
   },
   {
    "name": "Dream Mentor",
+   "wikiPage": "Dream Mentor",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Druidic Ritual",
+   "wikiPage": "Druidic Ritual",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Dwarf Cannon",
+   "wikiPage": "Dwarf Cannon",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Eadgar's Ruse",
+   "wikiPage": "Eadgar's Ruse",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Troll , #3"
+   "series": "Troll #3"
   },
   {
    "name": "Eagles' Peak",
+   "wikiPage": "Eagles' Peak",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Elemental Workshop I",
+   "wikiPage": "Elemental Workshop I",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "Elemental Workshop , #1"
+   "series": "Elemental Workshop #1"
   },
   {
    "name": "Elemental Workshop II",
+   "wikiPage": "Elemental Workshop II",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Elemental Workshop , #2"
+   "series": "Elemental Workshop #2"
   },
   {
    "name": "Enakhra's Lament",
+   "wikiPage": "Enakhra's Lament",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Mahjarrat , #4"
+   "series": "Mahjarrat #4"
   },
   {
    "name": "Enlightened Journey",
+   "wikiPage": "Enlightened Journey",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Enter the Abyss",
+   "wikiPage": "Enter the Abyss",
    "difficulty": "Intermediate",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Very Short",
-   "series": "Order of Wizards , #2"
+   "series": "Order of Wizards #2"
   },
   {
    "name": "Ernest the Chicken",
+   "wikiPage": "Ernest the Chicken",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 4,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Ethically Acquired Antiquities",
+   "wikiPage": "Ethically Acquired Antiquities",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Fairytale I - Growing Pains",
+   "wikiPage": "Fairytale I - Growing Pains",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Fairytale , #1"
+   "series": "Fairytale #1"
   },
   {
    "name": "Fairytale II - Cure a Queen",
+   "wikiPage": "Fairytale II - Cure a Queen",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Fairytale , #2"
+   "series": "Fairytale #2"
   },
   {
    "name": "Fallen From Grace",
+   "wikiPage": "Fallen From Grace",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Family Crest",
+   "wikiPage": "Family Crest",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Family Pest",
+   "wikiPage": "Family Pest",
    "difficulty": "Intermediate",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Fight Arena",
+   "wikiPage": "Fight Arena",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Mahjarrat , #3"
+   "series": "Mahjarrat #3"
   },
   {
    "name": "Fishing Contest",
+   "wikiPage": "Fishing Contest",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Forgettable Tale...",
+   "wikiPage": "Forgettable Tale...",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Red Axe , #2"
+   "series": "Red Axe #2"
   },
   {
    "name": "Garden of Tranquillity",
+   "wikiPage": "Garden of Tranquillity",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Gertrude's Cat",
+   "wikiPage": "Gertrude's Cat",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Getting Ahead",
+   "wikiPage": "Getting Ahead",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
@@ -822,989 +888,1099 @@
   },
   {
    "name": "Ghosts Ahoy",
+   "wikiPage": "Ghosts Ahoy",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Goblin Diplomacy",
+   "wikiPage": "Goblin Diplomacy",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 5,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Grim Tales",
+   "wikiPage": "Grim Tales",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Haunted Mine",
+   "wikiPage": "Haunted Mine",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Hazeel Cult",
+   "wikiPage": "Hazeel Cult",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "Mahjarrat , #2"
+   "series": "Mahjarrat #2"
   },
   {
    "name": "Heroes' Quest",
+   "wikiPage": "Heroes' Quest",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "His Faithful Servants",
+   "wikiPage": "His Faithful Servants",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Very Short",
-   "series": "Mahjarrat , #12"
+   "series": "Mahjarrat #12"
   },
   {
    "name": "Holy Grail",
+   "wikiPage": "Holy Grail",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Camelot , #2"
+   "series": "Camelot #2"
   },
   {
    "name": "Hopespear's Will",
+   "wikiPage": "Hopespear's Will",
    "difficulty": "Master",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Horror from the Deep",
+   "wikiPage": "Horror from the Deep",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Icthlarin's Little Helper",
+   "wikiPage": "Icthlarin's Little Helper",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Kharidian , #2"
+   "series": "Kharidian #2"
   },
   {
    "name": "Imp Catcher",
+   "wikiPage": "Imp Catcher",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "In Aid of the Myreque",
+   "wikiPage": "In Aid of the Myreque",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Myreque , #2"
+   "series": "Myreque #2"
   },
   {
    "name": "In Search of Knowledge",
+   "wikiPage": "In Search of Knowledge",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "In Search of the Myreque",
+   "wikiPage": "In Search of the Myreque",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Myreque , #1"
+   "series": "Myreque #1"
   },
   {
    "name": "Into the Tombs",
+   "wikiPage": "Into the Tombs",
    "difficulty": "Master",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "Kharidian , #5"
+   "series": "Kharidian #5"
   },
   {
    "name": "Jungle Potion",
+   "wikiPage": "Jungle Potion",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "King's Ransom",
+   "wikiPage": "King's Ransom",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Camelot , #3"
+   "series": "Camelot #3"
   },
   {
    "name": "Lair of Tarn Razorlor",
+   "wikiPage": "Lair of Tarn Razorlor",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Land of the Goblins",
+   "wikiPage": "Land of the Goblins",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Dorgeshuun , #4"
+   "series": "Dorgeshuun #4"
   },
   {
    "name": "Learning the Ropes",
+   "wikiPage": "Learning the Ropes",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Legends' Quest",
+   "wikiPage": "Legends' Quest",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Lost City",
+   "wikiPage": "Lost City",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Lunar Diplomacy",
+   "wikiPage": "Lunar Diplomacy",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Fremennik , #3"
+   "series": "Fremennik #3"
   },
   {
    "name": "Mage Arena I",
+   "wikiPage": "Mage Arena I",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Mage Arena II",
+   "wikiPage": "Mage Arena II",
    "difficulty": "Master",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Making Friends with My Arm",
+   "wikiPage": "Making Friends with My Arm",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Troll , #5"
+   "series": "Troll #5"
   },
   {
    "name": "Making History",
+   "wikiPage": "Making History",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Meat and Greet",
+   "wikiPage": "Meat and Greet",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Merlin's Crystal",
+   "wikiPage": "Merlin's Crystal",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 6,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Camelot , #1"
+   "series": "Camelot #1"
   },
   {
    "name": "Misthalin Mystery",
+   "wikiPage": "Misthalin Mystery",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Monk's Friend",
+   "wikiPage": "Monk's Friend",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Monkey Madness I",
+   "wikiPage": "Monkey Madness I",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Gnome , #4"
+   "series": "Gnome #4"
   },
   {
    "name": "Monkey Madness II",
-   "difficulty": "Master",
-   "qp": 0,
+   "wikiPage": "Monkey Madness II",
+   "difficulty": "Grandmaster",
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "Gnome , #5"
+   "series": "Gnome #5"
   },
   {
    "name": "Mountain Daughter",
+   "wikiPage": "Mountain Daughter",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Mourning's End Part I",
+   "wikiPage": "Mourning's End Part I",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Elf , #6"
+   "series": "Elf #6"
   },
   {
    "name": "Mourning's End Part II",
+   "wikiPage": "Mourning's End Part II",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Elf , #7"
+   "series": "Elf #7"
   },
   {
    "name": "Murder Mystery",
+   "wikiPage": "Murder Mystery",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "My Arm's Big Adventure",
+   "wikiPage": "My Arm's Big Adventure",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Troll , #4"
+   "series": "Troll #4"
   },
   {
    "name": "Nature Spirit",
+   "wikiPage": "Nature Spirit",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Observatory Quest",
+   "wikiPage": "Observatory Quest",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Olaf's Quest",
+   "wikiPage": "Olaf's Quest",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "One Small Favour",
+   "wikiPage": "One Small Favour",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Pandemonium",
+   "wikiPage": "Pandemonium",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Perilous Moons",
+   "wikiPage": "Perilous Moons",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Pirate's Treasure",
+   "wikiPage": "Pirate's Treasure",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 2,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Plague City",
+   "wikiPage": "Plague City",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "Elf , #1"
+   "series": "Elf #1"
   },
   {
    "name": "Priest in Peril",
+   "wikiPage": "Priest in Peril",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Prince Ali Rescue",
+   "wikiPage": "Prince Ali Rescue",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 3,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "Kharidian , #1"
+   "series": "Kharidian #1"
   },
   {
    "name": "Prying Times",
+   "wikiPage": "Prying Times",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Rag and Bone Man I",
+   "wikiPage": "Rag and Bone Man I",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Rag and Bone Man , #1"
+   "series": "Rag and Bone Man #1"
   },
   {
    "name": "Rag and Bone Man II",
+   "wikiPage": "Rag and Bone Man II",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Rag and Bone Man , #2"
+   "series": "Rag and Bone Man #2"
   },
   {
    "name": "Ratcatchers",
+   "wikiPage": "Ratcatchers",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Recipe for Disaster",
+   "wikiPage": "Recipe for Disaster",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 10,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Another Cook's Quest",
+   "name": "Recipe for Disaster - Another Cook's Quest",
+   "wikiPage": "Recipe for Disaster/Another Cook's Quest",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Defeating the Culinaromancer",
+   "name": "Recipe for Disaster - Culinaromancer",
+   "wikiPage": "Recipe for Disaster/Defeating the Culinaromancer",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Freeing Evil Dave",
+   "name": "Recipe for Disaster - Evil Dave",
+   "wikiPage": "Recipe for Disaster/Freeing Evil Dave",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Freeing King Awowogei",
+   "name": "Recipe for Disaster - King Awowogei",
+   "wikiPage": "Recipe for Disaster/Freeing King Awowogei",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Freeing Pirate Pete",
+   "name": "Recipe for Disaster - Lumbridge Guide",
+   "wikiPage": "Recipe for Disaster/Freeing the Lumbridge Guide",
    "difficulty": "Special",
-   "qp": 0,
-   "members": true,
-   "miniquest": false,
-   "length": "Medium",
-   "series": "N/A"
-  },
-  {
-   "name": "Recipe for Disaster/Freeing Sir Amik Varze",
-   "difficulty": "Special",
-   "qp": 0,
-   "members": true,
-   "miniquest": false,
-   "length": "Medium",
-   "series": "N/A"
-  },
-  {
-   "name": "Recipe for Disaster/Freeing Skrach Uglogwee",
-   "difficulty": "Special",
-   "qp": 0,
-   "members": true,
-   "miniquest": false,
-   "length": "Medium",
-   "series": "N/A"
-  },
-  {
-   "name": "Recipe for Disaster/Freeing the Goblin generals",
-   "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Freeing the Lumbridge Guide",
+   "name": "Recipe for Disaster - Mountain Dwarf",
+   "wikiPage": "Recipe for Disaster/Freeing the Mountain Dwarf",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
-   "name": "Recipe for Disaster/Freeing the Mountain Dwarf",
+   "name": "Recipe for Disaster - Pirate Pete",
+   "wikiPage": "Recipe for Disaster/Freeing Pirate Pete",
    "difficulty": "Special",
-   "qp": 0,
+   "qp": 1,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": null
+  },
+  {
+   "name": "Recipe for Disaster - Sir Amik Varze",
+   "wikiPage": "Recipe for Disaster/Freeing Sir Amik Varze",
+   "difficulty": "Special",
+   "qp": 1,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": null
+  },
+  {
+   "name": "Recipe for Disaster - Skrach Uglogwee",
+   "wikiPage": "Recipe for Disaster/Freeing Skrach Uglogwee",
+   "difficulty": "Special",
+   "qp": 1,
+   "members": true,
+   "miniquest": false,
+   "length": "Medium",
+   "series": null
+  },
+  {
+   "name": "Recipe for Disaster - Wartface & Bentnoze",
+   "wikiPage": "Recipe for Disaster/Freeing the Goblin generals",
+   "difficulty": "Special",
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Recruitment Drive",
+   "wikiPage": "Recruitment Drive",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Temple Knight , #1"
+   "series": "Temple Knight #1"
   },
   {
    "name": "Regicide",
+   "wikiPage": "Regicide",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Elf , #4"
+   "series": "Elf #4"
   },
   {
    "name": "Romeo & Juliet",
+   "wikiPage": "Romeo & Juliet",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 5,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Roving Elves",
+   "wikiPage": "Roving Elves",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Elf , #5"
+   "series": "Elf #5"
   },
   {
    "name": "Royal Trouble",
+   "wikiPage": "Royal Trouble",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Miscellania , #2"
+   "series": "Miscellania #2"
   },
   {
    "name": "Rum Deal",
+   "wikiPage": "Rum Deal",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Pirate , #1"
+   "series": "Pirate #1"
   },
   {
    "name": "Rune Mysteries",
+   "wikiPage": "Rune Mysteries",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "Order of Wizards , #1"
+   "series": "Order of Wizards #1"
   },
   {
    "name": "Scorpion Catcher",
+   "wikiPage": "Scorpion Catcher",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Scrambled!",
+   "wikiPage": "Scrambled!",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Sea Slug",
+   "wikiPage": "Sea Slug",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Temple Knight , #3"
+   "series": "Temple Knight #3"
   },
   {
    "name": "Secrets of the North",
+   "wikiPage": "Secrets of the North",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Mahjarrat , #13"
+   "series": "Mahjarrat #13"
   },
   {
    "name": "Shades of Mort'ton",
+   "wikiPage": "Shades of Mort'ton",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Shadow of the Storm",
+   "wikiPage": "Shadow of the Storm",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Demon Slayer , #2"
+   "series": "Demon Slayer #2"
   },
   {
    "name": "Shadows of Custodia",
+   "wikiPage": "Shadows of Custodia",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Sheep Herder",
+   "wikiPage": "Sheep Herder",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Sheep Shearer",
+   "wikiPage": "Sheep Shearer",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Shield of Arrav",
+   "wikiPage": "Shield of Arrav",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Shilo Village",
+   "wikiPage": "Shilo Village",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Sins of the Father",
+   "wikiPage": "Sins of the Father",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Myreque , #5"
+   "series": "Myreque #5"
   },
   {
    "name": "Skippy and the Mogres",
+   "wikiPage": "Skippy and the Mogres",
    "difficulty": "Novice",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Sleeping Giants",
+   "wikiPage": "Sleeping Giants",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Song of the Elves",
-   "difficulty": "Master",
-   "qp": 0,
+   "wikiPage": "Song of the Elves",
+   "difficulty": "Grandmaster",
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "Elf , #8"
+   "series": "Elf #8"
   },
   {
    "name": "Spirits of the Elid",
+   "wikiPage": "Spirits of the Elid",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Swan Song",
+   "wikiPage": "Swan Song",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Tai Bwo Wannai Trio",
+   "wikiPage": "Tai Bwo Wannai Trio",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Tale of the Righteous",
+   "wikiPage": "Tale of the Righteous",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Great Kourend , #3E"
+   "series": "Great Kourend #3E"
   },
   {
    "name": "Tears of Guthix",
+   "wikiPage": "Tears of Guthix",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Temple of Ikov",
+   "wikiPage": "Temple of Ikov",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Mahjarrat , #5"
+   "series": "Mahjarrat #5"
   },
   {
    "name": "Temple of the Eye",
+   "wikiPage": "Temple of the Eye",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Order of Wizards , #3"
+   "series": "Order of Wizards #3"
   },
   {
    "name": "The Ascent of Arceuus",
+   "wikiPage": "The Ascent of Arceuus",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Great Kourend , #3C"
+   "series": "Great Kourend #3C"
   },
   {
    "name": "The Blood Moon Rises",
-   "difficulty": "Master",
-   "qp": 0,
+   "wikiPage": "The Blood Moon Rises",
+   "difficulty": "Grandmaster",
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "Myreque , #6"
+   "series": "Myreque #6"
   },
   {
    "name": "The Corsair Curse",
+   "wikiPage": "The Corsair Curse",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Curse of Arrav",
+   "wikiPage": "The Curse of Arrav",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Mahjarrat , #10"
+   "series": "Mahjarrat #10"
   },
   {
    "name": "The Depths of Despair",
+   "wikiPage": "The Depths of Despair",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Great Kourend , #3B"
+   "series": "Great Kourend #3B"
   },
   {
    "name": "The Dig Site",
+   "wikiPage": "The Dig Site",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Mahjarrat , #1"
+   "series": "Mahjarrat #1"
   },
   {
    "name": "The Enchanted Key",
+   "wikiPage": "The Enchanted Key",
    "difficulty": "Intermediate",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Eyes of Glouphrie",
+   "wikiPage": "The Eyes of Glouphrie",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Gnome , #2"
+   "series": "Gnome #2"
   },
   {
    "name": "The Feud",
+   "wikiPage": "The Feud",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Final Dawn",
+   "wikiPage": "The Final Dawn",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Twilight Emissaries , #4"
+   "series": "Twilight Emissaries #4"
   },
   {
    "name": "The Forsaken Tower",
+   "wikiPage": "The Forsaken Tower",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Great Kourend , #3D"
+   "series": "Great Kourend #3D"
   },
   {
-   "name": "The Fractured Archive (miniquest)",
-   "difficulty": "Master",
+   "name": "The Fractured Archive",
+   "wikiPage": "The Fractured Archive (miniquest)",
+   "difficulty": "Grandmaster",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Fremennik Exiles",
+   "wikiPage": "The Fremennik Exiles",
    "difficulty": "Master",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Fremennik , #4"
+   "series": "Fremennik #4"
   },
   {
    "name": "The Fremennik Isles",
+   "wikiPage": "The Fremennik Isles",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Fremennik , #2"
+   "series": "Fremennik #2"
   },
   {
    "name": "The Fremennik Trials",
+   "wikiPage": "The Fremennik Trials",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 3,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Fremennik , #1"
+   "series": "Fremennik #1"
   },
   {
    "name": "The Frozen Door",
+   "wikiPage": "The Frozen Door",
    "difficulty": "Master",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Garden of Death",
+   "wikiPage": "The Garden of Death",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
@@ -1812,179 +1988,199 @@
   },
   {
    "name": "The General's Shadow",
+   "wikiPage": "The General's Shadow",
    "difficulty": "Experienced",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Medium",
-   "series": "Mahjarrat , #9"
+   "series": "Mahjarrat #9"
   },
   {
    "name": "The Giant Dwarf",
+   "wikiPage": "The Giant Dwarf",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Red Axe , #1"
+   "series": "Red Axe #1"
   },
   {
    "name": "The Golem",
+   "wikiPage": "The Golem",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Grand Tree",
+   "wikiPage": "The Grand Tree",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 5,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Gnome , #1"
+   "series": "Gnome #1"
   },
   {
    "name": "The Great Brain Robbery",
+   "wikiPage": "The Great Brain Robbery",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Pirate , #3"
+   "series": "Pirate #3"
   },
   {
    "name": "The Hand in the Sand",
+   "wikiPage": "The Hand in the Sand",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Heart of Darkness",
+   "wikiPage": "The Heart of Darkness",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Twilight Emissaries , #3"
+   "series": "Twilight Emissaries #3"
   },
   {
    "name": "The Ides of Milk",
+   "wikiPage": "The Ides of Milk",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Knight's Sword",
+   "wikiPage": "The Knight's Sword",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Lost Tribe",
+   "wikiPage": "The Lost Tribe",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Dorgeshuun , #1"
+   "series": "Dorgeshuun #1"
   },
   {
    "name": "The Path of Glouphrie",
+   "wikiPage": "The Path of Glouphrie",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Gnome , #3"
+   "series": "Gnome #3"
   },
   {
    "name": "The Queen of Thieves",
+   "wikiPage": "The Queen of Thieves",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "Great Kourend , #3A"
+   "series": "Great Kourend #3A"
   },
   {
    "name": "The Red Reef",
+   "wikiPage": "The Red Reef",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Tortugan , #2"
+   "series": "Tortugan #2"
   },
   {
    "name": "The Restless Ghost",
+   "wikiPage": "The Restless Ghost",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Ribbiting Tale of a Lily Pad Labour Dispute",
+   "wikiPage": "The Ribbiting Tale of a Lily Pad Labour Dispute",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "The Slug Menace",
+   "wikiPage": "The Slug Menace",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Temple Knight , #4"
+   "series": "Temple Knight #4"
   },
   {
    "name": "The Tourist Trap",
+   "wikiPage": "The Tourist Trap",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Throne of Miscellania",
+   "wikiPage": "Throne of Miscellania",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Miscellania , #1"
+   "series": "Miscellania #1"
   },
   {
    "name": "Tower of Life",
+   "wikiPage": "Tower of Life",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Tree Gnome Village",
+   "wikiPage": "Tree Gnome Village",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
@@ -1992,156 +2188,173 @@
   },
   {
    "name": "Tribal Totem",
+   "wikiPage": "Tribal Totem",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Troll Romance",
+   "wikiPage": "Troll Romance",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 2,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Troll Stronghold",
+   "wikiPage": "Troll Stronghold",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Troll , #2"
+   "series": "Troll #2"
   },
   {
    "name": "Troubled Tortugans",
+   "wikiPage": "Troubled Tortugans",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Tortugan , #1"
+   "series": "Tortugan #1"
   },
   {
    "name": "Twilight's Promise",
+   "wikiPage": "Twilight's Promise",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "Twilight Emissaries , #2"
+   "series": "Twilight Emissaries #2"
   },
   {
    "name": "Underground Pass",
+   "wikiPage": "Underground Pass",
    "difficulty": "Experienced",
-   "qp": 0,
+   "qp": 5,
    "members": true,
    "miniquest": false,
    "length": "Long",
-   "series": "Elf , #3"
+   "series": "Elf #3"
   },
   {
-   "name": "Vale Totems (miniquest)",
+   "name": "Vale Totems",
+   "wikiPage": "Vale Totems (miniquest)",
    "difficulty": "Novice",
    "qp": 0,
    "members": true,
    "miniquest": true,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Vampyre Slayer",
+   "wikiPage": "Vampyre Slayer",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 3,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Wanted!",
+   "wikiPage": "Wanted!",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "Temple Knight , #2"
+   "series": "Temple Knight #2"
   },
   {
    "name": "Watchtower",
+   "wikiPage": "Watchtower",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Medium",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Waterfall Quest",
+   "wikiPage": "Waterfall Quest",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "What Lies Below",
+   "wikiPage": "What Lies Below",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "While Guthix Sleeps",
-   "difficulty": "Master",
-   "qp": 0,
+   "wikiPage": "While Guthix Sleeps",
+   "difficulty": "Grandmaster",
+   "qp": 5,
    "members": true,
    "miniquest": false,
    "length": "Very Long",
-   "series": "Mahjarrat , #15"
+   "series": "Mahjarrat #15"
   },
   {
    "name": "Witch's House",
+   "wikiPage": "Witch's House",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 4,
    "members": true,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "Witch's Potion",
+   "wikiPage": "Witch's Potion",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "N/A"
+   "series": null
   },
   {
    "name": "X Marks the Spot",
+   "wikiPage": "X Marks the Spot",
    "difficulty": "Novice",
-   "qp": 0,
+   "qp": 1,
    "members": false,
    "miniquest": false,
    "length": "Very Short",
-   "series": "Great Kourend , #1"
+   "series": "Great Kourend #1"
   },
   {
    "name": "Zogre Flesh Eaters",
+   "wikiPage": "Zogre Flesh Eaters",
    "difficulty": "Intermediate",
-   "qp": 0,
+   "qp": 1,
    "members": true,
    "miniquest": false,
    "length": "Short",
-   "series": "N/A"
+   "series": null
   }
  ]
 }
