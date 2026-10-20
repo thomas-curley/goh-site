@@ -41,7 +41,6 @@ const KIND_LABEL: Record<Kind, { label: string; icon: string; tint: string }> = 
 
 const ALWAYS_ON = [
   { href: "/competitions", title: "Skill & Boss of the Week", text: "Weekly Wise Old Man competitions, with prizes and a raffle.", icon: "📈", section: "competitions" },
-  { href: "/points", title: "Clan Points", text: "Points for showing up and getting stuck in, tracked by our RuneLite plugin.", icon: "⭐", section: "points" },
   { href: "/leaderboard", title: "Attendance Leaderboard", text: "Who's been to the most clan events.", icon: "📅", section: "leaderboard" },
   { href: "/hiscores", title: "Clan Hiscores", text: "How you stack up against the clan in every skill and boss.", icon: "🥇", section: "hiscores" },
 ] as const;
@@ -236,7 +235,7 @@ export default async function ActivitiesPage() {
       {always.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-display text-2xl text-bark-brown">Always running</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-3">
             {always.map((x) => (
               <Link key={x.href} href={x.href} className="block h-full">
                 <Card className="h-full space-y-1">

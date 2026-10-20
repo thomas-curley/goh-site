@@ -24,7 +24,6 @@ export const SITE_SECTIONS = [
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
   { key: "quests", label: "Quest Events", description: "Quest race event pages (/quests)." },
   { key: "testimonials", label: "Testimonials", description: "Public clan testimonials/reviews." },
-  { key: "points", label: "Clan Points", description: "Points leaderboard, fed by the RuneLite plugin." },
   { key: "newsletter", label: "Newsletter", description: "The Weekly Glider -- latest issue and archive (/newsletter)." },
   { key: "rank_structure", label: "Rank Structure", description: "Clan rank structure (/rank-structure)." },
   { key: "clan_rules", label: "Clan Rules", description: "Clan rules (/clan-rules)." },

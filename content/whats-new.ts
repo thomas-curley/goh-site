@@ -34,6 +34,17 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 20, 2026 (late) ───────────────────────────────────────
+  {
+    id: "2026-10-20-clan-points-hidden",
+    date: "2026-10-20",
+    kind: "improved",
+    audience: "everyone",
+    title: "Clan Points is switched off for now",
+    summary:
+      "The Clan Points leaderboard has been taken off the site while we rethink it: it's gone from the Events menu, the Activities page and the admin sidebar, and its old link now goes to Activities. Nothing has been deleted, so it can come back later.",
+    links: [{ label: "Activities", href: "/activities" }],
+  },
   // ── October 20, 2026 (evening) ────────────────────────────────────
   {
     id: "2026-10-20-quest-events-whole-clan",

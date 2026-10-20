@@ -38,7 +38,6 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/competitions", label: "Competitions", sectionKey: "competitions" },
       { href: "/hiscores", label: "Hiscores", sectionKey: "hiscores" },
       { href: "/leaderboard", label: "Attendance Leaderboard", sectionKey: "leaderboard" },
-      { href: "/points", label: "Clan Points", sectionKey: "points" },
     ],
   },
   {
