@@ -25,8 +25,8 @@ function within(at: number, startsAt: string | null, endsAt: string | null): boo
   return (!startsAt || Date.parse(startsAt) <= at) && (!endsAt || Date.parse(endsAt) > at);
 }
 
-/** Live quest events and bingos, loaded once per post. */
-async function liveEvents(supabase: SupabaseClient): Promise<{ quests: QuestBundle[]; bingos: BingoBundle[] }> {
+/** Live quest events and bingos, loaded once per post (or once per poll). */
+export async function liveEvents(supabase: SupabaseClient): Promise<{ quests: QuestBundle[]; bingos: BingoBundle[] }> {
   const [{ data: q }, { data: b }] = await Promise.all([
     supabase.from("quest_events").select("id").eq("status", "active"),
     supabase.from("bingo_events").select("id").eq("status", "active"),
@@ -45,11 +45,11 @@ export async function applyFeedEvents(
   events: FeedEvent[],
   postedAt: string,
   imageUrls: string[],
-  { dryRun = false } = {}
+  { dryRun = false, live }: { dryRun?: boolean; live?: { quests: QuestBundle[]; bingos: BingoBundle[] } } = {}
 ): Promise<FeedOutcome[]> {
   if (events.length === 0) return [];
   const at = Date.parse(postedAt);
-  const { quests, bingos } = await liveEvents(supabase);
+  const { quests, bingos } = live ?? (await liveEvents(supabase));
   const outcomes: FeedOutcome[] = [];
   let stored: string[] | null = null;
   const images = async () => (stored ??= dryRun ? [] : await storeRemoteImages(supabase, imageUrls));
