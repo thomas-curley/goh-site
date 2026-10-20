@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getAlertChannel } from "@/lib/alert-channels";
 import { postToDestination } from "@/lib/discord";
-import { normalizeRsn } from "@/lib/wom";
+import { getGroupMembers, normalizeRsn } from "@/lib/wom";
 import {
   computeStandings,
   eventQuests,
@@ -21,7 +21,7 @@ export function questServiceClient(): SupabaseClient | null {
 }
 
 export const QUEST_EVENT_COLUMNS =
-  "id, name, description, rules, banner_url, starts_at, ends_at, status, format, scoring, difficulty_points, flat_points, quest_names, include_miniquests, last_synced_at, created_at, updated_at";
+  "id, name, description, rules, banner_url, starts_at, ends_at, status, format, scoring, difficulty_points, flat_points, quest_names, include_miniquests, auto_add_members, last_synced_at, created_at, updated_at";
 const PARTICIPANT_COLUMNS = "id, user_id, rsn, team_id, is_captain, has_wikisync, quests_done, baseline_at, last_checked_at, joined_at";
 
 export interface QuestBundle {
@@ -177,6 +177,44 @@ export async function syncParticipant(supabase: SupabaseClient, bundle: QuestBun
   return { newQuests };
 }
 
+/**
+ * Adds everyone on the clan's Wise Old Man group who isn't in the event yet
+ * (for events set to include the whole clan). In a team event, each new
+ * player goes to the team with the fewest players. Their starting snapshot
+ * is taken on their first WikiSync check, so only later quests count.
+ * Returns the players added.
+ */
+export async function addClanMembers(supabase: SupabaseClient, bundle: QuestBundle, { logJoins = true } = {}): Promise<QuestParticipant[]> {
+  const { event } = bundle;
+  if (!event.auto_add_members || event.status === "draft" || event.status === "completed") return [];
+  if (event.ends_at && Date.parse(event.ends_at) <= Date.now()) return [];
+  const roster = await getGroupMembers().catch(() => []);
+  if (roster.length === 0) return []; // Wise Old Man unreachable: try again next time
+  const have = new Set(bundle.participants.map((p) => normalizeRsn(p.rsn)));
+  const missing = roster.map((m) => m.displayName).filter((name) => name && !have.has(normalizeRsn(name)));
+  if (missing.length === 0) return [];
+
+  const teamSizes = new Map(bundle.teams.map((t) => [t.id, bundle.participants.filter((p) => p.team_id === t.id).length]));
+  const rows = missing.map((rsn) => {
+    let team_id: string | null = null;
+    if (event.format === "teams" && teamSizes.size) {
+      team_id = [...teamSizes.entries()].sort((a, b) => a[1] - b[1])[0][0];
+      teamSizes.set(team_id, (teamSizes.get(team_id) ?? 0) + 1);
+    }
+    return { event_id: event.id, rsn, team_id };
+  });
+  const { data } = await supabase
+    .from("quest_event_participants")
+    .upsert(rows, { onConflict: "event_id,rsn", ignoreDuplicates: true })
+    .select(PARTICIPANT_COLUMNS);
+  const added = (data ?? []) as QuestParticipant[];
+  bundle.participants.push(...added);
+  if (logJoins && added.length <= 10) {
+    for (const p of added) await logActivity(supabase, { event_id: event.id, participant_id: p.id, kind: "joined" });
+  }
+  return added;
+}
+
 /** Checks every participant of an event, a few at a time. Skips if it ran within `minAgeMinutes`. */
 export async function syncQuestEvent(supabase: SupabaseClient, eventId: string, { minAgeMinutes = 0 } = {}): Promise<{ checked: number; newQuests: number; skipped?: boolean; errors: string[] }> {
   const bundle = await loadQuestBundle(supabase, eventId);
@@ -184,6 +222,7 @@ export async function syncQuestEvent(supabase: SupabaseClient, eventId: string, 
   const last = bundle.event.last_synced_at ? Date.parse(bundle.event.last_synced_at) : 0;
   if (minAgeMinutes > 0 && Date.now() - last < minAgeMinutes * 60_000) return { checked: 0, newQuests: 0, skipped: true, errors: [] };
   await supabase.from("quest_events").update({ last_synced_at: new Date().toISOString() }).eq("id", eventId);
+  await addClanMembers(supabase, bundle);
 
   const errors: string[] = [];
   let newQuests = 0;
@@ -195,7 +234,7 @@ export async function syncQuestEvent(supabase: SupabaseClient, eventId: string, 
       if (r.error) errors.push(r.error);
     }
   };
-  await Promise.all(Array.from({ length: 4 }, worker));
+  await Promise.all(Array.from({ length: 8 }, worker));
   return { checked: bundle.participants.length, newQuests, errors };
 }
 

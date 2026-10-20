@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkPermission } from "@/lib/check-permission";
 import { questServiceClient, syncQuestEvent } from "@/lib/quest-server";
 
+// Checking a whole clan on WikiSync can take a while.
+export const maxDuration = 300;
+
 // POST - check every player's WikiSync now.
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

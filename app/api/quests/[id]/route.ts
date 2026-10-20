@@ -2,6 +2,9 @@ import { NextResponse, after } from "next/server";
 import { eventOpen, getQuestViewer, loadQuestBundle, questServiceClient, syncQuestEvent, viewerParticipants } from "@/lib/quest-server";
 import { computeStandings } from "@/lib/quests";
 
+// Checking a whole clan on WikiSync can take a while.
+export const maxDuration = 300;
+
 const STALE_MINUTES = 15;
 
 // GET - one quest event for the member page: settings, teams, players,

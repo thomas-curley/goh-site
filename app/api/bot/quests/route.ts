@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { questServiceClient, syncQuestEvent } from "@/lib/quest-server";
 
+// Checking a whole clan on WikiSync can take a while.
+export const maxDuration = 300;
+
 // Quest event endpoint for the Discord bot (Bearer DISCORD_WEBHOOK_SECRET).
 //   POST { action: "sync" }  checks WikiSync for every event with sign-ups
 //                            open or live (skipping ones checked recently)

@@ -144,6 +144,27 @@ export function QuestPlayersStep({ data, onSaved, onNext }: { data: AdminQuestEv
     await onSaved();
   };
 
+  const notAdded = roster.filter((r) => !keys.has(normalizeRsn(r))).length;
+
+  const toggleWholeClan = async (on: boolean) => {
+    setBusy(true);
+    await fetch(`/api/admin/quests/${event.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ auto_add_members: on }),
+    });
+    setBusy(false);
+    setNotice({
+      ok: true,
+      text: on
+        ? event.status === "draft"
+          ? "The whole clan will be added when you open sign-ups or go live."
+          : "Adding the whole clan now. Refresh in a minute to see everyone."
+        : "New clan members won't be added any more. Everyone already in stays.",
+    });
+    await onSaved();
+  };
+
   const suggestions = query.trim() ? roster.filter((r) => r.toLowerCase().includes(query.trim().toLowerCase()) && !keys.has(normalizeRsn(r))).slice(0, 8) : [];
 
   const chip = (p: Player) => {
@@ -212,9 +233,16 @@ export function QuestPlayersStep({ data, onSaved, onNext }: { data: AdminQuestEv
           </div>
         )}
       </div>
-      <button type="button" onClick={() => setShowPaste((v) => !v)} className="text-[11px] text-gnome-green hover:underline cursor-pointer">
-        {showPaste ? "Hide" : "Paste a list of names"}
-      </button>
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        <button type="button" onClick={() => setShowPaste((v) => !v)} className="text-[11px] text-gnome-green hover:underline cursor-pointer">
+          {showPaste ? "Hide" : "Paste a list of names"}
+        </button>
+        {notAdded > 0 && (
+          <button type="button" onClick={() => add(roster)} className="text-[11px] text-gnome-green hover:underline cursor-pointer">
+            Add everyone in the clan ({notAdded})
+          </button>
+        )}
+      </div>
       {showPaste && (
         <>
           <textarea value={paste} onChange={(e) => setPaste(e.target.value)} rows={3} className={`${inputClass} text-xs font-mono`} placeholder="One per line or comma-separated" />
@@ -279,6 +307,15 @@ export function QuestPlayersStep({ data, onSaved, onNext }: { data: AdminQuestEv
             </Button>
           )}
         </div>
+        <label className="flex items-start gap-2 text-sm text-bark-brown cursor-pointer pt-1">
+          <input type="checkbox" checked={event.auto_add_members} disabled={busy || event.status === "completed"} onChange={(e) => toggleWholeClan(e.target.checked)} className="accent-gnome-green mt-1" />
+          <span>
+            Everyone in the clan takes part
+            <span className="block text-xs text-iron-grey">
+              Adds everyone on the clan&apos;s Wise Old Man group, and keeps adding people who join the clan during the event{event.format === "teams" ? " (each to the team with the fewest players)" : ""}. Newcomers only score quests finished after they&apos;re added. People who leave the clan stay in; anyone you remove comes back on the next check while this is on.
+            </span>
+          </span>
+        </label>
         {withoutWikiSync > 0 && (
           <p className="text-xs text-gold">
             {withoutWikiSync} {withoutWikiSync === 1 ? "player has" : "players have"} no WikiSync data. They can turn on the WikiSync plugin in RuneLite and log out once, or send screenshots instead.
