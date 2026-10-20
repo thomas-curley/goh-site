@@ -143,7 +143,22 @@ export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): 
     fields: (e.fields ?? []).map((f) => ({ name: cleanText(f.name).toLowerCase(), value: cleanText(f.value) })),
   }));
 
-  // 1. Full broadcast lines anywhere in the post.
+  // 1. Embeds that label things in fields (Player / Quest / Item / Quantity).
+  //    The most reliable form: staff can add these fields in DropTracker's
+  //    embed builder, so they win over reading the sentence.
+  for (const e of embeds) {
+    const field = (...names: string[]) => e.fields.find((f) => names.includes(f.name))?.value ?? "";
+    const rsn = field("player", "rsn", "name", "username", "account");
+    if (!rsn || rsn.length > 12) continue;
+    const quest = field("quest", "quest name", "quest completed");
+    if (quest) push("quest", rsn, quest);
+    const item = field("item", "drop", "loot", "item name", "pet", "collection log item");
+    const qty = Number(field("quantity", "qty", "amount").replace(/[^\d]/g, "")) || 1;
+    if (item) push(embedKind(e.title) && embedKind(e.title) !== "quest" ? (embedKind(e.title) as FeedEventKind) : "drop", rsn, item, qty);
+  }
+  if (events.length) return events;
+
+  // 2. Full broadcast lines anywhere in the post.
   const lines = [content, ...embeds.flatMap((e) => [e.author, e.title, e.description])].flatMap((t) => t.split("\n")).map(strip).filter(Boolean);
   for (const line of lines) {
     for (const p of LINE_PATTERNS) {
@@ -153,7 +168,7 @@ export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): 
   }
   if (events.length) return events;
 
-  // 2. DropTracker's own embeds: "Name completed **Quest**." under a "Quest
+  // 3. DropTracker's own embeds: "Name completed **Quest**." under a "Quest
   //    Completed" title, and "Name received **Item**." style lines whose kind
   //    comes from the title. A quest only counts if it's a real quest name.
   for (const e of embeds) {
@@ -167,7 +182,7 @@ export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): 
   }
   if (events.length) return events;
 
-  // 3. A "Name received a drop:" header with the item as the embed title
+  // 4. A "Name received a drop:" header with the item as the embed title
   //    (DropTracker). Its description may hold "G/E Value: 127.30K (670 x 190)".
   const headers = [content, ...embeds.map((e) => e.author)].flatMap((t) => t.split("\n")).map(strip);
   for (const header of headers) {
@@ -183,16 +198,6 @@ export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): 
   }
   if (events.length) return events;
 
-  // 4. Embeds that label things in fields: Player / Quest / Item.
-  for (const e of embeds) {
-    const field = (...names: string[]) => e.fields.find((f) => names.includes(f.name))?.value ?? "";
-    const rsn = field("player", "rsn", "name", "username", "account") || e.author;
-    if (!rsn || rsn.length > 12) continue;
-    const quest = field("quest", "quest name", "quest completed");
-    if (quest) push("quest", rsn, quest);
-    const item = field("item", "drop", "loot", "item name");
-    if (item) push(/collection log/i.test(`${e.title} ${e.description}`) ? "collection_log" : "drop", rsn, item);
-  }
   return events;
 }
 
