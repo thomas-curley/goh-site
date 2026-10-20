@@ -16,6 +16,25 @@ const out = process.argv[2] ?? "osrs-quests.json";
 const sampleRsns = (process.env.SAMPLE_RSNS ?? "Gn0me Vlad,Um3ra,Gn0me Sammi").split(",").map((s) => s.trim()).filter(Boolean);
 
 const DIFFICULTIES = ["Novice", "Intermediate", "Experienced", "Master", "Grandmaster", "Special"];
+// Checked longest first, since "Grandmaster" contains "Master".
+const DIFFICULTY_MATCH = [...DIFFICULTIES].sort((a, b) => b.length - a.length);
+
+// WikiSync's names for quests the wiki list names differently. Quest events
+// use WikiSync's names so completions match exactly.
+const WIKISYNC_NAME = {
+  "Recipe for Disaster/Another Cook's Quest": "Recipe for Disaster - Another Cook's Quest",
+  "Recipe for Disaster/Defeating the Culinaromancer": "Recipe for Disaster - Culinaromancer",
+  "Recipe for Disaster/Freeing Evil Dave": "Recipe for Disaster - Evil Dave",
+  "Recipe for Disaster/Freeing King Awowogei": "Recipe for Disaster - King Awowogei",
+  "Recipe for Disaster/Freeing Pirate Pete": "Recipe for Disaster - Pirate Pete",
+  "Recipe for Disaster/Freeing Sir Amik Varze": "Recipe for Disaster - Sir Amik Varze",
+  "Recipe for Disaster/Freeing Skrach Uglogwee": "Recipe for Disaster - Skrach Uglogwee",
+  "Recipe for Disaster/Freeing the Goblin generals": "Recipe for Disaster - Wartface & Bentnoze",
+  "Recipe for Disaster/Freeing the Lumbridge Guide": "Recipe for Disaster - Lumbridge Guide",
+  "Recipe for Disaster/Freeing the Mountain Dwarf": "Recipe for Disaster - Mountain Dwarf",
+};
+// Keys WikiSync sends that aren't quests.
+const WIKISYNC_IGNORE = new Set(["."]);
 
 const decode = (s) =>
   s
@@ -71,7 +90,8 @@ for (const t of found) {
   const col = (re) => h.findIndex((x) => re.test(x));
   const iName = col(/^(name|quest|miniquest)/);
   const iDiff = col(/difficulty/);
-  const iQp = col(/quest points|^qp$|points/);
+  // The quest points column has an icon for a header, so its text is empty.
+  const iQp = col(/quest points|^qp$|points/) >= 0 ? col(/quest points|^qp$|points/) : h.findIndex((x) => x === "");
   const iSeries = col(/series/);
   const iLength = col(/length/);
   const iMembers = col(/members/);
@@ -81,19 +101,22 @@ for (const t of found) {
   for (const r of t.rows) {
     // Rows can start with a <th> (e.g. a release number), so line cells up by position from the header.
     if (r.length < t.headers.length) continue;
-    const name = nameFrom(r[iName].html);
+    const wikiName = nameFrom(r[iName].html);
+    const name = WIKISYNC_NAME[wikiName] ?? wikiName.replace(/ \(miniquest\)$/i, "");
     if (!name || quests.has(name)) continue;
-    const diff = DIFFICULTIES.find((d) => text(r[iDiff].html).toLowerCase().includes(d.toLowerCase())) ?? "Special";
+    const diff = DIFFICULTY_MATCH.find((d) => text(r[iDiff].html).toLowerCase().includes(d.toLowerCase())) ?? "Special";
     const qp = iQp >= 0 ? Number(text(r[iQp].html).replace(/[^\d]/g, "")) || 0 : 0;
     const membersCell = iMembers >= 0 ? text(r[iMembers].html).toLowerCase() : "";
+    const series = iSeries >= 0 ? text(r[iSeries].html).replace(/\s+,/g, ",").replace(/,\s*#/, " #") : "";
     quests.set(name, {
       name,
+      wikiPage: wikiName,
       difficulty: diff,
       qp,
       members: iMembers >= 0 ? /yes|members|✓/.test(membersCell) || r[iMembers].html.includes("Member") : !/free/.test(heading),
       miniquest,
       length: iLength >= 0 ? text(r[iLength].html) : null,
-      series: iSeries >= 0 ? text(r[iSeries].html) || null : null,
+      series: series && series !== "N/A" ? series : null,
     });
   }
 }
@@ -102,7 +125,8 @@ const list = [...quests.values()].sort((a, b) => a.name.localeCompare(b.name));
 console.log(`\nParsed ${list.length} quests (${list.filter((q) => q.miniquest).length} miniquests, ${list.filter((q) => !q.members).length} free-to-play).`);
 console.log("By difficulty:", JSON.stringify(Object.fromEntries(DIFFICULTIES.map((d) => [d, list.filter((q) => q.difficulty === d).length]))));
 console.log("Total QP:", list.reduce((s, q) => s + q.qp, 0));
-console.log("Samples:", JSON.stringify(list.filter((q) => ["Cook's Assistant", "Desert Treasure II - The Fallen Empire", "Recipe for Disaster", "Dragon Slayer I", "Song of the Elves"].includes(q.name))));
+console.log("Samples:", JSON.stringify(list.filter((q) => ["Cook's Assistant", "Desert Treasure II - The Fallen Empire", "Recipe for Disaster", "Recipe for Disaster - Evil Dave", "Dragon Slayer I", "Song of the Elves", "Vale Totems"].includes(q.name))));
+console.log("Quest points (first 5 with points):", JSON.stringify(list.filter((q) => q.qp > 0).slice(0, 5).map((q) => [q.name, q.qp])));
 
 // WikiSync check: which quest names it uses, and which don't match the list.
 const wikiSyncNames = new Set();
@@ -116,7 +140,7 @@ for (const rsn of sampleRsns) {
   const q = data.quests ?? {};
   const statuses = Object.values(q).reduce((acc, v) => ((acc[v] = (acc[v] ?? 0) + 1), acc), {});
   console.log(`\nWikiSync ${rsn}: top-level keys ${Object.keys(data).join(", ")} · timestamp ${data.timestamp} · ${Object.keys(q).length} quests · status counts ${JSON.stringify(statuses)}`);
-  for (const k of Object.keys(q)) wikiSyncNames.add(k);
+  for (const k of Object.keys(q)) if (!WIKISYNC_IGNORE.has(k)) wikiSyncNames.add(k);
 }
 if (wikiSyncNames.size) {
   const notInList = [...wikiSyncNames].filter((n) => !quests.has(n));
