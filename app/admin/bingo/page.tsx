@@ -79,19 +79,23 @@ export default function BingoAdminListPage() {
               <label htmlFor="bingo-name" className="block text-sm font-semibold text-bark-brown mb-1">Name</label>
               <input id="bingo-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="e.g. Winter Bingo 2026" autoFocus />
             </div>
-            <div>
-              <label htmlFor="bingo-copy" className="block text-sm font-semibold text-bark-brown mb-1">Start from</label>
-              <select id="bingo-copy" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} className={`${inputClass} cursor-pointer`}>
-                <option value="">A blank board</option>
-                {(events ?? []).map((e) => (
-                  <option key={e.id} value={e.id}>
-                    A copy of {e.name} ({e.tileCount} tiles)
-                  </option>
-                ))}
-              </select>
-            </div>
+            {(events ?? []).length > 0 && (
+              <div>
+                <label htmlFor="bingo-copy" className="block text-sm font-semibold text-bark-brown mb-1">Start from</label>
+                <select id="bingo-copy" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} className={`${inputClass} cursor-pointer`}>
+                  <option value="">A blank board</option>
+                  {(events ?? []).map((e) => (
+                    <option key={e.id} value={e.id}>
+                      A copy of {e.name} ({e.tileCount} tiles)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-iron-grey">A copy brings over the tiles, team names and scoring, but no players or progress. It starts as a draft only staff can see.</p>
+          <p className="text-xs text-iron-grey">
+            {(events ?? []).length > 0 && "A copy brings over the tiles, team names and scoring, but no players or progress. "}It starts as a draft only staff can see.
+          </p>
           {error && <p className="text-sm text-red-accent">{error}</p>}
           <div className="flex gap-2">
             <Button disabled={busy || !name.trim()} onClick={create}>

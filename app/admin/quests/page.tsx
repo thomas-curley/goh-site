@@ -81,19 +81,23 @@ export default function QuestEventsAdminPage() {
               <label htmlFor="quest-name" className="block text-sm font-semibold text-bark-brown mb-1">Name</label>
               <input id="quest-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="e.g. Quest Cape Sprint" autoFocus />
             </div>
-            <div>
-              <label htmlFor="quest-copy" className="block text-sm font-semibold text-bark-brown mb-1">Start from</label>
-              <select id="quest-copy" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} className={`${inputClass} cursor-pointer`}>
-                <option value="">Blank</option>
-                {(events ?? []).map((e) => (
-                  <option key={e.id} value={e.id}>
-                    A copy of {e.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {(events ?? []).length > 0 && (
+              <div>
+                <label htmlFor="quest-copy" className="block text-sm font-semibold text-bark-brown mb-1">Start from</label>
+                <select id="quest-copy" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} className={`${inputClass} cursor-pointer`}>
+                  <option value="">Nothing, start fresh</option>
+                  {(events ?? []).map((e) => (
+                    <option key={e.id} value={e.id}>
+                      A copy of {e.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-iron-grey">A copy brings over the scoring, quest list and team names, but no players or scores. It starts as a draft only staff can see.</p>
+          <p className="text-xs text-iron-grey">
+            {(events ?? []).length > 0 && "A copy brings over the scoring, quest list and team names, but no players or scores. "}It starts as a draft only staff can see.
+          </p>
           {error && <p className="text-sm text-red-accent">{error}</p>}
           <div className="flex gap-2">
             <Button disabled={busy || !name.trim()} onClick={create}>
