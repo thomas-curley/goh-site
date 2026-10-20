@@ -72,7 +72,7 @@ function ordinal(n: number) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-const SOURCE_LABEL = { wikisync: "via WikiSync", proof: "screenshot approved", staff: "added by staff" } as const;
+const SOURCE_LABEL = { wikisync: "via WikiSync", proof: "screenshot approved", staff: "added by staff", broadcast: "via clan broadcast" } as const;
 
 /** How to get WikiSync going, for anyone without it. */
 function WikiSyncHelp() {

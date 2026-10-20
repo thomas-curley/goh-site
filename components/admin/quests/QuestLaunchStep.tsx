@@ -15,7 +15,7 @@ function when(iso: string | null): string {
   return iso ? new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "not set";
 }
 
-const SOURCE_LABEL = { wikisync: "WikiSync", proof: "Screenshot", staff: "Added by staff" } as const;
+const SOURCE_LABEL = { wikisync: "WikiSync", proof: "Screenshot", staff: "Added by staff", broadcast: "Clan broadcast" } as const;
 
 export function QuestLaunchStep({ data, onChanged, goTo }: { data: AdminQuestEvent; onChanged: () => Promise<void>; goTo: (step: string) => void }) {
   const router = useRouter();

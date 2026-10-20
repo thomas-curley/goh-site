@@ -79,7 +79,7 @@ export interface QuestParticipant {
 export interface QuestCompletion {
   participant_id: string;
   quest_name: string;
-  source: "wikisync" | "proof" | "staff";
+  source: "wikisync" | "proof" | "staff" | "broadcast";
   completed_at: string;
 }
 

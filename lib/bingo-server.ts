@@ -19,7 +19,7 @@ export function bingoServiceClient(): SupabaseClient | null {
 }
 
 export const EVENT_COLUMNS =
-  "id, name, description, rules, banner_url, starts_at, ends_at, grid_size, status, win_rule, line_bonus, blackout_bonus, hide_other_teams, last_synced_at, created_at, updated_at";
+  "id, name, description, rules, banner_url, starts_at, ends_at, grid_size, status, win_rule, line_bonus, blackout_bonus, hide_other_teams, feed_mode, last_synced_at, created_at, updated_at";
 export const TILE_COLUMNS =
   "id, position, title, description, points, icon_kind, icon_ref, icon_item_id, kind, required_count, accepted_items, metric, target, auto_mode";
 
@@ -239,6 +239,27 @@ export async function getBingoViewer(supabase: SupabaseClient): Promise<BingoVie
 
 export const MAX_SUBMISSION_IMAGES = 4;
 
+const REMOTE_IMAGE_HOSTS = /^https:\/\/(cdn\.discordapp\.com|media\.discordapp\.net|(?:www\.)?droptracker\.io)\//;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+/** Copies Discord (and DropTracker) images into site storage, since their links expire. */
+export async function storeRemoteImages(supabase: SupabaseClient, urls: string[]): Promise<string[]> {
+  const stored: string[] = [];
+  for (const url of urls.slice(0, MAX_SUBMISSION_IMAGES)) {
+    if (!REMOTE_IMAGE_HOSTS.test(url)) continue;
+    const res = await fetch(url).catch(() => null);
+    const type = res?.headers.get("content-type") ?? "";
+    if (!res?.ok || !type.startsWith("image/")) continue;
+    const buffer = await res.arrayBuffer();
+    if (buffer.byteLength > MAX_IMAGE_BYTES) continue;
+    const ext = type.split("/")[1]?.split(";")[0] || "png";
+    const fileName = `bingo_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("banners").upload(fileName, buffer, { contentType: type, cacheControl: "31536000" });
+    if (!error) stored.push(supabase.storage.from("banners").getPublicUrl(fileName).data.publicUrl);
+  }
+  return stored;
+}
+
 /** Public URL prefix for files in this project's storage, the only images a submission may use. */
 export function storagePublicPrefix(): string {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/`;
@@ -343,3 +364,65 @@ export async function announceResults(supabase: SupabaseClient, bundle: BingoBun
     [`🏁 **${event.name}** is over${winner ? `, and **${winner.name}** wins!` : "!"}`, "", ...lines, "", site ? `Full board: ${site}/bingo/${event.id}` : ""].join("\n").trim()
   );
 }
+
+/**
+ * A drop from the clan feed (DropTracker or a clan-chat forwarder) for a
+ * proof tile whose item list includes it. Counted straight away or queued
+ * for staff, depending on the bingo's feed setting. The same drop posted by
+ * two feeds within two minutes only counts once.
+ */
+export async function createFeedSubmission(
+  supabase: SupabaseClient,
+  bundle: BingoBundle,
+  input: { tile: BingoTile; teamId: string; rsn: string; item: string; quantity: number; imageUrls: string[]; postedAt: string; dryRun?: boolean }
+): Promise<"counted" | "queued" | "already counted" | "tile already done" | "duplicate"> {
+  const { tile, teamId } = input;
+  const progress = bundle.progress.find((p) => p.tile_id === tile.id && p.team_id === teamId);
+  if (progress?.completed_at) return "tile already done";
+  const posted = Date.parse(input.postedAt);
+  const { data: recent } = await supabase
+    .from("bingo_submissions")
+    .select("id, created_at")
+    .eq("tile_id", tile.id)
+    .eq("team_id", teamId)
+    .eq("source", "feed")
+    .ilike("submitter_rsn", input.rsn)
+    .gte("created_at", new Date(posted - 120_000).toISOString())
+    .lte("created_at", new Date(posted + 120_000).toISOString());
+  if (recent?.length) return "duplicate";
+  const review = bundle.event.feed_mode === "review";
+  if (input.dryRun) return review ? "queued" : "counted";
+
+  const remaining = Math.max(1, tile.required_count - (progress?.progress ?? 0));
+  const quantity = Math.max(1, Math.min(input.quantity, remaining));
+  const { error } = await supabase.from("bingo_submissions").insert({
+    event_id: bundle.event.id,
+    tile_id: tile.id,
+    team_id: teamId,
+    submitter_rsn: input.rsn,
+    source: "feed",
+    image_urls: input.imageUrls,
+    quantity,
+    note: `From the clan feed: ${input.item}${input.quantity > 1 ? ` x ${input.quantity}` : ""}`,
+    status: review ? "pending" : "approved",
+    reviewed_by: review ? null : "Clan feed",
+    reviewed_at: review ? null : new Date().toISOString(),
+    created_at: input.postedAt,
+  });
+  if (error) return "already counted";
+  const team = bundle.teams.find((t) => t.id === teamId);
+  if (review) {
+    await logActivity(supabase, {
+      event_id: bundle.event.id,
+      team_id: teamId,
+      tile_id: tile.id,
+      kind: "submitted",
+      rsn: input.rsn,
+      message: `${input.rsn} got ${input.item} for ${tile.title}${team ? ` (${team.name})` : ""}`,
+    });
+    return "queued";
+  }
+  await recomputeProofTile(supabase, bundle, tile, teamId, { byRsn: input.rsn, images: input.imageUrls });
+  return "counted";
+}
+

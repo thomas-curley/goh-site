@@ -101,11 +101,12 @@ export async function recordCompletion(
   bundle: QuestBundle,
   participant: QuestParticipant,
   questName: string,
-  source: "wikisync" | "proof" | "staff",
-  images?: string[]
+  source: QuestCompletion["source"],
+  images?: string[],
+  completedAt?: string
 ): Promise<boolean> {
   if (bundle.completions.some((c) => c.participant_id === participant.id && c.quest_name === questName)) return false;
-  const completed_at = new Date().toISOString();
+  const completed_at = completedAt ?? new Date().toISOString();
   const { error } = await supabase.from("quest_event_completions").insert({ event_id: bundle.event.id, participant_id: participant.id, quest_name: questName, source, completed_at });
   if (error) return false; // unique violation: another sync got there first
   bundle.completions.push({ participant_id: participant.id, quest_name: questName, source, completed_at });

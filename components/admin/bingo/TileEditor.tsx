@@ -158,7 +158,7 @@ export function TileEditor({
           <Field label="How many are needed" hint="More than 1 makes a count tile: each approved screenshot adds to it (e.g. 2 whips, 3 Barrows pieces).">
             <input type="number" min={1} max={1000} value={draft.required_count} onChange={(e) => set({ required_count: Math.max(1, Number(e.target.value) || 1) })} className={`${inputClass} w-28`} />
           </Field>
-          <Field label="Items that count (optional)" hint="For 'any of these' tiles. Shown to players as a checklist; staff still decide.">
+          <Field label="Items that count (optional)" hint="For 'any of these' tiles. Shown to players as a checklist. Drops of these items from the clan feed (DropTracker) count automatically, if the bingo allows it.">
             <div className="flex flex-wrap gap-1.5 mb-2">
               {draft.accepted_items.map((name) => (
                 <span key={name} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-gnome-green/10 text-gnome-green">

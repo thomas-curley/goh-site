@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   if (copyFrom) {
     const { data: source } = await supabase
       .from("bingo_events")
-      .select("description, rules, banner_url, grid_size, win_rule, line_bonus, blackout_bonus, hide_other_teams")
+      .select("description, rules, banner_url, grid_size, win_rule, line_bonus, blackout_bonus, hide_other_teams, feed_mode")
       .eq("id", copyFrom)
       .maybeSingle();
     if (!source) return NextResponse.json({ error: "The board to copy wasn't found." }, { status: 404 });
