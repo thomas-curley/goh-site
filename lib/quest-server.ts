@@ -250,3 +250,92 @@ export async function announceQuestResults(supabase: SupabaseClient, bundle: Que
     [`🏁 **${bundle.event.name}** is over${standings[0] ? `, and **${standings[0].name}** wins!` : "!"}`, "", ...lines, "", site ? `Full results: ${site}/quests/${bundle.event.id}` : ""].join("\n").trim()
   );
 }
+
+// ── Proof and staff changes ─────────────────────────────────────────
+
+const MAX_PROOF_IMAGES = 4;
+
+/** What still stops an event going live. */
+export function questLaunchProblems(bundle: QuestBundle): string[] {
+  const { event, participants, teams } = bundle;
+  const problems: string[] = [];
+  if (!event.ends_at) problems.push("Set an end date.");
+  if (event.starts_at && event.ends_at && Date.parse(event.ends_at) <= Date.parse(event.starts_at)) problems.push("The end date is before the start.");
+  if (eventQuests(event).length === 0) problems.push("Pick at least one quest.");
+  if (event.format === "teams") {
+    if (teams.length < 2) problems.push("Make at least two teams.");
+    const loose = participants.filter((p) => !p.team_id).length;
+    if (loose > 0) problems.push(`${loose} ${loose === 1 ? "player isn't" : "players aren't"} on a team yet.`);
+  }
+  return problems;
+}
+
+/** A participant sends a screenshot for a quest WikiSync didn't pick up. */
+export async function createQuestSubmission(
+  supabase: SupabaseClient,
+  bundle: QuestBundle,
+  input: { participant: QuestParticipant; questName: string; source: "web" | "discord"; imageUrls: string[]; note?: string | null; publicPrefix: string }
+): Promise<{ ok: true; id: string } | { ok: false; status: number; error: string }> {
+  const { event } = bundle;
+  if (!eventOpen(event)) return { ok: false, status: 400, error: event.status === "completed" || (event.ends_at && Date.parse(event.ends_at) <= Date.now()) ? "This quest event has ended." : "This quest event hasn't started yet." };
+  if (!eventQuests(event).some((q) => q.name === input.questName)) return { ok: false, status: 400, error: "That quest doesn't count in this event." };
+  if (bundle.completions.some((c) => c.participant_id === input.participant.id && c.quest_name === input.questName)) {
+    return { ok: false, status: 400, error: "That quest is already counted for you." };
+  }
+  const imageUrls = input.imageUrls.filter((u) => typeof u === "string" && u.startsWith(input.publicPrefix)).slice(0, MAX_PROOF_IMAGES);
+  if (imageUrls.length === 0) return { ok: false, status: 400, error: "Add a screenshot of the quest complete screen." };
+  const { count: pending } = await supabase
+    .from("quest_event_submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("participant_id", input.participant.id)
+    .eq("quest_name", input.questName)
+    .eq("status", "pending");
+  if ((pending ?? 0) > 0) return { ok: false, status: 400, error: "You already sent that one. Staff will review it soon." };
+
+  const { data, error } = await supabase
+    .from("quest_event_submissions")
+    .insert({
+      event_id: event.id,
+      participant_id: input.participant.id,
+      quest_name: input.questName,
+      image_urls: imageUrls,
+      note: input.note?.trim().slice(0, 300) || null,
+      source: input.source,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return { ok: false, status: 500, error: "Couldn't save your submission." };
+  await logActivity(supabase, { event_id: event.id, participant_id: input.participant.id, quest_name: input.questName, kind: "submitted" });
+  return { ok: true, id: data.id };
+}
+
+/**
+ * Takes a quest back off a participant (staff correction or a reopened
+ * proof). With `keepOff`, it's also marked as done in their starting
+ * snapshot so the next WikiSync check doesn't count it again.
+ */
+export async function removeCompletion(supabase: SupabaseClient, eventId: string, participantId: string, questName: string, { keepOff = false } = {}) {
+  if (keepOff) {
+    const { data: row } = await supabase.from("quest_event_participants").select("baseline").eq("id", participantId).maybeSingle();
+    const baseline = row?.baseline as Record<string, number> | null;
+    if (baseline) await supabase.from("quest_event_participants").update({ baseline: { ...baseline, [questName]: 2 } }).eq("id", participantId);
+  }
+  await supabase.from("quest_event_completions").delete().eq("event_id", eventId).eq("participant_id", participantId).eq("quest_name", questName);
+  await supabase.from("quest_event_activity").delete().eq("event_id", eventId).eq("participant_id", participantId).eq("quest_name", questName).eq("kind", "completed");
+}
+
+/**
+ * How many of the event's quests each participant still had to do when
+ * their starting snapshot was taken (null without one). Used to balance teams.
+ */
+export async function questsRemaining(supabase: SupabaseClient, event: QuestEvent, participantIds: string[]): Promise<Map<string, number | null>> {
+  const out = new Map<string, number | null>();
+  if (participantIds.length === 0) return out;
+  const { data } = await supabase.from("quest_event_participants").select("id, baseline").in("id", participantIds);
+  const counted = eventQuests(event);
+  for (const row of data ?? []) {
+    const baseline = row.baseline as Record<string, number> | null;
+    out.set(row.id, baseline ? counted.filter((q) => baseline[q.name] !== 2).length : null);
+  }
+  return out;
+}
