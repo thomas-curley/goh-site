@@ -23,6 +23,11 @@ interface Logged {
   outcomes: FeedOutcome[];
 }
 type Filter = "all" | "counted" | "understood" | "not understood";
+interface DropTrackerState {
+  configured: boolean;
+  lastPolledAt: string | null;
+  lastResult: { players?: number; newDrops?: number; counted?: number; skipped?: string; error?: string; at?: string } | null;
+}
 
 const KIND_LABEL: Record<FeedEvent["kind"], string> = { drop: "Drop", collection_log: "Collection log", pet: "Pet", quest: "Quest" };
 const GOOD = new Set(["counted", "queued"]);
@@ -73,7 +78,9 @@ export default function ClanFeedPage() {
   const [test, setTest] = useState({ content: "", title: "", description: "" });
   const [testResult, setTestResult] = useState<{ events: FeedEvent[]; outcomes: FeedOutcome[] } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [names, setNames] = useState<Map<string, string>>(new Map());
+  const [names, setNames] = useState<Map<string, string>>(new Map([["droptracker-api", "DropTracker API"]]));
+  const [droptracker, setDroptracker] = useState<DropTrackerState | null>(null);
+  const [pollNote, setPollNote] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = () =>
     fetch("/api/admin/clan-feed")
@@ -81,6 +88,7 @@ export default function ClanFeedPage() {
       .then((d) => {
         setChannels(d.channels ?? []);
         setMessages(d.messages ?? []);
+        setDroptracker(d.droptracker ?? null);
       })
       .catch(() => setMessages([]));
 
@@ -92,11 +100,12 @@ export default function ClanFeedPage() {
         if (cancelled) return;
         setChannels(d.channels ?? []);
         setMessages(d.messages ?? []);
+        setDroptracker(d.droptracker ?? null);
       })
       .catch(() => !cancelled && setMessages([]));
     fetch("/api/discord/channels")
       .then((r) => r.json())
-      .then((d: { groups?: { channels: { id: string; name: string }[] }[] }) => !cancelled && setNames(new Map((d.groups ?? []).flatMap((g) => g.channels.map((c) => [c.id, c.name] as const)))))
+      .then((d: { groups?: { channels: { id: string; name: string }[] }[] }) => !cancelled && setNames(new Map([["droptracker-api", "DropTracker API"], ...(d.groups ?? []).flatMap((g) => g.channels.map((c) => [c.id, c.name] as const))])))
       .catch(() => undefined);
     return () => {
       cancelled = true;
@@ -114,6 +123,18 @@ export default function ClanFeedPage() {
     const res = await fetch("/api/admin/clan-feed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", ...test }) });
     setTestResult(await res.json().catch(() => null));
     setBusy(null);
+  };
+
+  const pollNow = async () => {
+    setBusy("poll");
+    setPollNote(null);
+    const res = await fetch("/api/admin/clan-feed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "poll" }) });
+    const json = await res.json().catch(() => ({}));
+    setBusy(null);
+    if (!res.ok) setPollNote({ ok: false, text: json.error ?? "Couldn't reach DropTracker." });
+    else if (json.result?.error) setPollNote({ ok: false, text: json.result.error });
+    else setPollNote({ ok: true, text: `Connected to DropTracker group ${json.groupId}. Read ${json.result.players} players: ${json.result.newDrops} new drops, ${json.result.counted} counted for a bingo.` });
+    await load();
   };
 
   const replay = async (id: string) => {
@@ -168,6 +189,35 @@ export default function ClanFeedPage() {
         <p className="text-xs text-iron-grey">
           Bingo: drops count for proof tiles whose item list includes the item, for the player&apos;s team. Each bingo chooses whether they count straight away or go to the review queue (Basics step). Quest events: completions count for players in a live event, by RSN.
         </p>
+      </Card>
+
+      <Card hover={false} className="space-y-3">
+        <h2 className="font-display text-xl text-bark-brown">DropTracker API</h2>
+        {!droptracker?.configured ? (
+          <p className="text-sm text-iron-grey">
+            Not connected. Add the group&apos;s API key in Vercel as <span className="font-mono">DROPTRACKER_API_KEY</span> (and redeploy). Then drops are read straight from DropTracker every 5 minutes while a bingo is live, so nothing is missed if the bot was offline. Quests still come from the Discord post, since the API doesn&apos;t list them.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-bark-brown-light">
+              Connected. Drops are read every 5 minutes while a bingo is live, and each one is counted once even if the Discord post is read too.
+            </p>
+            <p className="text-xs text-iron-grey">
+              {droptracker.lastPolledAt ? `Last read ${when(droptracker.lastPolledAt)}` : "Not read yet"}
+              {droptracker.lastResult?.error
+                ? ` · last try failed: ${droptracker.lastResult.error}`
+                : droptracker.lastResult?.skipped
+                  ? ` · skipped: ${droptracker.lastResult.skipped}`
+                  : droptracker.lastResult?.players != null
+                    ? ` · ${droptracker.lastResult.players} players, ${droptracker.lastResult.newDrops ?? 0} new drops, ${droptracker.lastResult.counted ?? 0} counted`
+                    : ""}
+            </p>
+            <Button size="sm" variant="ghost" disabled={busy === "poll"} onClick={pollNow}>
+              {busy === "poll" ? "Reading..." : "Check now"}
+            </Button>
+          </>
+        )}
+        {pollNote && <p className={`text-xs ${pollNote.ok ? "text-gnome-green" : "text-red-accent"}`}>{pollNote.text}</p>}
       </Card>
 
       <Card hover={false} className="space-y-3">

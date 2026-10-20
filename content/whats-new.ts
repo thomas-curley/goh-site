@@ -34,6 +34,18 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 20, 2026 (night) ──────────────────────────────────────
+  {
+    id: "2026-10-20-droptracker-api",
+    date: "2026-10-20",
+    kind: "improved",
+    audience: "admin",
+    title: "Bingo drops straight from DropTracker",
+    summary:
+      "With the clan's DropTracker API key added, the site reads drops straight from DropTracker every 5 minutes while a bingo is live, as well as from the Discord posts. Each drop counts once, and drops aren't missed if the bot was offline for a while. Quests still come from the Discord post and WikiSync.",
+    tryIt: ["Go to Admin › Settings › Clan Feed and press Check now under DropTracker API."],
+    links: [{ label: "Admin › Clan Feed", href: "/admin/clan-feed" }],
+  },
   // ── October 20, 2026 (late) ───────────────────────────────────────
   {
     id: "2026-10-20-clan-points-hidden",

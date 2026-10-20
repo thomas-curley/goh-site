@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import { checkPermission } from "@/lib/check-permission";
 import { applyFeedEvents } from "@/lib/clan-feed-server";
 import { parseFeedMessage, type FeedEvent } from "@/lib/clan-feed";
+import { DROPTRACKER_CHANNEL, droptrackerConfigured, droptrackerStatus, pollDroptracker } from "@/lib/droptracker";
+
+export const maxDuration = 300;
 
 async function context() {
   const { allowed } = await checkPermission("manage_settings");
@@ -17,11 +20,16 @@ async function context() {
 export async function GET() {
   const ctx = await context();
   if ("error" in ctx) return ctx.error;
-  const [{ data: channels }, { data: messages }] = await Promise.all([
+  const [{ data: channels }, { data: messages }, { data: source }] = await Promise.all([
     ctx.supabase.from("clan_feed_channels").select("channel_id, label, created_at").order("created_at"),
     ctx.supabase.from("clan_feed_messages").select("id, channel_id, author_name, posted_at, text, image_urls, events, outcomes").order("posted_at", { ascending: false }).limit(100),
+    ctx.supabase.from("clan_feed_sources").select("last_polled_at, last_result").eq("source", DROPTRACKER_CHANNEL).maybeSingle(),
   ]);
-  return NextResponse.json({ channels: channels ?? [], messages: messages ?? [] });
+  return NextResponse.json({
+    channels: channels ?? [],
+    messages: messages ?? [],
+    droptracker: { configured: droptrackerConfigured(), lastPolledAt: source?.last_polled_at ?? null, lastResult: source?.last_result ?? null },
+  });
 }
 
 // PUT { channels: [{ channel_id, label }] } - replace the watched channels.
@@ -53,6 +61,14 @@ export async function POST(request: NextRequest) {
     const events = parseFeedMessage({ content: s(body.content), embeds: s(body.title) || s(body.description) ? [{ title: s(body.title), description: s(body.description) }] : [] });
     const outcomes = await applyFeedEvents(ctx.supabase, events, new Date().toISOString(), [], { dryRun: true });
     return NextResponse.json({ events, outcomes });
+  }
+
+  if (body.action === "poll") {
+    // "Check now": tests the key and reads the feed even if no bingo is live.
+    const status = await droptrackerStatus();
+    if (!status.configured) return NextResponse.json({ error: "Add DROPTRACKER_API_KEY in Vercel first." }, { status: 400 });
+    if (!status.ok) return NextResponse.json({ error: status.error }, { status: 502 });
+    return NextResponse.json({ groupId: status.groupId, result: await pollDroptracker(ctx.supabase, { force: true }) });
   }
 
   if (body.action === "replay") {

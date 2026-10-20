@@ -122,6 +122,10 @@ client.once(Events.ClientReady, async (c) => {
   const { startClanFeed } = await import("./lib/clan-feed.js");
   startClanFeed(c);
 
+  // Drops from the DropTracker API for live bingos, every 5 minutes.
+  const { syncDroptracker } = await import("./lib/api.js");
+  setInterval(syncDroptracker, 5 * 60 * 1000);
+
   // Keep live bingo boards' tracked tiles fresh (the site skips boards it updated recently).
   // Same for quest events' WikiSync checks.
   const { syncBingo, syncQuests } = await import("./lib/api.js");
