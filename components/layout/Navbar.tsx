@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
     type: "dropdown",
     label: "Events",
     items: [
+      { href: "/activities", label: "Activities", sectionKey: "activities" },
       { href: "/events", label: "Calendar", sectionKey: "events" },
       { href: "/bingo", label: "Bingo", sectionKey: "bingo" },
       { href: "/competitions", label: "Competitions", sectionKey: "competitions" },
