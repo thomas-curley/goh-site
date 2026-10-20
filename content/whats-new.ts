@@ -34,6 +34,39 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 20, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-20-quest-events",
+    date: "2026-10-20",
+    kind: "new",
+    audience: "staff",
+    title: "Quest events: run a quest race on the site",
+    summary:
+      "Staff can now run quest competitions. Pick solo or teams, choose how quests score (by difficulty with your own points, by quest points, or the same for every quest), and count every quest or a list you pick. Members join from the event page, and their quests tick off by themselves through the WikiSync RuneLite plugin, checked every half hour. Anyone without WikiSync can send a screenshot of the quest complete scroll, which lands in a new review queue. Each finished quest is posted to Discord once a channel is set.",
+    tryIt: [
+      "Go to Admin › Quest Events and press New quest event.",
+      "Set the dates, format and scoring, then pick which quests count.",
+      "On Players, open sign-ups (or add people yourself). For teams, press Balance teams to even out how many quests each team has left.",
+      "On Launch, press Go live. Screenshots to check show up under Review Queue › Quest Screenshots.",
+      "To post finished quests in Discord, pick a channel for Quest Event Announcements in Admin › Discord Channels.",
+    ],
+    links: [
+      { label: "Admin › Quest Events", href: "/admin/quests" },
+      { label: "Quest Screenshots", href: "/admin/quests/submissions" },
+      { label: "Discord Channels", href: "/admin/alert-channels" },
+    ],
+  },
+  {
+    id: "2026-10-20-activities-page",
+    date: "2026-10-20",
+    kind: "new",
+    audience: "everyone",
+    title: "New Activities page",
+    summary:
+      "Events › Activities is a new page listing everything members can take part in: live and upcoming bingos, quest events and Wise Old Man competitions, with countdowns, plus links to the always-on things like Clan Points and the hiscores. It's the place to send people who ask what's going on.",
+    tryIt: ["Open the Events menu and pick Activities."],
+    links: [{ label: "Activities", href: "/activities" }],
+  },
   // ── October 19, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-19-delete-testimonials",

@@ -73,3 +73,8 @@ export async function submitBingoProof(payload: { discordId: string; tileId: str
 export async function syncBingo() {
   await apiCall("/api/bot/bingo", { method: "POST", body: JSON.stringify({ action: "sync" }) }).catch(() => undefined);
 }
+
+/** Asks the site to check WikiSync for quest events (it skips ones checked recently). */
+export async function syncQuests() {
+  await apiCall("/api/bot/quests", { method: "POST", body: JSON.stringify({ action: "sync" }) }).catch(() => undefined);
+}

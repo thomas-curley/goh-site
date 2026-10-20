@@ -1,0 +1,56 @@
+# Rebuilds content/osrs-quests.json (every quest's difficulty, quest
+# points, members flag and series) from the OSRS Wiki, for quest events.
+#
+# - Pushing a change to the builder rebuilds the list on that branch.
+# - Run it by hand after a quest release to refresh master (opens a PR).
+name: OSRS quest list
+
+on:
+  push:
+    branches-ignore: [master, osrs-quests-update]
+    paths: ["scripts/osrs-quests/**", ".github/workflows/osrs-quests.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: osrs-quests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the quest list
+        run: node scripts/osrs-quests/build.mjs content/osrs-quests.json
+
+      - name: Commit changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add content/osrs-quests.json
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update OSRS quest list"
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          else
+            git push -f origin HEAD:refs/heads/osrs-quests-update
+            gh pr create --base "$GITHUB_REF_NAME" --head osrs-quests-update \
+              --title "Update OSRS quest list" \
+              --body "Automatic refresh of content/osrs-quests.json from the OSRS Wiki." \
+              || echo "Pull request already open, or Actions can't open pull requests in this repo."
+          fi

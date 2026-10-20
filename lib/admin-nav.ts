@@ -31,6 +31,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/wom-competitions", label: "WOM Competitions", group: "Competitions", permission: "manage_competitions" },
   { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", group: "Competitions", permission: "manage_competitions" },
   { href: "/admin/bingo", label: "Bingo", group: "Competitions", permission: "manage_bingo" },
+  { href: "/admin/quests", label: "Quest Events", group: "Competitions", permission: "manage_quests" },
   { href: "/admin/payouts", label: "Prize Payouts", group: "Competitions", permission: "manage_payouts", badge: "unpaid_payouts" },
   { href: "/admin/raffles", label: "Raffles", group: "Competitions", permission: "manage_payouts" },
 
@@ -40,6 +41,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/testimonials", label: "Testimonials", group: "Review Queue", permission: "manage_testimonials", badge: "testimonials" },
   { href: "/admin/rsn-links", label: "RSN Links", group: "Review Queue", permission: "manage_rsn_links", badge: "rsn_requests" },
   { href: "/admin/bingo/submissions", label: "Bingo Submissions", group: "Review Queue", permission: "manage_bingo", badge: "bingo_submissions" },
+  { href: "/admin/quests/submissions", label: "Quest Screenshots", group: "Review Queue", permission: "manage_quests", badge: "quest_submissions" },
 
   { href: "/admin/gn0mebook", label: "Gn0meBook Profiles", group: "Members", permission: "manage_member_profiles" },
   { href: "/admin/profiles-beta", label: "Member Profiles (Beta)", group: "Members", permission: "manage_member_profiles" },
