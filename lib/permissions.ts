@@ -127,6 +127,11 @@ export const PERMISSIONS = {
     label: "Manage Bingo Events",
     description: "Create bingo boards, assign teams, and review manual tile submissions",
   },
+  manage_quests: {
+    key: "manage_quests",
+    label: "Manage Quest Events",
+    description: "Create quest events, manage participants and teams, and review quest screenshots",
+  },
   manage_points: {
     key: "manage_points",
     label: "Manage Clan Points",
