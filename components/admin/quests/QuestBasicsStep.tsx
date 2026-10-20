@@ -171,7 +171,7 @@ export function QuestBasicsStep({ data, onSaved, onNext }: { data: AdminQuestEve
                 <span className="text-bark-brown truncate">
                   {q.name} <span className="text-xs text-iron-grey">· {q.difficulty}, {q.qp} QP</span>
                 </span>
-                <span className="font-semibold tabular-nums text-gnome-green shrink-0">{questPoints(preview, q)} pts</span>
+                <span className="font-semibold tabular-nums text-gnome-green shrink-0">{questPoints(preview, q)} {questPoints(preview, q) === 1 ? "pt" : "pts"}</span>
               </li>
             ))}
           </ul>

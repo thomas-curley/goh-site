@@ -119,9 +119,14 @@ client.once(Events.ClientReady, async (c) => {
   startRoomCleanup(c);
 
   // Keep live bingo boards' tracked tiles fresh (the site skips boards it updated recently).
-  const { syncBingo } = await import("./lib/api.js");
+  // Same for quest events' WikiSync checks.
+  const { syncBingo, syncQuests } = await import("./lib/api.js");
   syncBingo();
-  setInterval(syncBingo, 30 * 60 * 1000);
+  syncQuests();
+  setInterval(() => {
+    syncBingo();
+    syncQuests();
+  }, 30 * 60 * 1000);
 });
 
 // Start

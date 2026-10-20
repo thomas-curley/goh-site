@@ -378,7 +378,7 @@ export function QuestEventPage({ eventId }: { eventId: string }) {
                               {mine && <span className="text-xs font-body text-gnome-green"> (you)</span>}
                             </span>
                             <span className="shrink-0 text-sm tabular-nums">
-                              <span className="font-semibold text-bark-brown">{s.points}</span> <span className="text-xs text-iron-grey">pts · {s.quests} {s.quests === 1 ? "quest" : "quests"}</span>
+                              <span className="font-semibold text-bark-brown">{s.points}</span> <span className="text-xs text-iron-grey">pts<span className="hidden sm:inline"> · {s.quests} {s.quests === 1 ? "quest" : "quests"}</span></span>
                             </span>
                           </div>
                           <div className="h-1.5 rounded-full bg-bark-brown-light/15 overflow-hidden mt-1">

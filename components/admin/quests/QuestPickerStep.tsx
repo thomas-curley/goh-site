@@ -42,7 +42,7 @@ export function QuestPickerStep({ data, onSaved, onNext }: { data: AdminQuestEve
   }, [query, difficulty, series, membership, onlyPicked, picked]);
 
   const draft = { ...event, quest_names: mode === "all" ? [] : [...picked], include_miniquests: miniquests };
-  const counted = eventQuests(draft);
+  const counted = mode === "pick" && picked.size === 0 ? [] : eventQuests(draft);
   const total = counted.reduce((s, q) => s + questPoints(event, q), 0);
 
   const toggle = (name: string) => {
@@ -115,7 +115,7 @@ export function QuestPickerStep({ data, onSaved, onNext }: { data: AdminQuestEve
                 </option>
               ))}
             </select>
-            <select value={membership} onChange={(e) => setMembership(e.target.value as typeof membership)} aria-label="Free or members" className={`${inputClass} sm:w-40 cursor-pointer`}>
+            <select value={membership} onChange={(e) => setMembership(e.target.value as typeof membership)} aria-label="Free or members" className={`${inputClass} sm:w-48 cursor-pointer`}>
               <option value="">F2P and members</option>
               <option value="f2p">Free-to-play only</option>
               <option value="members">Members only</option>

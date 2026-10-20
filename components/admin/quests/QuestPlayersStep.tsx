@@ -155,33 +155,37 @@ export function QuestPlayersStep({ data, onSaved, onNext }: { data: AdminQuestEv
         draggable={isTeams}
         onDragStart={() => setDrag(p.rsn)}
         onDragEnd={() => setDrag(null)}
-        className={`group flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs bg-parchment ${isTeams ? "cursor-grab" : ""} ${selected === p.rsn ? "border-gnome-green ring-2 ring-gnome-green/40" : "border-bark-brown-light/40"}`}
+        className={`group rounded-md border px-2 py-1 text-xs bg-parchment ${isTeams ? "cursor-grab" : ""} ${selected === p.rsn ? "border-gnome-green ring-2 ring-gnome-green/40" : "border-bark-brown-light/40"}`}
       >
-        <button type="button" onClick={() => isTeams && setSelected(selected === p.rsn ? null : p.rsn)} className="flex-1 min-w-0 text-left truncate font-mono text-bark-brown cursor-pointer">
-          {p.is_captain && <span title="Captain">★ </span>}
-          {p.rsn}
-        </button>
-        {row ? <WikiSyncBadge has={row.has_wikisync} checked={row.last_checked_at} /> : <span className="text-[10px] text-gold">new</span>}
-        {row?.remaining != null && <span className="text-[10px] text-iron-grey" title="Quests in this event they hadn't done yet when we first checked">{row.remaining} left</span>}
-        {isTeams && p.team !== null && (
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={() => isTeams && setSelected(selected === p.rsn ? null : p.rsn)} className="flex-1 min-w-0 text-left truncate font-mono text-bark-brown cursor-pointer" title={p.rsn}>
+            {p.is_captain && <span title="Captain">★ </span>}
+            {p.rsn}
+          </button>
+          {isTeams && p.team !== null && (
+            <button
+              type="button"
+              aria-label={p.is_captain ? `Remove ${p.rsn} as captain` : `Make ${p.rsn} captain`}
+              onClick={() => change((prev) => prev.map((x) => (x.rsn === p.rsn ? { ...x, is_captain: !x.is_captain } : x)))}
+              className="text-gold opacity-40 group-hover:opacity-100 cursor-pointer"
+            >
+              {p.is_captain ? "★" : "☆"}
+            </button>
+          )}
           <button
             type="button"
-            aria-label={p.is_captain ? `Remove ${p.rsn} as captain` : `Make ${p.rsn} captain`}
-            onClick={() => change((prev) => prev.map((x) => (x.rsn === p.rsn ? { ...x, is_captain: !x.is_captain } : x)))}
-            className="text-gold opacity-40 group-hover:opacity-100 cursor-pointer"
+            aria-label={`Remove ${p.rsn}`}
+            title={hasPoints ? "Removes them and the quests they've scored" : "Remove"}
+            onClick={() => remove(p.rsn)}
+            className="text-red-accent opacity-40 group-hover:opacity-100 cursor-pointer px-0.5"
           >
-            {p.is_captain ? "★" : "☆"}
+            ✕
           </button>
-        )}
-        <button
-          type="button"
-          aria-label={`Remove ${p.rsn}`}
-          title={hasPoints ? "Removes them and the quests they've scored" : "Remove"}
-          onClick={() => remove(p.rsn)}
-          className="text-red-accent opacity-40 group-hover:opacity-100 cursor-pointer px-0.5"
-        >
-          ✕
-        </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+          {row ? <WikiSyncBadge has={row.has_wikisync} checked={row.last_checked_at} /> : <span className="text-[10px] text-gold">new, save to check WikiSync</span>}
+          {row?.remaining != null && <span className="text-[10px] text-iron-grey" title="Quests in this event they hadn't done yet when we first checked">{row.remaining} left</span>}
+        </div>
       </div>
     );
   };

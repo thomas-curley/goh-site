@@ -107,7 +107,7 @@ export function QuestLaunchStep({ data, onChanged, goTo }: { data: AdminQuestEve
             <button type="button" onClick={() => setOpenPlayer(open ? null : p.id)} className="w-full flex items-center gap-2 text-left text-sm cursor-pointer">
               <span className="font-mono text-bark-brown flex-1 min-w-0 truncate">{p.rsn}</span>
               <WikiSyncBadge has={p.has_wikisync} checked={p.last_checked_at} />
-              <span className="text-xs text-iron-grey tabular-nums w-20 text-right">{mine.length} quests</span>
+              <span className="text-xs text-iron-grey tabular-nums w-20 text-right">{mine.length} {mine.length === 1 ? "quest" : "quests"}</span>
               <span className="text-xs text-gnome-green">{open ? "Hide" : "Edit"}</span>
             </button>
             {open && (
