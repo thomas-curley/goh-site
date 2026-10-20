@@ -67,8 +67,14 @@ for (const q of QUESTS) if (q.name.includes(" - ")) QUEST_BY_KEY.set(nameKey(q.n
 
 /** The quest list's name for a quest as written in a post, or null if it isn't one. */
 export function matchQuest(written: string): string | null {
-  const key = nameKey(written.replace(/^the quest\s+/i, ""));
-  return QUEST_BY_KEY.get(key) ?? null;
+  const key = nameKey(written.replace(/^the quest\s+/i, "").replace(/\bfreeing\s+/i, ""));
+  const exact = QUEST_BY_KEY.get(key);
+  if (exact) return exact;
+  // A shortened name ("Desert Treasure II" for "... - The Fallen Empire"),
+  // but only when exactly one quest fits.
+  if (key.length < 6) return null;
+  const fits = [...new Set([...QUEST_BY_KEY.entries()].filter(([k]) => k.startsWith(key)).map(([, name]) => name))];
+  return fits.length === 1 ? fits[0] : null;
 }
 
 const RSN = String.raw`([A-Za-z0-9][A-Za-z0-9 _\-]{0,11})`;
@@ -108,6 +114,15 @@ function tidyName(name: string): string {
     .trim();
 }
 
+/** What a DropTracker-style embed title says the post is about. */
+function embedKind(title: string): FeedEventKind | null {
+  if (/quest/i.test(title)) return "quest";
+  if (/collection log/i.test(title)) return "collection_log";
+  if (/\bpet\b/i.test(title)) return "pet";
+  if (/\b(drop|loot)\b/i.test(title)) return "drop";
+  return null;
+}
+
 /** Every event a post describes (usually one). */
 export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): FeedEvent[] {
   const events: FeedEvent[] = [];
@@ -138,7 +153,21 @@ export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): 
   }
   if (events.length) return events;
 
-  // 2. A "Name received a drop:" header with the item as the embed title
+  // 2. DropTracker's own embeds: "Name completed **Quest**." under a "Quest
+  //    Completed" title, and "Name received **Item**." style lines whose kind
+  //    comes from the title. A quest only counts if it's a real quest name.
+  for (const e of embeds) {
+    const kind = embedKind(e.title);
+    for (const line of [e.description, e.author, content].flatMap((t) => t.split("\n")).map(strip)) {
+      let m = line.match(new RegExp(`^${RSN} (?:has )?completed (?:the quest |a quest:? )?(.+?)[.!]?$`, "i"));
+      if (m && matchQuest(m[2])) push("quest", m[1], m[2]);
+      m = line.match(new RegExp(`^${RSN} (?:has )?(?:received|obtained|got|found) (?:a |an |the )?(?:new )?(?:drop|pet|collection log item)?[:\\s]*(.+?)[.!]?$`, "i"));
+      if (m && kind && kind !== "quest") push(kind, m[1], m[2]);
+    }
+  }
+  if (events.length) return events;
+
+  // 3. A "Name received a drop:" header with the item as the embed title
   //    (DropTracker). Its description may hold "G/E Value: 127.30K (670 x 190)".
   const headers = [content, ...embeds.map((e) => e.author)].flatMap((t) => t.split("\n")).map(strip);
   for (const header of headers) {
@@ -154,7 +183,7 @@ export function parseFeedMessage(msg: Pick<FeedMessage, "content" | "embeds">): 
   }
   if (events.length) return events;
 
-  // 3. Embeds that label things in fields: Player / Quest / Item.
+  // 4. Embeds that label things in fields: Player / Quest / Item.
   for (const e of embeds) {
     const field = (...names: string[]) => e.fields.find((f) => names.includes(f.name))?.value ?? "";
     const rsn = field("player", "rsn", "name", "username", "account") || e.author;
