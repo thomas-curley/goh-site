@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ChannelSelector } from "@/components/admin/ChannelSelector";
 import { inputClass } from "@/components/admin/bingo/BasicsStep";
+import { FeedLog } from "@/components/admin/clan-feed/FeedLog";
 import type { FeedEvent } from "@/lib/clan-feed";
 import type { FeedOutcome } from "@/lib/clan-feed-server";
 
@@ -12,17 +13,6 @@ interface Channel {
   channel_id: string;
   label: string | null;
 }
-interface Logged {
-  id: string;
-  channel_id: string;
-  author_name: string | null;
-  posted_at: string;
-  text: string;
-  image_urls: string[];
-  events: FeedEvent[];
-  outcomes: FeedOutcome[];
-}
-type Filter = "all" | "counted" | "understood" | "not understood";
 interface DropTrackerState {
   configured: boolean;
   lastPolledAt: string | null;
@@ -71,10 +61,9 @@ function Outcomes({ outcomes }: { outcomes: FeedOutcome[] }) {
 
 export default function ClanFeedPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [messages, setMessages] = useState<Logged[] | null>(null);
+  const [logKey, setLogKey] = useState(0);
   const [adding, setAdding] = useState("");
   const [saved, setSaved] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("all");
   const [test, setTest] = useState({ content: "", title: "", description: "" });
   const [testResult, setTestResult] = useState<{ events: FeedEvent[]; outcomes: FeedOutcome[] } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -87,10 +76,10 @@ export default function ClanFeedPage() {
       .then((r) => r.json())
       .then((d) => {
         setChannels(d.channels ?? []);
-        setMessages(d.messages ?? []);
         setDroptracker(d.droptracker ?? null);
+        setLogKey((n) => n + 1);
       })
-      .catch(() => setMessages([]));
+      .catch(() => undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,10 +88,9 @@ export default function ClanFeedPage() {
       .then((d) => {
         if (cancelled) return;
         setChannels(d.channels ?? []);
-        setMessages(d.messages ?? []);
         setDroptracker(d.droptracker ?? null);
       })
-      .catch(() => !cancelled && setMessages([]));
+      .catch(() => undefined);
     fetch("/api/discord/channels")
       .then((r) => r.json())
       .then((d: { groups?: { channels: { id: string; name: string }[] }[] }) => !cancelled && setNames(new Map([["droptracker-api", "DropTracker API"], ...(d.groups ?? []).flatMap((g) => g.channels.map((c) => [c.id, c.name] as const))])))
@@ -137,16 +125,7 @@ export default function ClanFeedPage() {
     await load();
   };
 
-  const replay = async (id: string) => {
-    setBusy(id);
-    await fetch("/api/admin/clan-feed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "replay", id }) });
-    await load();
-    setBusy(null);
-  };
 
-  const shown = (messages ?? []).filter((m) =>
-    filter === "all" ? true : filter === "counted" ? m.outcomes.some((o) => GOOD.has(o.result)) : filter === "understood" ? m.events.length > 0 : m.events.length === 0
-  );
 
   return (
     <div className="space-y-6">
@@ -247,55 +226,7 @@ export default function ClanFeedPage() {
         )}
       </Card>
 
-      <Card hover={false} className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-xl text-bark-brown">What the bot has read</h2>
-          <div className="flex flex-wrap gap-1">
-            {(["all", "counted", "understood", "not understood"] as const).map((f) => (
-              <button key={f} type="button" onClick={() => setFilter(f)} className={`px-2.5 py-1 rounded-full text-xs cursor-pointer capitalize ${filter === f ? "bg-gnome-green text-text-light font-semibold" : "bg-parchment-dark text-bark-brown"}`}>
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-        <p className="text-xs text-iron-grey">The last 30 days. &quot;Run again&quot; re-checks a post, for example after adding the player to the event.</p>
-        {messages === null ? (
-          <p className="text-sm text-iron-grey">Loading...</p>
-        ) : shown.length === 0 ? (
-          <p className="text-sm text-iron-grey">Nothing here yet.</p>
-        ) : (
-          <ul className="divide-y divide-bark-brown-light/20">
-            {shown.map((m) => (
-              <li key={m.id} className="py-3 space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs text-iron-grey">
-                    {when(m.posted_at)} · {m.author_name ?? "unknown"} · #{names.get(m.channel_id) ?? channels.find((c) => c.channel_id === m.channel_id)?.label ?? m.channel_id}
-                  </p>
-                  {m.events.length > 0 && (
-                    <button type="button" disabled={busy === m.id} onClick={() => replay(m.id)} className="text-xs text-gnome-green hover:underline cursor-pointer">
-                      {busy === m.id ? "Checking..." : "Run again"}
-                    </button>
-                  )}
-                </div>
-                {m.events.length > 0 ? (
-                  <>
-                    <div className="flex flex-wrap gap-1.5">
-                      <EventChips events={m.events} />
-                    </div>
-                    <Outcomes outcomes={m.outcomes} />
-                  </>
-                ) : (
-                  <p className="text-xs text-gold">Not understood</p>
-                )}
-                <details className="text-xs">
-                  <summary className="cursor-pointer text-iron-grey">Original post</summary>
-                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] text-bark-brown-light bg-parchment-dark/30 rounded p-2">{m.text}</pre>
-                </details>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <FeedLog sources={[{ id: "droptracker-api", name: "DropTracker API" }, ...channels.map((c) => ({ id: c.channel_id, name: `#${names.get(c.channel_id) ?? c.label ?? c.channel_id}` }))]} refreshKey={logKey} />
     </div>
   );
 }
