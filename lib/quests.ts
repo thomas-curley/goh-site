@@ -51,6 +51,8 @@ export interface QuestEvent {
   flat_points: number;
   quest_names: string[];
   include_miniquests: boolean;
+  /** Everyone in the clan takes part, including people who join during the event. */
+  auto_add_members: boolean;
   last_synced_at: string | null;
   created_at: string;
   updated_at: string;

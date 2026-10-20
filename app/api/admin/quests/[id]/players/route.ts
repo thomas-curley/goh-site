@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse, after } from "next/server";
+
+export const maxDuration = 300;
 import { checkPermission } from "@/lib/check-permission";
 import { logQuestActivity, questServiceClient, syncParticipant, loadQuestBundle } from "@/lib/quest-server";
 import { normalizeRsn } from "@/lib/wom";
@@ -75,16 +77,24 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     } else {
       const { data: row2, error } = await supabase.from("quest_event_participants").insert({ ...row, event_id: id, rsn: p.rsn }).select("id").single();
       if (error || !row2) return NextResponse.json({ error: `Couldn't add ${p.rsn}.` }, { status: 500 });
-      await logQuestActivity(supabase, { event_id: id, participant_id: row2.id, kind: "joined" });
       added.push(row2.id);
     }
   }
-  // Take the new players' starting snapshot (or count nothing yet, in a draft).
+  // A few people added by hand show in the activity feed; a whole-clan
+  // import doesn't flood it.
+  if (added.length > 0 && added.length <= 10) {
+    for (const participantId of added) await logQuestActivity(supabase, { event_id: id, participant_id: participantId, kind: "joined" });
+  }
+  // Take the new players' starting snapshot (or nothing yet, in a draft).
   if (added.length) {
     after(async () => {
       const bundle = await loadQuestBundle(supabase, id);
       if (!bundle || bundle.event.status === "draft" || bundle.event.status === "completed") return;
-      for (const p of bundle.participants.filter((x) => added.includes(x.id))) await syncParticipant(supabase, bundle, p).catch(() => undefined);
+      const queue = bundle.participants.filter((x) => added.includes(x.id));
+      const worker = async () => {
+        for (let p = queue.shift(); p; p = queue.shift()) await syncParticipant(supabase, bundle, p).catch(() => undefined);
+      };
+      await Promise.all(Array.from({ length: 8 }, worker));
     });
   }
   return NextResponse.json({ saved: true, teamIds });

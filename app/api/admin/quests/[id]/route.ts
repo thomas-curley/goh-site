@@ -3,6 +3,9 @@ import { checkPermission } from "@/lib/check-permission";
 import { announceQuestResults, loadQuestBundle, questLaunchProblems, questServiceClient, questsRemaining, syncQuestEvent } from "@/lib/quest-server";
 import { computeStandings, DIFFICULTIES, QUEST_BY_NAME, type QuestEventStatus } from "@/lib/quests";
 
+// Checking a whole clan on WikiSync can take a while.
+export const maxDuration = 300;
+
 const STATUSES: QuestEventStatus[] = ["draft", "signups", "active", "completed"];
 
 async function guard() {
@@ -81,6 +84,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
   if ("flat_points" in body) update.flat_points = Math.max(0, Math.min(1000, Math.floor(Number(body.flat_points) || 0)));
   if ("include_miniquests" in body) update.include_miniquests = !!body.include_miniquests;
+  if ("auto_add_members" in body) update.auto_add_members = !!body.auto_add_members;
   if ("quest_names" in body) {
     if (!Array.isArray(body.quest_names)) return NextResponse.json({ error: "The quest list isn't valid." }, { status: 400 });
     update.quest_names = [...new Set((body.quest_names as unknown[]).filter((n): n is string => typeof n === "string" && QUEST_BY_NAME.has(n)))];
@@ -102,8 +106,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (update.status === "completed" && bundle.event.status === "active") {
     await announceQuestResults(supabase, { ...bundle, event: { ...bundle.event, ...update } as typeof bundle.event });
   }
-  // Opening sign-ups or going live takes everyone's starting snapshot.
-  if ((update.status === "signups" || update.status === "active") && update.status !== bundle.event.status) {
+  // Opening sign-ups or going live takes everyone's starting snapshot (and
+  // brings in the whole clan, if the event includes everyone).
+  if (((update.status === "signups" || update.status === "active") && update.status !== bundle.event.status) || update.auto_add_members === true) {
     after(() => syncQuestEvent(supabase, id).then(() => undefined).catch(() => undefined));
   }
   return NextResponse.json({ saved: true });

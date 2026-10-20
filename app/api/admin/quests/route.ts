@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   if (copyFrom) {
     const { data: source } = await supabase
       .from("quest_events")
-      .select("description, rules, banner_url, format, scoring, difficulty_points, flat_points, quest_names, include_miniquests")
+      .select("description, rules, banner_url, format, scoring, difficulty_points, flat_points, quest_names, include_miniquests, auto_add_members")
       .eq("id", copyFrom)
       .maybeSingle();
     if (!source) return NextResponse.json({ error: "The event to copy wasn't found." }, { status: 404 });

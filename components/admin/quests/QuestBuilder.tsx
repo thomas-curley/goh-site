@@ -109,7 +109,7 @@ export function QuestBuilder({ id }: { id: string }) {
 
       {step === "basics" && <QuestBasicsStep data={data} onSaved={reload} onNext={() => setStep("quests")} />}
       {step === "quests" && <QuestPickerStep data={data} onSaved={reload} onNext={() => setStep("players")} />}
-      {step === "players" && <QuestPlayersStep key={data.event.format} data={data} onSaved={reload} onNext={() => setStep("launch")} />}
+      {step === "players" && <QuestPlayersStep key={`${data.event.format}-${data.participants.length}`} data={data} onSaved={reload} onNext={() => setStep("launch")} />}
       {step === "launch" && <QuestLaunchStep data={data} onChanged={reload} goTo={(s) => setStep(s as StepKey)} />}
     </div>
   );

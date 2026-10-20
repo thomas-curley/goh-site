@@ -34,6 +34,21 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 20, 2026 (evening) ────────────────────────────────────
+  {
+    id: "2026-10-20-quest-events-whole-clan",
+    date: "2026-10-20",
+    kind: "improved",
+    audience: "staff",
+    title: "Quest events can include the whole clan",
+    summary:
+      "On a quest event's Players step there's now an \"Add everyone in the clan\" link, and a setting called \"Everyone in the clan takes part\". With the setting on, everyone on the clan's Wise Old Man group is added, and anyone who joins the clan mid-event is added automatically (to the smallest team, in a team event). Newcomers only score quests they finish after they're added.",
+    tryIt: [
+      "Open a quest event in Admin › Quest Events and go to Players.",
+      "Tick Everyone in the clan takes part, or press Add everyone in the clan and then Save players.",
+    ],
+    links: [{ label: "Admin › Quest Events", href: "/admin/quests" }],
+  },
   // ── October 20, 2026 (later) ──────────────────────────────────────
   {
     id: "2026-10-20-clan-feed",
