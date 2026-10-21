@@ -34,6 +34,21 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 21, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-21-key-ranks",
+    date: "2026-10-21",
+    kind: "improved",
+    audience: "everyone",
+    title: "New rank order: Gold Key and Silver Key at the top",
+    summary:
+      "The site now uses the clan's new ranks, highest first: Gold Key, Silver Key, Yew, Pine, Oak, Council, then Gnome Child. Gold Key is the in-game Owner rank and Silver Key is Deputy Owner, matching the key icons in game and on Wise Old Man. Council (the Summoner rank) now sits below Oak and starts with Oak's permissions. Rank badges, the rank list, Gn0meBook, Roles & Access and the bot's voice room staff roles all use the new names.",
+    tryIt: ["Open Admin › Roles & Access to check each rank's permissions, especially Council's."],
+    links: [
+      { label: "Roles & Access", href: "/admin/permissions" },
+      { label: "Rank Structure", href: "/rank-structure" },
+    ],
+  },
   // ── October 20, 2026 (night) ──────────────────────────────────────
   {
     id: "2026-10-20-droptracker-api",

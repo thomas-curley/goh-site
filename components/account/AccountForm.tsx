@@ -278,7 +278,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
     if (error) {
       setStatus({ type: "error", message: "Failed to submit request. Try again." });
     } else {
-      setStatus({ type: "success", message: "Reset request submitted! A Council Member will review it." });
+      setStatus({ type: "success", message: "Reset request submitted! A staff member will review it." });
       setShowResetForm(false);
       setResetReason("");
     }
@@ -434,7 +434,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
               Request RSN Reset
             </h3>
             <p className="text-xs text-bark-brown-light mb-3">
-              If this is your RSN, explain below and a Council Member will review your request.
+              If this is your RSN, explain below and a staff member will review your request.
             </p>
             <form onSubmit={handleResetRequest} className="space-y-3">
               <textarea
@@ -603,7 +603,7 @@ export function AccountForm({ userId, userMeta }: AccountFormProps) {
           </li>
           <li className="flex gap-2">
             <span className="text-gnome-green shrink-0">4.</span>
-            If someone links your RSN by mistake, request an admin reset and a Council Member will review it.
+            If someone links your RSN by mistake, request an admin reset and a staff member will review it.
           </li>
         </ul>
       </Card>

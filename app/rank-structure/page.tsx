@@ -8,7 +8,7 @@ import { CLAN_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Rank Structure",
-  description: `How ranks work in ${CLAN_NAME}, from Gnome Child to Council.`,
+  description: `How ranks work in ${CLAN_NAME}, from Gnome Child to Gold Key.`,
 };
 
 export const dynamic = "force-dynamic";

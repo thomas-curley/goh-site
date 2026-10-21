@@ -156,7 +156,7 @@ export default async function AboutPage() {
             },
             {
               q: "How do I rank up?",
-              a: "Ranks are earned through activity, event participation, and time in the clan. Council members review promotions regularly.",
+              a: "Ranks are earned through activity, event participation, and time in the clan. Our Gold and Silver Keys review promotions regularly.",
             },
             {
               q: "Do you do learner raids?",

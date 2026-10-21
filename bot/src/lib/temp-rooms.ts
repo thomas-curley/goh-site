@@ -37,7 +37,7 @@ export interface RoomSettings {
 const DEFAULT_CATEGORY_NAME = process.env.TEMP_ROOMS_CATEGORY_NAME || "Temp Rooms";
 
 /** Used when no staff roles are picked on the website: roles with these names (Oak and up, as on the site). */
-const FALLBACK_STAFF_ROLE_NAMES = (process.env.TEMP_ROOM_STAFF_ROLES || "Oak,Pine,Yew,Council Member,Owner")
+const FALLBACK_STAFF_ROLE_NAMES = (process.env.TEMP_ROOM_STAFF_ROLES || "Council,Oak,Pine,Yew,Silver Key,Gold Key")
   .split(",")
   .map((r) => r.trim().toLowerCase())
   .filter(Boolean);

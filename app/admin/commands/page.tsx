@@ -400,7 +400,7 @@ export default function AdminCommandsPage() {
                 </div>
                 <div>
                   <label className={labelClass}>Restrict to Roles (comma-separated names, leave blank for everyone)</label>
-                  <input type="text" value={spec.allowed_roles.join(", ")} onChange={(e) => setSpec((s) => ({ ...s, allowed_roles: e.target.value.split(",").map((r) => r.trim()).filter(Boolean) }))} className={inputClass} placeholder="Officer, Council Member" />
+                  <input type="text" value={spec.allowed_roles.join(", ")} onChange={(e) => setSpec((s) => ({ ...s, allowed_roles: e.target.value.split(",").map((r) => r.trim()).filter(Boolean) }))} className={inputClass} placeholder="Silver Key, Gold Key" />
                 </div>
                 <div className="flex gap-3">
                   <Button variant="ghost" onClick={() => setStep(3)}>Back</Button>

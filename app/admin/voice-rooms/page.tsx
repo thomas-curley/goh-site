@@ -178,7 +178,7 @@ export default function VoiceRoomsSettingsPage() {
             roles={roles}
             value={settings.staffRoleIds}
             onChange={(ids) => set("staffRoleIds", ids)}
-            emptyLabel="Roles named Oak, Pine, Yew, Council Member or Owner (plus anyone who can manage channels)."
+            emptyLabel="Roles named Council, Oak, Pine, Yew, Silver Key or Gold Key (plus anyone who can manage channels)."
           />
         </Field>
       </Card>

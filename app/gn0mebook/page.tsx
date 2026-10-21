@@ -18,11 +18,11 @@ export default async function Gn0meBookPage() {
   if (!(await checkSectionAccess("gn0mebook"))) return <SectionUnavailable />;
 
   const profiles = await getPublishedProfiles();
-  const founders = profiles.filter((p) => ["council_member", "owner"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
-  const staff = profiles.filter((p) => ["yew", "pine", "oak"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
+  const leaders = profiles.filter((p) => ["gold_key", "silver_key"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
+  const staff = profiles.filter((p) => ["yew", "pine", "oak", "council"].includes(getRankByName(p.clan_rank ?? "")?.key ?? ""));
   const members = profiles.filter((p) => {
     const key = getRankByName(p.clan_rank ?? "")?.key ?? "";
-    return !["council_member", "owner"].includes(key) && !["yew", "pine", "oak"].includes(key);
+    return !["gold_key", "silver_key"].includes(key) && !["yew", "pine", "oak", "council"].includes(key);
   });
 
   return (
@@ -42,11 +42,11 @@ export default async function Gn0meBookPage() {
         </Card>
       ) : (
         <>
-          {founders.length > 0 && (
+          {leaders.length > 0 && (
             <section className="mb-12">
-              <h2 className="font-display text-2xl text-gnome-green mb-4">Founders</h2>
+              <h2 className="font-display text-2xl text-gnome-green mb-4">Leadership</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {founders.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
+                {leaders.map((profile) => <ProfileCard key={profile.id} profile={profile} />)}
               </div>
             </section>
           )}

@@ -5,20 +5,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { normalizeRole } from "@/lib/permissions";
+import { getRankByName, getRankOrder } from "@/lib/constants";
 
-// Rank hierarchy — higher index = higher rank
-const RANK_ORDER: Record<string, number> = {
-  gnome_child: 0,
-  oak: 1,
-  pine: 2,
-  yew: 3,
-  council_member: 4,
-  owner: 5,
-};
+/** Silver Key and Gold Key can manage everyone's links. */
+const SEES_ALL_ORDER = getRankByName("silver_key")?.order ?? 5;
 
 function getRankLevel(rank: string | null): number {
-  if (!rank) return -1;
-  return RANK_ORDER[normalizeRole(rank)] ?? -1;
+  return rank ? getRankOrder(rank) : -1;
 }
 
 interface ResetRequest {
@@ -158,10 +151,10 @@ export default function AdminRsnLinksPage() {
   const linkedProfiles = profiles.filter((p) => p.rsn);
   const allUsers = profiles;
 
-  // Filter to profiles at or below my rank (owners/council can see everyone)
+  // Filter to profiles below my rank (Silver Key and Gold Key see everyone)
   const canManage = (profile: LinkedProfile) => {
     const theirLevel = getRankLevel(profile.clan_rank);
-    return theirLevel < myRankLevel || myRankLevel >= 4; // council_member sees all
+    return theirLevel < myRankLevel || myRankLevel >= SEES_ALL_ORDER;
   };
 
   if (loading) {
@@ -260,7 +253,7 @@ export default function AdminRsnLinksPage() {
                         )}
                         {p.clan_rank && (
                           <span className="ml-2 capitalize">
-                            · {normalizeRole(p.clan_rank).replace(/_/g, " ")}
+                            · {getRankByName(p.clan_rank)?.name ?? normalizeRole(p.clan_rank).replace(/_/g, " ")}
                           </span>
                         )}
                       </p>
@@ -309,7 +302,7 @@ export default function AdminRsnLinksPage() {
                   )}
                   {p.clan_rank && (
                     <span className="ml-2 capitalize">
-                      · {normalizeRole(p.clan_rank).replace(/_/g, " ")}
+                      · {getRankByName(p.clan_rank)?.name ?? normalizeRole(p.clan_rank).replace(/_/g, " ")}
                     </span>
                   )}
                 </p>
