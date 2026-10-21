@@ -196,9 +196,9 @@ export default function AdminPermissionsPage() {
         <h3 className="font-display text-base text-bark-brown mb-2">How permissions work</h3>
         <ul className="space-y-1 text-xs text-bark-brown-light">
           <li>• Ranks are detected from WOM when a user links their RSN</li>
-          <li>• WOM &quot;Owner&quot; and &quot;Summoner&quot; roles map to &quot;Council Member&quot;</li>
+          <li>• WOM &quot;Owner&quot; is Gold Key, &quot;Deputy Owner&quot; is Silver Key and &quot;Summoner&quot; is Council</li>
           <li>• Users without a linked RSN have no rank-based permissions</li>
-          <li>• Only Council Members can access this permissions page</li>
+          <li>• Only ranks with &quot;Manage Permissions&quot; can change this page</li>
         </ul>
       </Card>
     </div>

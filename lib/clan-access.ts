@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getGroupMembers } from "@/lib/wom";
-import { getRankByName } from "@/lib/constants";
+import { getRankByName, STAFF_MIN_ORDER } from "@/lib/constants";
 import { normalizeRole } from "@/lib/permissions";
 import { linkedRsns, bestMembership } from "@/lib/rank-resolution";
 import { SITE_SECTIONS, type SiteSectionKey } from "@/lib/site-sections";
@@ -64,8 +64,7 @@ export async function checkClanEligibility(
 
     if (accessLevel === "staff") {
       const rank = getRankByName(member.role);
-      const oakOrder = getRankByName("oak")?.order ?? 1;
-      if (!rank || rank.order < oakOrder) {
+      if (!rank || rank.order < STAFF_MIN_ORDER) {
         return { eligible: false, reason: `You must be a member of Staff to access ${context}.` };
       }
     }

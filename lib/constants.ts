@@ -9,34 +9,48 @@ export const CLAN_CHAT = "Gn0me Home";
 export const CLAN_TIMEZONE = "America/New_York";
 export const DISCORD_INVITE = "https://discord.gg/F392pAMCvA";
 
+// The clan's ranks, lowest to highest. Gold Key and Silver Key are the
+// in-game Owner and Deputy Owner ranks (their key icons), as Wise Old Man
+// shows them; Council is the Summoner rank and sits below Oak.
 export const RANKS = [
   { name: "Gnome Child", order: 0, color: "bg-green-300 text-green-900", key: "gnome_child" },
-  { name: "Oak", order: 1, color: "bg-amber-700 text-amber-100", key: "oak" },
-  { name: "Pine", order: 2, color: "bg-green-700 text-green-100", key: "pine" },
-  { name: "Yew", order: 3, color: "bg-green-900 text-green-100", key: "yew" },
-  { name: "Council Member", order: 4, color: "bg-yellow-500 text-yellow-900", key: "council_member" },
-  { name: "Owner", order: 5, color: "bg-red-700 text-red-100", key: "owner" },
+  { name: "Council", order: 1, color: "bg-sky-700 text-sky-50", key: "council" },
+  { name: "Oak", order: 2, color: "bg-amber-700 text-amber-100", key: "oak" },
+  { name: "Pine", order: 3, color: "bg-green-700 text-green-100", key: "pine" },
+  { name: "Yew", order: 4, color: "bg-green-900 text-green-100", key: "yew" },
+  { name: "Silver Key", order: 5, color: "bg-slate-300 text-slate-900", key: "silver_key" },
+  { name: "Gold Key", order: 6, color: "bg-yellow-500 text-yellow-950", key: "gold_key" },
 ] as const;
 
 export type RankName = (typeof RANKS)[number]["name"];
+export type RankKey = (typeof RANKS)[number]["key"];
 
-// WOM roles that map to "Council Member" -- "owner" used to be included
-// here too, but is now its own rank (see RANKS above) so it can be managed
-// separately in Permissions/Section Visibility instead of inheriting
-// whatever Council Member has.
-const COUNCIL_ALIASES = ["deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
+/** The lowest rank that counts as staff (Council and above). */
+export const STAFF_MIN_ORDER = 1;
+
+// Wise Old Man role names (and older names this site used) -> our rank keys.
+export const ROLE_ALIASES: Record<string, RankKey> = {
+  owner: "gold_key",
+  gold_key: "gold_key",
+  deputy_owner: "silver_key",
+  silver_key: "silver_key",
+  summoner: "council",
+  summoner_hat: "council",
+  council: "council",
+  council_member: "council",
+  leader: "council",
+  administrator: "council",
+};
+
+/** A Wise Old Man role (or rank name) as our rank key, e.g. "deputy_owner" -> "silver_key". */
+export function rankKeyFor(name: string): string {
+  const normalized = name.toLowerCase().trim().replace(/[\s-]+/g, "_");
+  return ROLE_ALIASES[normalized] ?? normalized;
+}
 
 export function getRankByName(name: string) {
-  const normalized = name.toLowerCase().replace(/ /g, "_");
-
-  // Map WOM owner/summoner/council to Council Member
-  if (COUNCIL_ALIASES.includes(normalized)) {
-    return RANKS.find((r) => r.key === "council_member");
-  }
-
-  return RANKS.find(
-    (r) => r.name.toLowerCase() === name.toLowerCase() || r.key === normalized
-  );
+  const key = rankKeyFor(name);
+  return RANKS.find((r) => r.key === key || r.name.toLowerCase() === name.toLowerCase());
 }
 
 export function getRankOrder(name: string): number {

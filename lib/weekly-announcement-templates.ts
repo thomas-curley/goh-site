@@ -263,7 +263,7 @@ export function buildForumPost(params: {
     ].join("\n"),
     DIVIDER,
     [`💰 **Prize Pool — ${formatGp(totalPool)} GP — ${prizes.length} Winners**`, ...prizeLines].join("\n"),
-    `Prizes distributed in-game by the Gnome Council at the end of the week. Winners announced in ${announcementsChannelId ? `<#${announcementsChannelId}>` : "#announcements"}.`,
+    `Prizes distributed in-game by clan staff at the end of the week. Winners announced in ${announcementsChannelId ? `<#${announcementsChannelId}>` : "#announcements"}.`,
     DIVIDER,
     [
       "📝 **How it works**",

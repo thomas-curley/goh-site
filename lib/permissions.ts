@@ -1,4 +1,4 @@
-import { RANKS } from "./constants";
+import { RANKS, rankKeyFor } from "./constants";
 
 // All available permissions in the system
 export const PERMISSIONS = {
@@ -166,18 +166,12 @@ export const ASSIGNABLE_ROLES = [
 ];
 
 /**
- * Normalize a WOM role name to our internal role key.
- * WOM uses "summoner", "council", etc. — we map those to "council_member".
- * "owner" is deliberately NOT included -- it's its own RANKS entry (see
- * lib/constants.ts) so it can be managed separately from Council Member in
- * Permissions/Section Visibility instead of always inheriting the same grants.
+ * Normalize a WOM role name to our internal role key: owner -> gold_key,
+ * deputy_owner -> silver_key, summoner -> council (see ROLE_ALIASES in
+ * lib/constants.ts); everything else (yew, pine, oak, gnome_child) as is.
  */
-const COUNCIL_ALIASES = ["deputy_owner", "summoner", "council", "council_member", "summoner_hat", "leader", "administrator"];
-
 export function normalizeRole(womRole: string): string {
-  const normalized = womRole.toLowerCase().replace(/ /g, "_");
-  if (COUNCIL_ALIASES.includes(normalized)) return "council_member";
-  return normalized;
+  return rankKeyFor(womRole);
 }
 
 /**

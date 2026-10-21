@@ -3,11 +3,12 @@ import { Card } from "@/components/ui/Card";
 import { RANKS } from "@/lib/constants";
 
 const RANK_DESCRIPTIONS: Record<string, string> = {
-  owner: "Clan founder — the Owner rank in WOM. Full admin access.",
-  council_member: "Clan leadership — Summoner and other council ranks in WOM. Manages events, guides, and clan operations with full admin access.",
+  gold_key: "Clan owner — the Owner rank in game and on Wise Old Man, shown with a gold key. Full admin access.",
+  silver_key: "Deputy owners — the Deputy Owner rank, shown with a silver key. Run the clan alongside the Gold Key.",
   yew: "Experienced and trusted members who contribute actively to the clan.",
   pine: "Established members who participate regularly in events and activities.",
   oak: "Members who have been around a while and proven themselves.",
+  council: "Council — the Summoner rank in game. Helps out with events and looking after members.",
   gnome_child: "Welcome! New members start here. Join events and get to know us.",
 };
 

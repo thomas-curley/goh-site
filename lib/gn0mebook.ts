@@ -66,7 +66,7 @@ function flatten(row: Record<string, unknown>): MemberProfile {
   };
 }
 
-/** Every published, non-hidden profile, staff (Council Member) first. Used by the public directory. */
+/** Every published, non-hidden profile, highest rank first. Used by the public directory. */
 export async function getPublishedProfiles(): Promise<MemberProfile[]> {
   const supabase = getServiceClient();
   if (!supabase) return [];
