@@ -34,6 +34,21 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 21, 2026 (later) ──────────────────────────────────────
+  {
+    id: "2026-10-21-rank-labels",
+    date: "2026-10-21",
+    kind: "new",
+    audience: "admin",
+    title: "Rename ranks however you like",
+    summary:
+      "A new Rank Labels page lets you choose what each rank is called across the site (for example Gold Key as \"Supreme Overlord\"), and the description shown for it on the Rank Structure page. Ranks still come from Wise Old Man; only the names shown change. Empty boxes keep the standard names.",
+    tryIt: ["Go to Admin › Settings › Rank Labels, type a new name next to a rank and press Save labels."],
+    links: [
+      { label: "Rank Labels", href: "/admin/rank-labels" },
+      { label: "Rank Structure", href: "/rank-structure" },
+    ],
+  },
   // ── October 21, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-21-key-ranks",

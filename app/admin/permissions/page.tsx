@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useRankLabels } from "@/components/ui/RankLabelsProvider";
 import { PERMISSIONS, ASSIGNABLE_ROLES, type PermissionKey } from "@/lib/permissions";
 
 interface RolePermission {
@@ -16,6 +17,7 @@ interface RolePermission {
 }
 
 export default function AdminPermissionsPage() {
+  const { name: rankName } = useRankLabels();
   const [permissions, setPermissions] = useState<RolePermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,7 +82,7 @@ export default function AdminPermissionsPage() {
 
   const permissionKeys = Object.keys(PERMISSIONS) as PermissionKey[];
   // Sort roles highest first
-  const sortedRoles = [...ASSIGNABLE_ROLES].sort((a, b) => b.order - a.order);
+  const sortedRoles = [...ASSIGNABLE_ROLES].sort((a, b) => b.order - a.order).map((r) => ({ ...r, name: r.key === "guest" ? r.name : rankName(r.key, r.name) }));
 
   return (
     <div>

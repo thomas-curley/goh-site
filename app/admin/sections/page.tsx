@@ -5,6 +5,7 @@ import { ROLES_ACCESS_TABS } from "@/lib/admin-tabs";
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { SITE_SECTIONS } from "@/lib/site-sections";
+import { useRankLabels } from "@/components/ui/RankLabelsProvider";
 import { ASSIGNABLE_ROLES } from "@/lib/permissions";
 
 interface VisibilityRow {
@@ -15,6 +16,7 @@ interface VisibilityRow {
 }
 
 export default function AdminSectionsPage() {
+  const { name: rankName } = useRankLabels();
   const [rows, setRows] = useState<VisibilityRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,7 +61,7 @@ export default function AdminSectionsPage() {
     );
   }
 
-  const sortedRoles = [...ASSIGNABLE_ROLES].sort((a, b) => b.order - a.order);
+  const sortedRoles = [...ASSIGNABLE_ROLES].sort((a, b) => b.order - a.order).map((r) => ({ ...r, name: r.key === "guest" ? r.name : rankName(r.key, r.name) }));
 
   return (
     <div>

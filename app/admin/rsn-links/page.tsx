@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { normalizeRole } from "@/lib/permissions";
 import { getRankByName, getRankOrder } from "@/lib/constants";
+import { useRankLabels } from "@/components/ui/RankLabelsProvider";
 
 /** Silver Key and Gold Key can manage everyone's links. */
 const SEES_ALL_ORDER = getRankByName("silver_key")?.order ?? 5;
@@ -145,6 +145,7 @@ export default function AdminRsnLinksPage() {
     await loadData();
   };
 
+  const { name: rankName } = useRankLabels();
   const myRankLevel = getRankLevel(myRank);
 
   // Split profiles: linked RSNs and all users
@@ -253,7 +254,7 @@ export default function AdminRsnLinksPage() {
                         )}
                         {p.clan_rank && (
                           <span className="ml-2 capitalize">
-                            · {getRankByName(p.clan_rank)?.name ?? normalizeRole(p.clan_rank).replace(/_/g, " ")}
+                            · {rankName(p.clan_rank)}
                           </span>
                         )}
                       </p>
@@ -302,7 +303,7 @@ export default function AdminRsnLinksPage() {
                   )}
                   {p.clan_rank && (
                     <span className="ml-2 capitalize">
-                      · {getRankByName(p.clan_rank)?.name ?? normalizeRole(p.clan_rank).replace(/_/g, " ")}
+                      · {rankName(p.clan_rank)}
                     </span>
                   )}
                 </p>
