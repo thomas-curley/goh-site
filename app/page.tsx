@@ -7,13 +7,14 @@ import { AchievementsTicker } from "@/components/home/AchievementsTicker";
 import { formatNumber } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
 import { EVENT_TYPES } from "@/lib/constants";
-import { resolveUnicodeShortcodes } from "@/lib/emoji-shortcodes";
 import { checkSectionAccess } from "@/lib/section-gate";
 import { SectionUnavailable } from "@/components/layout/SectionUnavailable";
 import { getFeaturedTestimonials } from "@/lib/testimonials";
 import { TestimonialsSection } from "@/components/testimonials/TestimonialsSection";
 import { getLatestNewsletter } from "@/lib/newsletters";
 import { formatIssueDate } from "@/lib/newsletter-format";
+import { getDiscordNames, getMentionNames } from "@/lib/discord-names";
+import { NewsList } from "@/components/home/NewsList";
 
 export const dynamic = "force-dynamic";
 
@@ -92,16 +93,24 @@ async function getAnnouncements() {
 export default async function HomePage() {
   if (!(await checkSectionAccess("home"))) return <SectionUnavailable />;
 
-  const [groupDetails, achievements, upcomingEvents, activeCompetitions, announcements, featuredTestimonials] = await Promise.all([
+  const [groupDetails, achievements, upcomingEvents, activeCompetitions, announcements, featuredTestimonials, discordNames] = await Promise.all([
     getGroupDetails(),
     getGroupAchievements(50),
     getUpcomingEvents(),
     getActiveCompetitions(),
     getAnnouncements(),
     getFeaturedTestimonials(),
+    getDiscordNames().catch(() => ({ channels: {}, roles: {}, guildId: null })),
   ]);
   // Only shout out the newsletter when there's an issue to read and the
   // section isn't hidden from this viewer.
+  // Names for <@id> mentions in the news, from members' linked accounts.
+  const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const mentionNames =
+    serviceUrl && serviceKey && announcements.length
+      ? await getMentionNames(createClient(serviceUrl, serviceKey), announcements.flatMap((a) => [a.title, a.content])).catch(() => ({}))
+      : {};
   const latestNewsletter = (await checkSectionAccess("newsletter")) ? await getLatestNewsletter() : null;
 
   const memberCount = groupDetails?.memberships?.length ?? 0;
@@ -360,29 +369,7 @@ export default async function HomePage() {
           </h2>
           <div className="max-w-2xl mx-auto space-y-4">
             {announcements.length > 0 ? (
-              announcements.map((a) => (
-                <Card key={a.id}>
-                  <div className="flex items-center gap-2 mb-1">
-                    {a.pinned && <span className="text-xs">📌</span>}
-                    <p className="text-xs text-iron-grey uppercase tracking-wide">
-                      {a.category.replace(/_/g, " ")}
-                    </p>
-                    <span className="text-xs text-iron-grey">·</span>
-                    <p className="text-xs text-iron-grey">
-                      {new Date(a.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <h3 className="font-display text-lg text-bark-brown">
-                    {resolveUnicodeShortcodes(a.title)}
-                  </h3>
-                  <p className="text-sm text-bark-brown-light mt-2 line-clamp-3">
-                    {resolveUnicodeShortcodes(a.content)}
-                  </p>
-                  {a.author_name && (
-                    <p className="text-xs text-iron-grey mt-2">— {a.author_name}</p>
-                  )}
-                </Card>
-              ))
+              <NewsList items={announcements} names={{ ...discordNames, users: mentionNames }} />
             ) : (
               <Card>
                 <p className="text-xs text-iron-grey mb-1">Announcement</p>
