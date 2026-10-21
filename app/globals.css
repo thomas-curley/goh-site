@@ -221,3 +221,30 @@ h1, h2, h3 {
 .fc-gnome .fc .fc-event:hover {
   filter: brightness(1.1);
 }
+
+/* Charts (recharts): axis text, grid, legend and tooltip follow the theme,
+   overriding the light-only colours charts pass in. */
+.recharts-cartesian-axis-tick-value,
+.recharts-label {
+  fill: var(--color-bark-brown-light);
+}
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+  stroke: var(--color-bark-brown-light);
+  stroke-opacity: 0.4;
+}
+.recharts-cartesian-grid line {
+  stroke: var(--color-bark-brown-light);
+  stroke-opacity: 0.18;
+}
+.recharts-legend-item-text {
+  color: var(--color-bark-brown) !important;
+}
+.dark .recharts-default-tooltip {
+  background-color: #1e2d40 !important;
+  border-color: #2a3f5a !important;
+  color: #E8D5A8;
+}
+.dark .recharts-tooltip-label {
+  color: #E8D5A8;
+}

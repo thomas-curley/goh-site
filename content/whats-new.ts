@@ -34,6 +34,17 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 21, 2026 (evening) ────────────────────────────────────
+  {
+    id: "2026-10-21-readable-charts",
+    date: "2026-10-21",
+    kind: "fixed",
+    audience: "staff",
+    title: "Easier-to-read charts",
+    summary:
+      "Chart labels, grid lines and legends now follow the light and dark themes instead of staying dim grey, so they're readable in dark mode. On Player Activity the labels are larger, player names have more room, and big numbers are shortened (14M instead of 14000000).",
+    links: [{ label: "Player Activity", href: "/admin/activity" }],
+  },
   // ── October 21, 2026 (later) ──────────────────────────────────────
   {
     id: "2026-10-21-rank-labels",
