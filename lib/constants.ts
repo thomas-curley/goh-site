@@ -12,14 +12,17 @@ export const DISCORD_INVITE = "https://discord.gg/F392pAMCvA";
 // The clan's ranks, lowest to highest. Gold Key and Silver Key are the
 // in-game Owner and Deputy Owner ranks (their key icons), as Wise Old Man
 // shows them; Council is the Summoner rank and sits below Oak.
+// `wom` is the Wise Old Man role it comes from; `description` is the default
+// blurb on the Rank Structure page. Both the name and description can be
+// relabelled in Admin › Settings › Rank Labels (see lib/rank-labels.ts).
 export const RANKS = [
-  { name: "Gnome Child", order: 0, color: "bg-green-300 text-green-900", key: "gnome_child" },
-  { name: "Council", order: 1, color: "bg-sky-700 text-sky-50", key: "council" },
-  { name: "Oak", order: 2, color: "bg-amber-700 text-amber-100", key: "oak" },
-  { name: "Pine", order: 3, color: "bg-green-700 text-green-100", key: "pine" },
-  { name: "Yew", order: 4, color: "bg-green-900 text-green-100", key: "yew" },
-  { name: "Silver Key", order: 5, color: "bg-slate-300 text-slate-900", key: "silver_key" },
-  { name: "Gold Key", order: 6, color: "bg-yellow-500 text-yellow-950", key: "gold_key" },
+  { name: "Gnome Child", order: 0, color: "bg-green-300 text-green-900", key: "gnome_child", wom: "Gnome Child", description: "Welcome! New members start here. Join events and get to know us." },
+  { name: "Council", order: 1, color: "bg-sky-700 text-sky-50", key: "council", wom: "Summoner", description: "Council — the Summoner rank in game. Helps out with events and looking after members." },
+  { name: "Oak", order: 2, color: "bg-amber-700 text-amber-100", key: "oak", wom: "Oak", description: "Members who have been around a while and proven themselves." },
+  { name: "Pine", order: 3, color: "bg-green-700 text-green-100", key: "pine", wom: "Pine", description: "Established members who participate regularly in events and activities." },
+  { name: "Yew", order: 4, color: "bg-green-900 text-green-100", key: "yew", wom: "Yew", description: "Experienced and trusted members who contribute actively to the clan." },
+  { name: "Silver Key", order: 5, color: "bg-slate-300 text-slate-900", key: "silver_key", wom: "Deputy Owner", description: "Deputy owners — the Deputy Owner rank, shown with a silver key. Run the clan alongside the Gold Key." },
+  { name: "Gold Key", order: 6, color: "bg-yellow-500 text-yellow-950", key: "gold_key", wom: "Owner", description: "Clan owner — the Owner rank in game and on Wise Old Man, shown with a gold key. Full admin access." },
 ] as const;
 
 export type RankName = (typeof RANKS)[number]["name"];

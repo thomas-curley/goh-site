@@ -8,6 +8,8 @@ import { Footer } from "@/components/layout/Footer";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { getHiddenSectionKeys } from "@/lib/clan-access";
+import { getRankLabels, type RankLabels } from "@/lib/rank-labels";
+import { RankLabelsProvider } from "@/components/ui/RankLabelsProvider";
 import "./globals.css";
 
 function getServiceClient() {
@@ -87,10 +89,11 @@ export default async function RootLayout({
   // flash into view for a moment on every page load before disappearing.
   const supabase = getServiceClient();
   let initialHiddenKeys: string[] = [];
+  let rankLabels: RankLabels = {};
   if (supabase) {
     const authClient = await createSupabaseServerClient();
     const { data: { user } } = await authClient.auth.getUser();
-    initialHiddenKeys = await getHiddenSectionKeys(supabase, user?.id ?? null);
+    [initialHiddenKeys, rankLabels] = await Promise.all([getHiddenSectionKeys(supabase, user?.id ?? null), getRankLabels(supabase).catch(() => ({}))]);
   }
 
   return (
@@ -107,11 +110,13 @@ export default async function RootLayout({
             strategy="beforeInteractive"
           />
         )}
-        <Navbar initialHiddenKeys={initialHiddenKeys} />
-        <main className="flex-1">{children}</main>
-        <WalkthroughBar />
-        <AdBanner />
-        <Footer />
+        <RankLabelsProvider labels={rankLabels}>
+          <Navbar initialHiddenKeys={initialHiddenKeys} />
+          <main className="flex-1">{children}</main>
+          <WalkthroughBar />
+          <AdBanner />
+          <Footer />
+        </RankLabelsProvider>
       </body>
     </html>
   );
