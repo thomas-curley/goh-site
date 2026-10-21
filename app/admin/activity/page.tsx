@@ -10,6 +10,9 @@ import { presetDates, toDateInput } from "@/lib/raffle";
 import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
+
+/** Short axis numbers: 14000000 -> 14M, 3500 -> 3.5K. */
+const compact = (n: number) => Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(n);
 import type { ActivityMember, Focus } from "@/app/api/admin/activity/route";
 import type { MetricRanking } from "@/app/api/admin/activity/skills-bosses/route";
 
@@ -29,7 +32,7 @@ const FOCUS_LABELS: Record<Focus, string> = {
 };
 
 const FOCUS_COLORS: Record<Focus, string> = {
-  skiller: "#2D5016",
+  skiller: "var(--color-gnome-green)",
   bosser: "#8B1A1A",
   balanced: "#DAA520",
   inactive: "#6B6B6B",
@@ -327,12 +330,12 @@ export default function AdminActivityPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={topGainers}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#555" }} angle={-30} textAnchor="end" height={60} interval={0} />
-                    <YAxis tick={{ fontSize: 10, fill: "#555" }} />
+                    <CartesianGrid strokeDasharray="3 3"  />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-35} textAnchor="end" height={80} interval={0} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={compact} width={44} />
                     <Tooltip contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }} />
-                    <Legend wrapperStyle={{ fontSize: "0.7rem" }} />
-                    <Bar dataKey="ehpGained" name="EHP Gained" fill="#2D5016" radius={[4, 4, 0, 0]} />
+                    <Legend wrapperStyle={{ fontSize: "0.8rem" }} />
+                    <Bar dataKey="ehpGained" name="EHP Gained" fill="var(--color-gnome-green)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="ehbGained" name="EHB Gained" fill="#8B1A1A" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -344,9 +347,9 @@ export default function AdminActivityPage() {
               <p className="text-xs text-iron-grey mb-4">Where the roster falls this range</p>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={focusData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-                  <XAxis dataKey="key" tickFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k} tick={{ fontSize: 11, fill: "#555" }} />
-                  <YAxis tick={{ fontSize: 10, fill: "#555" }} allowDecimals={false} />
+                  <CartesianGrid strokeDasharray="3 3"  />
+                  <XAxis dataKey="key" tickFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k} tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} width={44} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                     labelFormatter={(k) => FOCUS_LABELS[k as Focus] ?? k}
@@ -371,14 +374,14 @@ export default function AdminActivityPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={topSkills} layout="vertical" margin={{ left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: "#555" }} />
-                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "#555" }} />
+                    <CartesianGrid strokeDasharray="3 3"  />
+                    <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={compact} />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12 }} interval={0} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                       formatter={(v) => [Number(v).toLocaleString(), "XP Gained"]}
                     />
-                    <Bar dataKey="totalGained" name="XP Gained" fill="#2D5016" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="totalGained" name="XP Gained" fill="var(--color-gnome-green)" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -392,9 +395,9 @@ export default function AdminActivityPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={topBosses} layout="vertical" margin={{ left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E8D5A8" />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: "#555" }} />
-                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "#555" }} />
+                    <CartesianGrid strokeDasharray="3 3"  />
+                    <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={compact} />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12 }} interval={0} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#F5E6C8", border: "1px solid #5C4033", borderRadius: "0.375rem", fontSize: "0.75rem" }}
                       formatter={(v) => [Number(v).toLocaleString(), "KC Gained"]}
