@@ -8,6 +8,10 @@
  * ~1800-entry gemoji set -- add more here as people hit missing ones.
  */
 const SHORTCODE_TO_EMOJI: Record<string, string> = {
+  // Clan favourites (trees, tools, celebrations)
+  deciduous_tree: "🌳", evergreen_tree: "🌲", palm_tree: "🌴", seedling: "🌱", mushroom: "🍄",
+  fallen_leaf: "🍂", maple_leaf: "🍁", axe: "🪓", pick: "⛏️", hammer_pick: "⚒️", partying_face: "🥳",
+  balloon: "🎈", old_key: "🗝️", scales: "⚖️",
   // Smileys & people
   smile: "😄", grin: "😁", joy: "😂", laughing: "😆", wink: "😉", blush: "😊",
   slight_smile: "🙂", upside_down: "🙃", relieved: "😌", heart_eyes: "😍",

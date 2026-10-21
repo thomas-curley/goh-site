@@ -34,6 +34,18 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 22, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-22-news-posts",
+    date: "2026-10-22",
+    kind: "improved",
+    audience: "everyone",
+    title: "News posts open in full, with Discord formatting and emoji",
+    summary:
+      "The Latest News cards on the homepage now show posts the way they look in Discord: bold and headings, lists, quotes, custom server emoji, channel names instead of long links, member names for @mentions, and readable dates. Click a card (or Read more) to open the whole post.",
+    tryIt: ["Open the homepage, scroll to Latest News and click a post."],
+    links: [{ label: "Homepage", href: "/" }],
+  },
   // ── October 21, 2026 (evening) ────────────────────────────────────
   {
     id: "2026-10-21-readable-charts",
