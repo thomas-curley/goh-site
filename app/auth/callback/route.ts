@@ -9,7 +9,13 @@ export async function GET(request: NextRequest) {
   const redirect = searchParams.get("redirect") ?? "/account";
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=no_code`);
+    // Supabase sends people back without a code when Discord's side failed,
+    // with the reason in error/error_description (e.g. a Discord account with
+    // no verified email). Pass a reason to the login page so it can explain,
+    // instead of quietly showing the login button again.
+    const description = `${searchParams.get("error_description") ?? ""} ${searchParams.get("error") ?? ""}`.toLowerCase();
+    const reason = description.includes("email") ? "no_email" : description.trim() ? "provider_error" : "no_code";
+    return NextResponse.redirect(`${origin}/login?error=${reason}&redirect=${encodeURIComponent(redirect)}`);
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,7 +44,7 @@ export async function GET(request: NextRequest) {
 
   if (error || !data.user) {
     console.error("Auth exchange failed:", error);
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+    return NextResponse.redirect(`${origin}/login?error=auth_failed&redirect=${encodeURIComponent(redirect)}`);
   }
 
   const user = data.user;
