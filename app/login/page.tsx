@@ -7,11 +7,24 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CLAN_NAME } from "@/lib/constants";
 
+// Why a login came back unfinished (/auth/callback's ?error=).
+const LOGIN_ERRORS: Record<string, string> = {
+  no_email:
+    "Discord didn't share a verified email for your account, so the login couldn't finish. In Discord, open User Settings › My Account, verify your email, then try again.",
+  provider_error: "Discord couldn't finish the login. Please try again in a minute.",
+  auth_failed:
+    "The login didn't finish. If you opened this site from inside the Discord app, open it in your normal browser (Chrome, Safari, ...) instead, make sure cookies are allowed, and try again.",
+  no_code:
+    "The login didn't finish. Check that your Discord account has a verified email (User Settings › My Account), and if you opened this site from inside the Discord app, try your normal browser instead.",
+};
+
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/account";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const errorCode = searchParams.get("error");
+  const problem = error || !errorCode ? null : LOGIN_ERRORS[errorCode] ?? LOGIN_ERRORS.no_code;
 
   const handleDiscordLogin = async () => {
     setLoading(true);
@@ -62,6 +75,11 @@ export default function LoginPage() {
 
         {error && (
           <p className="text-red-accent text-sm mt-4">{error}</p>
+        )}
+        {problem && (
+          <p role="alert" className="text-sm mt-4 rounded-md border border-red-accent/40 bg-red-accent/10 text-red-accent px-3 py-2 text-left">
+            {problem}
+          </p>
         )}
 
         <p className="text-xs text-iron-grey mt-6">

@@ -34,6 +34,17 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 28, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-28-login-loop-message",
+    date: "2026-10-28",
+    kind: "fixed",
+    audience: "everyone",
+    title: "Login explains why it didn't work instead of looping",
+    summary:
+      "If a Discord login can't finish, the login page now says why instead of quietly showing the button again. The most common cause is a Discord account without a verified email: the message tells people to verify it in Discord (User Settings › My Account) and try again.",
+    links: [{ label: "Login", href: "/login" }],
+  },
   // ── October 22, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-22-news-posts",
