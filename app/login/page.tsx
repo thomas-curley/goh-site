@@ -7,8 +7,13 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CLAN_NAME } from "@/lib/constants";
 
-// Why a login came back unfinished (/auth/callback's ?error=).
+// Why a login came back unfinished (/auth/callback's ?error=). Anything not
+// listed gets the generic message; the exact error (?detail=) always shows
+// underneath so a new kind of failure can still be reported and fixed.
 const LOGIN_ERRORS: Record<string, string> = {
+  access_denied: "The Discord login was cancelled. Press Login with Discord and choose Authorize to continue.",
+  unexpected: "Something went wrong on our side while finishing the login. Please try again.",
+  not_configured: "Login isn't available right now. Please let staff know.",
   no_email:
     "Discord didn't share a verified email for your account, so the login couldn't finish. In Discord, open User Settings › My Account, verify your email, then try again.",
   provider_error: "Discord couldn't finish the login. Please try again in a minute.",
@@ -24,7 +29,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const errorCode = searchParams.get("error");
-  const problem = error || !errorCode ? null : LOGIN_ERRORS[errorCode] ?? LOGIN_ERRORS.no_code;
+  const detail = searchParams.get("detail");
+  const problem = error || !errorCode ? null : LOGIN_ERRORS[errorCode] ?? "The login didn't finish. Please try again.";
 
   const handleDiscordLogin = async () => {
     setLoading(true);
@@ -41,11 +47,11 @@ export default function LoginPage() {
       });
 
       if (authError) {
-        setError(authError.message);
+        setError(`Couldn't start the Discord login: ${authError.message}`);
         setLoading(false);
       }
-    } catch {
-      setError("Failed to initiate Discord login. Make sure Supabase is configured.");
+    } catch (err) {
+      setError(`Couldn't start the Discord login: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
     }
   };
@@ -77,9 +83,15 @@ export default function LoginPage() {
           <p className="text-red-accent text-sm mt-4">{error}</p>
         )}
         {problem && (
-          <p role="alert" className="text-sm mt-4 rounded-md border border-red-accent/40 bg-red-accent/10 text-red-accent px-3 py-2 text-left">
-            {problem}
-          </p>
+          <div role="alert" className="text-sm mt-4 rounded-md border border-red-accent/40 bg-red-accent/10 text-red-accent px-3 py-2 text-left space-y-1.5">
+            <p>{problem}</p>
+            {detail && (
+              <p className="text-xs">
+                <span className="font-semibold">Details:</span> <span className="font-mono break-words">{detail}</span>
+              </p>
+            )}
+            <p className="text-xs opacity-80">Still stuck? Send a screenshot of this box to staff.</p>
+          </div>
         )}
 
         <p className="text-xs text-iron-grey mt-6">

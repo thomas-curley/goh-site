@@ -3,26 +3,54 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { reconcileRenamedRsns } from "@/lib/rsn-reconciliation";
 
+/**
+ * Sends a failed login back to /login with a reason the page explains and
+ * the exact error text, so anything we haven't planned for still shows up
+ * on screen (and in the logs) instead of looking like a silent loop.
+ */
+function fail(origin: string, redirect: string, reason: string, detail?: string | null) {
+  console.error(`Login failed (${reason}):`, detail ?? "(no details)");
+  const qs = new URLSearchParams({ error: reason, redirect });
+  if (detail) qs.set("detail", detail.replace(/\s+/g, " ").trim().slice(0, 300));
+  return NextResponse.redirect(`${origin}/login?${qs}`);
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
   const redirect = searchParams.get("redirect") ?? "/account";
+  try {
+    return await finishLogin(request, searchParams, origin, redirect);
+  } catch (err) {
+    return fail(origin, redirect, "unexpected", err instanceof Error ? err.message : String(err));
+  }
+}
+
+async function finishLogin(request: NextRequest, searchParams: URLSearchParams, origin: string, redirect: string) {
+  const code = searchParams.get("code");
 
   if (!code) {
-    // Supabase sends people back without a code when Discord's side failed,
-    // with the reason in error/error_description (e.g. a Discord account with
-    // no verified email). Pass a reason to the login page so it can explain,
-    // instead of quietly showing the login button again.
-    const description = `${searchParams.get("error_description") ?? ""} ${searchParams.get("error") ?? ""}`.toLowerCase();
-    const reason = description.includes("email") ? "no_email" : description.trim() ? "provider_error" : "no_code";
-    return NextResponse.redirect(`${origin}/login?error=${reason}&redirect=${encodeURIComponent(redirect)}`);
+    // Supabase (or Discord) sent the person back without a code, with the
+    // reason in error / error_code / error_description.
+    const providerError = searchParams.get("error");
+    const errorCode = searchParams.get("error_code");
+    const description = searchParams.get("error_description");
+    const detail = [description, errorCode && `(${errorCode})`, !description && providerError].filter(Boolean).join(" ") || null;
+    const text = `${description ?? ""} ${providerError ?? ""} ${errorCode ?? ""}`.toLowerCase();
+    const reason = text.includes("email")
+      ? "no_email"
+      : text.includes("access_denied") || text.includes("denied") || text.includes("cancel")
+        ? "access_denied"
+        : detail
+          ? "provider_error"
+          : "no_code";
+    return fail(origin, redirect, reason, detail);
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.redirect(`${origin}/login?error=supabase_not_configured`);
+    return fail(origin, redirect, "not_configured", "The site's login service isn't configured.");
   }
 
   const response = NextResponse.redirect(`${origin}${redirect}`);
@@ -43,8 +71,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.user) {
-    console.error("Auth exchange failed:", error);
-    return NextResponse.redirect(`${origin}/login?error=auth_failed&redirect=${encodeURIComponent(redirect)}`);
+    const detail = error ? [error.message, error.code && `(${error.code})`].filter(Boolean).join(" ") : "Supabase returned no user.";
+    return fail(origin, redirect, "auth_failed", detail);
   }
 
   const user = data.user;

@@ -34,6 +34,16 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  {
+    id: "2026-10-28-login-error-details",
+    date: "2026-10-28",
+    kind: "improved",
+    audience: "everyone",
+    title: "Failed logins now show the exact error",
+    summary:
+      "Whenever a login can't finish, for any reason (a cancelled Discord prompt, a Discord or Supabase error, or something unexpected on our side), the login page now shows what happened plus the exact error underneath. If someone gets stuck, ask them for a screenshot of that box.",
+    links: [{ label: "Login", href: "/login" }],
+  },
   // ── October 28, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-28-login-loop-message",
