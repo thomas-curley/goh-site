@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"; // gated per-viewer, can't be statically cached
 
-type Kind = "bingo" | "quests" | "competition";
+type Kind = "bingo" | "quests" | "art" | "competition";
 type Phase = "live" | "soon" | "finished";
 
 interface Activity {
@@ -29,6 +29,8 @@ interface Activity {
   banner: string | null;
   phase: Phase;
   signups: boolean;
+  /** A stage label shown instead of "Sign-ups open" (art contests). */
+  badge?: string;
   startsAt: string | null;
   endsAt: string | null;
 }
@@ -36,6 +38,7 @@ interface Activity {
 const KIND_LABEL: Record<Kind, { label: string; icon: string; tint: string }> = {
   bingo: { label: "Bingo", icon: "🎯", tint: "bg-[#2E64A8]/10 text-[#2E64A8]" },
   quests: { label: "Quest event", icon: "📜", tint: "bg-[#B5862A]/15 text-[#8a6418]" },
+  art: { label: "Art contest", icon: "🎨", tint: "bg-[#C2577E]/15 text-[#A23F66]" },
   competition: { label: "Competition", icon: "🏆", tint: "bg-gnome-green/10 text-gnome-green" },
 };
 
@@ -43,6 +46,7 @@ const ALWAYS_ON = [
   { href: "/competitions", title: "Skill & Boss of the Week", text: "Weekly Wise Old Man competitions, with prizes and a raffle.", icon: "📈", section: "competitions" },
   { href: "/leaderboard", title: "Attendance Leaderboard", text: "Who's been to the most clan events.", icon: "📅", section: "leaderboard" },
   { href: "/hiscores", title: "Clan Hiscores", text: "How you stack up against the clan in every skill and boss.", icon: "🥇", section: "hiscores" },
+  { href: "/gallery", title: "Gn0mie Gallery", text: "Artwork by clan members from our art contests.", icon: "🖼️", section: "gallery" },
 ] as const;
 
 function phaseOf(status: string, startsAt: string | null, endsAt: string | null, now: number): Phase {
@@ -61,12 +65,15 @@ async function loadActivities(show: Record<Kind, boolean>): Promise<{ list: Acti
   const supabase = questServiceClient();
   const recent = now - 30 * 86_400_000;
 
-  const [bingos, questEvents, competitions] = await Promise.all([
+  const [bingos, questEvents, artContests, competitions] = await Promise.all([
     show.bingo && supabase
       ? supabase.from("bingo_events").select("id, name, description, banner_url, status, starts_at, ends_at, grid_size").in("status", ["signups", "active", "completed"])
       : Promise.resolve({ data: [] }),
     show.quests && supabase
       ? supabase.from("quest_events").select("id, name, description, banner_url, status, starts_at, ends_at, format, quest_names, include_miniquests").in("status", ["signups", "active", "completed"])
+      : Promise.resolve({ data: [] }),
+    show.art && supabase
+      ? supabase.from("art_contests").select("id, name, description, theme, banner_url, status, submissions_close_at, voting_close_at, updated_at").neq("status", "draft")
       : Promise.resolve({ data: [] }),
     show.competition ? getGroupCompetitions() : Promise.resolve([]),
   ]);
@@ -99,6 +106,24 @@ async function loadActivities(show: Record<Kind, boolean>): Promise<{ list: Acti
       signups: q.status === "signups",
       startsAt: q.starts_at,
       endsAt: q.ends_at,
+    });
+  }
+  for (const a of (artContests.data ?? []) as { id: string; name: string; description: string | null; theme: string | null; banner_url: string | null; status: string; submissions_close_at: string | null; voting_close_at: string | null; updated_at: string }[]) {
+    const stage = { submissions: "Taking entries", review: "Judging", voting: "Voting open", completed: "Finished" }[a.status] ?? "";
+    list.push({
+      kind: "art",
+      key: `art-${a.id}`,
+      href: `/art/${a.id}`,
+      title: a.name,
+      blurb: a.theme ? `Theme: ${a.theme}` : a.description,
+      detail: stage,
+      banner: a.banner_url,
+      // Taking entries and voting are things to do now; judging is "coming up".
+      phase: a.status === "completed" ? "finished" : a.status === "review" ? "soon" : "live",
+      signups: false,
+      badge: a.status === "submissions" || a.status === "voting" ? stage : undefined,
+      startsAt: null,
+      endsAt: a.status === "submissions" ? a.submissions_close_at : a.status === "voting" ? a.voting_close_at : a.status === "completed" ? a.updated_at : null,
     });
   }
   for (const c of competitions) {
@@ -141,6 +166,7 @@ function ActivityCard({ a, now, big = false }: { a: Activity; now: number; big?:
           </span>
           {a.phase === "live" && <span className="px-2 py-0.5 rounded-full bg-gnome-green text-text-light">● Live</span>}
           {a.signups && <span className="px-2 py-0.5 rounded-full bg-gold/20 text-bark-brown">Sign-ups open</span>}
+          {a.badge && <span className="px-2 py-0.5 rounded-full bg-gold/20 text-bark-brown">{a.badge}</span>}
         </div>
         <h3 className={`font-display text-bark-brown leading-tight break-words ${big ? "text-2xl" : "text-xl"}`}>
           {a.title}
@@ -177,13 +203,14 @@ function ActivityCard({ a, now, big = false }: { a: Activity; now: number; big?:
 export default async function ActivitiesPage() {
   if (!(await checkSectionAccess("activities"))) return <SectionUnavailable />;
 
-  const [bingo, quests, competition, ...alwaysOn] = await Promise.all([
+  const [bingo, quests, art, competition, ...alwaysOn] = await Promise.all([
     checkSectionAccess("bingo"),
     checkSectionAccess("quests"),
+    checkSectionAccess("art"),
     checkSectionAccess("competitions"),
     ...ALWAYS_ON.map((x) => checkSectionAccess(x.section)),
   ]);
-  const { list, now } = await loadActivities({ bingo, quests, competition });
+  const { list, now } = await loadActivities({ bingo, quests, art, competition });
   const byEnd = (a: Activity, b: Activity) => (a.endsAt ? Date.parse(a.endsAt) : Infinity) - (b.endsAt ? Date.parse(b.endsAt) : Infinity);
   const live = list.filter((a) => a.phase === "live").sort(byEnd);
   const soon = list.filter((a) => a.phase === "soon").sort((a, b) => (a.startsAt ? Date.parse(a.startsAt) : 0) - (b.startsAt ? Date.parse(b.startsAt) : 0));
@@ -235,7 +262,7 @@ export default async function ActivitiesPage() {
       {always.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-display text-2xl text-bark-brown">Always running</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {always.map((x) => (
               <Link key={x.href} href={x.href} className="block h-full">
                 <Card className="h-full space-y-1">

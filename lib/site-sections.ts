@@ -23,6 +23,8 @@ export const SITE_SECTIONS = [
   { key: "activities", label: "Activities", description: "Activities hub: live and upcoming bingos, quest events and competitions (/activities)." },
   { key: "bingo", label: "Bingo", description: "Bingo event boards." },
   { key: "quests", label: "Quest Events", description: "Quest race event pages (/quests)." },
+  { key: "art", label: "Art Contests", description: "Art contest pages: entering, voting and results (/art)." },
+  { key: "gallery", label: "Gn0mie Gallery", description: "Public gallery of members' artwork (/gallery)." },
   { key: "testimonials", label: "Testimonials", description: "Public clan testimonials/reviews." },
   { key: "newsletter", label: "Newsletter", description: "The Weekly Glider -- latest issue and archive (/newsletter)." },
   { key: "rank_structure", label: "Rank Structure", description: "Clan rank structure (/rank-structure)." },
