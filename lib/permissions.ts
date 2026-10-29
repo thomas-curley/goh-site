@@ -132,6 +132,11 @@ export const PERMISSIONS = {
     label: "Manage Quest Events",
     description: "Create quest events, manage participants and teams, and review quest screenshots",
   },
+  manage_art: {
+    key: "manage_art",
+    label: "Manage Art Contests",
+    description: "Run art contests, review submitted artwork, moderate comments and manage the gallery",
+  },
   manage_points: {
     key: "manage_points",
     label: "Manage Clan Points",
