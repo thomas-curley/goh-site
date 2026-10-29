@@ -9,6 +9,7 @@ export const PENDING_SOURCES = {
   testimonials: { label: "Testimonials", href: "/admin/testimonials", permission: "manage_testimonials", table: "testimonials", column: "status", value: "pending" },
   rsn_requests: { label: "RSN reset requests", href: "/admin/rsn-links", permission: "manage_rsn_links", table: "rsn_reset_requests", column: "status", value: "pending" },
   bingo_submissions: { label: "Bingo tile submissions", href: "/admin/bingo/submissions", permission: "manage_bingo", table: "bingo_submissions", column: "status", value: "pending" },
+  art_entries: { label: "Art contest entries", href: "/admin/art", permission: "manage_art", table: "art_entries", column: "status", value: "pending" },
   quest_submissions: { label: "Quest screenshots", href: "/admin/quests/submissions", permission: "manage_quests", table: "quest_event_submissions", column: "status", value: "pending" },
   unpaid_payouts: { label: "Unpaid prizes", href: "/admin/payouts", permission: "manage_payouts", table: "prize_payouts", column: "is_paid", value: false },
 } as const satisfies Record<string, { label: string; href: string; permission: PermissionKey; table: string; column: string; value: string | boolean }>;

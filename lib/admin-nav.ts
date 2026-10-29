@@ -32,6 +32,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/weekly-competition", label: "Weekly SOTW/BotW", group: "Competitions", permission: "manage_competitions" },
   { href: "/admin/bingo", label: "Bingo", group: "Competitions", permission: "manage_bingo" },
   { href: "/admin/quests", label: "Quest Events", group: "Competitions", permission: "manage_quests" },
+  { href: "/admin/art", label: "Art Contests", group: "Competitions", permission: "manage_art", badge: "art_entries" },
   { href: "/admin/payouts", label: "Prize Payouts", group: "Competitions", permission: "manage_payouts", badge: "unpaid_payouts" },
   { href: "/admin/raffles", label: "Raffles", group: "Competitions", permission: "manage_payouts" },
 
