@@ -369,6 +369,7 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
             </div>
           )}
 
+          {podium.length > 0 && <h3 className="font-display text-xl text-bark-brown pt-2">All entries</h3>}
           {ordered.length === 0 ? (
             <Card hover={false} className="text-center py-8">
               <p className="text-sm text-iron-grey">No entries to show{!viewer.clanMember ? " (some may be for clan members only)" : ""}.</p>
@@ -380,7 +381,7 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
                 const r = resultFor.get(e.id);
                 const full = !picked && ballot.size >= max;
                 return (
-                  <Card key={e.id} hover={false} className={`space-y-2 ${picked ? "ring-2 ring-gnome-green" : ""}`}>
+                  <Card key={e.id} hover={false} className={`space-y-2 ${picked ? "!border-2 !border-gnome-green shadow-lg" : ""}`}>
                     <Gallery images={e.images} title={e.title} onOpen={setLightbox} />
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">

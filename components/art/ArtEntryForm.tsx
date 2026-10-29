@@ -18,7 +18,7 @@ export interface EntryDraft {
   gallery_opt_in: boolean;
 }
 
-export const emptyEntry = (): EntryDraft => ({ title: "", description: "", images: [], visibility: "public", credit: "rsn", credit_name: "", gallery_opt_in: true });
+export const emptyEntry = (): EntryDraft => ({ title: "", description: "", images: [], visibility: "public", credit: "rsn", credit_name: "", gallery_opt_in: false });
 
 function Choice({ name, checked, onPick, title, text, disabled }: { name: string; checked: boolean; onPick: () => void; title: string; text: string; disabled?: boolean }) {
   return (
