@@ -42,7 +42,7 @@ const FLOW: { status: ArtContestStatus; label: string; next?: string; nextLabel?
   { status: "draft", label: "Draft", next: "submissions", nextLabel: "Open entries" },
   { status: "submissions", label: "Entries open", next: "review", nextLabel: "Close entries" },
   { status: "review", label: "Judging", next: "voting", nextLabel: "Open voting" },
-  { status: "voting", label: "Voting", next: "completed", nextLabel: "Finish and post results" },
+  { status: "voting", label: "Voting", next: "completed", nextLabel: "Finish and show results" },
   { status: "completed", label: "Finished" },
 ];
 
@@ -95,7 +95,7 @@ export function ArtBuilder({ id }: { id: string }) {
   const pending = entries.filter((e) => e.status === "pending").length;
   const approved = entries.filter((e) => e.status === "approved").length;
 
-  const move = async (status: string, announce = true) => {
+  const move = async (status: string, announce = false) => {
     setBusy(true);
     setNotice(null);
     const res = await fetch(`/api/admin/art/${contest.id}`, {
@@ -163,17 +163,17 @@ export function ArtBuilder({ id }: { id: string }) {
                   {current.next === "voting"
                     ? `Open voting on ${approved} approved ${approved === 1 ? "entry" : "entries"}?`
                     : current.next === "completed"
-                      ? "Close voting and post the results?"
+                      ? "Close voting and show the results?"
                       : current.next === "review"
                         ? "Stop taking entries?"
                         : "Open the contest for entries?"}
                 </span>
                 <Button size="sm" disabled={busy} onClick={() => move(current.next!)}>
-                  Yes{current.next !== "review" ? ", and announce it" : ""}
+                  Yes
                 </Button>
                 {current.next !== "review" && (
-                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => move(current.next!, false)}>
-                    Yes, quietly
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => move(current.next!, true)}>
+                    Yes, and post it in Discord
                   </Button>
                 )}
                 <Button size="sm" variant="ghost" onClick={() => setConfirm(null)}>
@@ -193,7 +193,7 @@ export function ArtBuilder({ id }: { id: string }) {
           {current?.next === "voting" && approved === 0 && <span className="text-xs text-iron-grey">Approve at least one entry first.</span>}
           {notice && <span className={`text-sm ${notice.ok ? "text-gnome-green" : "text-red-accent"}`}>{notice.text}</span>}
         </div>
-        <p className="text-[11px] text-iron-grey">Opening entries, opening voting and finishing post in the Art Contest Announcements channel (Admin › Discord Channels), unless you pick &quot;quietly&quot;.</p>
+        <p className="text-[11px] text-iron-grey">Nothing is posted to Discord unless you pick &quot;post it in Discord&quot; (it goes to the Art Contest Announcements channel in Admin › Discord Channels).</p>
       </div>
 
       <nav className="flex gap-1 border-b border-bark-brown-light/30" aria-label="Contest sections">

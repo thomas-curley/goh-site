@@ -40,7 +40,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 // PATCH - change settings or move the contest along. Opening entries,
-// opening voting and finishing are announced in the art contests channel.
+// opening voting and finishing are only posted to the art contests channel
+// when staff ask for it ({ announce: true }); by default nothing is posted.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await guard();
@@ -107,7 +108,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { error } = await supabase.from("art_contests").update(update).eq("id", id);
   if (error) return NextResponse.json({ error: "Couldn't save the contest." }, { status: 500 });
 
-  if (announce && body.announce !== false) {
+  if (announce && body.announce === true) {
     const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
     const link = site ? `\n${site}/art/${id}` : "";
     const name = (update.name as string) ?? contest.name;
