@@ -20,6 +20,7 @@ export const ALERT_CHANNEL_FEATURES: AlertChannelFeature[] = [
   { key: "gnomie_reviews_staff", label: "Gn0mie Shoutouts (Staff Heads-Up)", envVar: "DISCORD_GNOMIE_REVIEWS_STAFF_CHANNEL_ID" },
   { key: "bingo_completions", label: "Bingo Announcements (Completed Tiles, Lines, Results)" },
   { key: "quest_events", label: "Quest Event Announcements (Completed Quests, Results)" },
+  { key: "art_contests", label: "Art Contest Announcements (Submissions Open, Voting Open, Results)" },
   { key: "weekly_competition_announcements", label: "Weekly SOTW/BotW Announcements (Raffle Winners)" },
   { key: "skill_or_kill_forum", label: "Skill or Kill of the Week Forum" },
   { key: "plugin_activity", label: "Plugin Activity (Level-ups, Quests, KC Milestones, Clues)" },

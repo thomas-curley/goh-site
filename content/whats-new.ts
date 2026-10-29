@@ -34,6 +34,27 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 29, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-29-art-contests",
+    date: "2026-10-29",
+    kind: "new",
+    audience: "staff",
+    title: "Art contests and the Gn0mie Gallery",
+    summary:
+      "Staff can now run art contests on the site. Members upload their artwork with a title and description and choose who can see it (everyone or clan members only), how they're credited (their RSN, a name they pick, or anonymous) and whether it goes in the gallery afterwards. Staff approve the entries that follow the rules, then open voting: each contest sets how many votes people get, who can vote (clan members, anyone signed in, or once per IP), whether counts show live, and how voters' comments are shown. Finished contests post their results to Discord, and pieces whose artists said yes appear in the new Gn0mie Gallery.",
+    tryIt: [
+      "Go to Admin › Art Contests, press New art contest and fill in the setup.",
+      "Press Open entries and share the contest page; entries waiting for review show in the Entries tab.",
+      "Approve the pieces you want in the vote, then press Open voting, and Finish and post results when it's done.",
+      "To announce each stage in Discord, pick a channel for Art Contest Announcements in Admin › Discord Channels.",
+    ],
+    links: [
+      { label: "Admin › Art Contests", href: "/admin/art" },
+      { label: "Gn0mie Gallery", href: "/gallery" },
+      { label: "Activities", href: "/activities" },
+    ],
+  },
   {
     id: "2026-10-28-login-error-details",
     date: "2026-10-28",
