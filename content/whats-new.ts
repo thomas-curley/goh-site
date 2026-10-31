@@ -36,6 +36,23 @@ export interface WhatsNewEntry {
 export const WHATS_NEW: WhatsNewEntry[] = [
   // ── October 31, 2026 ──────────────────────────────────────────────
   {
+    id: "2026-10-31-contests-and-wom-competitions",
+    date: "2026-10-31",
+    kind: "improved",
+    audience: "everyone",
+    title: "Activities is now Contests; WOM Competitions has its own page",
+    summary:
+      "The Activities page is now called Contests and only shows clan-run contests: team bingos, quest races and art contests, plus the always-running hiscores, attendance and gallery. Skill & Boss of the Week and every other Wise Old Man competition now live on one page, WOM Competitions, with what's live, coming up and past. In the Events menu you'll find Calendar, Contests, Bingo, WOM Competitions, Hiscores and the Attendance Leaderboard. Old Activities links still work and open Contests.",
+    tryIt: [
+      "Open the Events menu and pick Contests to see live bingos, quest races and art contests.",
+      "Open Events › WOM Competitions for Skill & Boss of the Week and past winners.",
+    ],
+    links: [
+      { label: "Contests", href: "/contests" },
+      { label: "WOM Competitions", href: "/competitions" },
+    ],
+  },
+  {
     id: "2026-10-31-art-entry-visibility",
     date: "2026-10-31",
     kind: "improved",
