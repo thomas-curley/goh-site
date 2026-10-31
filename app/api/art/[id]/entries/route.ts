@@ -3,7 +3,7 @@ import { artServiceClient, canSubmit, getArtViewer, loadContest, ownPaths, readE
 
 
 // POST - enter the contest: title, description, images (uploaded first via
-// /upload) and the artist's privacy choices. Waits for staff review.
+// /upload) and the artist's credit and gallery choices (who can see it comes from the contest). Waits for staff review.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = artServiceClient();
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data, error } = await supabase
     .from("art_entries")
-    .insert({ ...fields, contest_id: id, user_id: viewer.userId, rsn: viewer.verified ? viewer.rsn : null, image_paths, agreed_rules: true, status: "pending" })
+    .insert({ ...fields, visibility: contest.entry_visibility, contest_id: id, user_id: viewer.userId, rsn: viewer.verified ? viewer.rsn : null, image_paths, agreed_rules: true, status: "pending" })
     .select("id")
     .single();
   if (error || !data) return NextResponse.json({ error: "Couldn't save your entry." }, { status: 500 });

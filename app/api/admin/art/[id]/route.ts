@@ -82,6 +82,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   };
   try {
     pick("submit_eligibility", ["clan", "signed_in"]);
+    pick("entry_visibility", ["public", "clan"]);
     pick("vote_eligibility", ["clan", "signed_in", "ip"]);
     pick("comments_visibility", ["live", "after", "private", "off"]);
   } catch {
@@ -107,6 +108,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   update.updated_at = new Date().toISOString();
   const { error } = await supabase.from("art_contests").update(update).eq("id", id);
   if (error) return NextResponse.json({ error: "Couldn't save the contest." }, { status: 500 });
+  // Every entry follows the contest's setting (in the vote and the gallery)
+  if (update.entry_visibility) {
+    await supabase.from("art_entries").update({ visibility: update.entry_visibility }).eq("contest_id", id);
+  }
 
   if (announce && body.announce === true) {
     const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";

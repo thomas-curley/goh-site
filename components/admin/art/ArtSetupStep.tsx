@@ -25,6 +25,7 @@ export function ArtSetupStep({ contest, onSaved }: { contest: ArtContest; onSave
     submissionsClose: toLocalInput(contest.submissions_close_at),
     votingClose: toLocalInput(contest.voting_close_at),
     submitEligibility: contest.submit_eligibility,
+    entryVisibility: contest.entry_visibility,
     maxEntries: contest.max_entries_per_person,
     maxImages: contest.max_images_per_entry,
     votes: contest.votes_per_voter,
@@ -54,6 +55,7 @@ export function ArtSetupStep({ contest, onSaved }: { contest: ArtContest; onSave
         submissions_close_at: form.submissionsClose ? new Date(form.submissionsClose).toISOString() : null,
         voting_close_at: form.votingClose ? new Date(form.votingClose).toISOString() : null,
         submit_eligibility: form.submitEligibility,
+        entry_visibility: form.entryVisibility,
         max_entries_per_person: form.maxEntries,
         max_images_per_entry: form.maxImages,
         votes_per_voter: form.votes,
@@ -116,6 +118,12 @@ export function ArtSetupStep({ contest, onSaved }: { contest: ArtContest; onSave
           <div className="grid gap-2 sm:grid-cols-2">
             <ChoiceCard name="submit" checked={form.submitEligibility === "clan"} onPick={() => set("submitEligibility", "clan")} title="Clan members" text="Signed in with a linked, verified RSN that's in the clan." />
             <ChoiceCard name="submit" checked={form.submitEligibility === "signed_in"} onPick={() => set("submitEligibility", "signed_in")} title="Anyone signed in" text="Any Discord account, clan member or not (friends, guests)." />
+          </div>
+        </Field>
+        <Field label="Who can see the entries" hint="Applies to every entry, in the vote and in the gallery afterwards. Changing it later updates entries already in.">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ChoiceCard name="entryVis" checked={form.entryVisibility === "public"} onPick={() => set("entryVisibility", "public")} title="Everyone" text="Anyone visiting the site, signed in or not." />
+            <ChoiceCard name="entryVis" checked={form.entryVisibility === "clan"} onPick={() => set("entryVisibility", "clan")} title="Clan members only" text="Only signed-in clan members (and staff) can see the artwork." />
           </div>
         </Field>
         <div className="flex flex-wrap gap-6">

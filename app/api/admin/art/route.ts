@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   if (typeof body.copyFrom === "string" && body.copyFrom) {
     const { data } = await supabase
       .from("art_contests")
-      .select("description, rules, submit_eligibility, max_entries_per_person, max_images_per_entry, votes_per_voter, vote_eligibility, show_live_results, comments_visibility, anonymous_voting")
+      .select("description, rules, submit_eligibility, entry_visibility, max_entries_per_person, max_images_per_entry, votes_per_voter, vote_eligibility, show_live_results, comments_visibility, anonymous_voting")
       .eq("id", body.copyFrom)
       .maybeSingle();
     if (!data) return NextResponse.json({ error: "The contest to copy wasn't found." }, { status: 404 });

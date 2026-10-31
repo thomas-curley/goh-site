@@ -15,6 +15,7 @@ export interface ArtContest {
   submissions_close_at: string | null;
   voting_close_at: string | null;
   submit_eligibility: "clan" | "signed_in";
+  entry_visibility: "public" | "clan";
   max_entries_per_person: number;
   max_images_per_entry: number;
   votes_per_voter: number;
