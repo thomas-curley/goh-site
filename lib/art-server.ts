@@ -10,7 +10,7 @@ import type { ArtContest, ArtEntry } from "@/lib/art";
 export const ART_BUCKET = "art";
 export const ART_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 export const CONTEST_COLUMNS =
-  "id, name, description, rules, theme, banner_url, status, submissions_close_at, voting_close_at, submit_eligibility, max_entries_per_person, max_images_per_entry, votes_per_voter, vote_eligibility, show_live_results, comments_visibility, anonymous_voting, created_at, updated_at";
+  "id, name, description, rules, theme, banner_url, status, submissions_close_at, voting_close_at, submit_eligibility, entry_visibility, max_entries_per_person, max_images_per_entry, votes_per_voter, vote_eligibility, show_live_results, comments_visibility, anonymous_voting, created_at, updated_at";
 export const ENTRY_COLUMNS =
   "id, contest_id, user_id, rsn, title, description, image_paths, visibility, credit, credit_name, gallery_opt_in, agreed_rules, status, review_note, reviewed_by, reviewed_at, gallery_hidden, created_at, updated_at";
 
@@ -130,7 +130,6 @@ export function readEntryFields(body: Record<string, unknown>) {
   return {
     title: text(body.title, 100),
     description: text(body.description, 1000) || null,
-    visibility: body.visibility === "clan" ? "clan" : "public",
     credit: body.credit === "custom" || body.credit === "anonymous" ? body.credit : "rsn",
     credit_name: body.credit === "custom" ? text(body.credit_name, 40) || null : null,
     gallery_opt_in: !!body.gallery_opt_in,

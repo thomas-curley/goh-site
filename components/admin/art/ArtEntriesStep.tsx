@@ -79,7 +79,6 @@ export function ArtEntriesStep({ data, onChanged }: { data: AdminArt; onChanged:
                 {e.description && <p className="text-sm text-bark-brown-light mt-1 whitespace-pre-line">{e.description}</p>}
               </div>
               <div className="flex flex-wrap gap-1">
-                <Chip tone={e.visibility === "clan" ? "warn" : "plain"}>{e.visibility === "clan" ? "Clan members only" : "Public"}</Chip>
                 <Chip>{e.gallery_opt_in ? "OK for the gallery" : "Not in the gallery"}</Chip>
                 {e.gallery_hidden && <Chip tone="warn">Hidden from gallery by staff</Chip>}
                 {!e.agreed_rules && <Chip tone="warn">Didn&apos;t confirm the rules</Chip>}

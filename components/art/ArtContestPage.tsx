@@ -161,7 +161,6 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
       title: e.title,
       description: e.description ?? "",
       images: e.image_paths.map((path, i) => ({ path, preview: e.images[i] ?? "" })),
-      visibility: e.visibility,
       credit: e.credit,
       credit_name: e.credit_name ?? "",
       gallery_opt_in: e.gallery_opt_in,
@@ -224,6 +223,7 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
               maxImages={contest.max_images_per_entry}
               rsn={viewer.rsn}
               rules={contest.rules}
+              clanOnly={contest.entry_visibility === "clan"}
               onDone={async (msg) => {
                 setNotice({ ok: true, text: msg });
                 await load();
@@ -249,13 +249,14 @@ export function ArtContestPage({ contestId }: { contestId: string }) {
       {editing && (
         <Card hover={false} className="space-y-3">
           <h2 className="font-display text-2xl text-bark-brown">Edit your entry</h2>
-          {contest.status !== "submissions" && <p className="text-sm text-iron-grey">Entries have closed, so the piece itself can&apos;t change, but you can still change who sees it, your credit and the gallery.</p>}
+          {contest.status !== "submissions" && <p className="text-sm text-iron-grey">Entries have closed, so the piece itself can&apos;t change, but you can still change your credit and the gallery choice.</p>}
           <ArtEntryForm
             contestId={contest.id}
             draft={editing}
             maxImages={contest.max_images_per_entry}
             rsn={viewer.rsn}
             rules={contest.rules}
+            clanOnly={contest.entry_visibility === "clan"}
             pieceLocked={contest.status !== "submissions"}
             onCancel={() => setEditing(null)}
             onDone={async (msg) => {

@@ -12,13 +12,12 @@ export interface EntryDraft {
   title: string;
   description: string;
   images: ArtImage[];
-  visibility: "public" | "clan";
   credit: "rsn" | "custom" | "anonymous";
   credit_name: string;
   gallery_opt_in: boolean;
 }
 
-export const emptyEntry = (): EntryDraft => ({ title: "", description: "", images: [], visibility: "public", credit: "rsn", credit_name: "", gallery_opt_in: false });
+export const emptyEntry = (): EntryDraft => ({ title: "", description: "", images: [], credit: "rsn", credit_name: "", gallery_opt_in: false });
 
 function Choice({ name, checked, onPick, title, text, disabled }: { name: string; checked: boolean; onPick: () => void; title: string; text: string; disabled?: boolean }) {
   return (
@@ -32,8 +31,9 @@ function Choice({ name, checked, onPick, title, text, disabled }: { name: string
 
 /**
  * Enter (or edit) a piece: title, description, images and the artist's own
- * choices about who sees it, how they're credited and the gallery. When
- * `pieceLocked`, only the privacy choices can change (entries have closed).
+ * choices about how they're credited and the gallery. Who can see entries is
+ * set by staff for the whole contest. When `pieceLocked`, only the credit and
+ * gallery choices can change (entries have closed).
  */
 export function ArtEntryForm({
   contestId,
@@ -41,6 +41,7 @@ export function ArtEntryForm({
   maxImages,
   rsn,
   rules,
+  clanOnly,
   pieceLocked = false,
   onDone,
   onCancel,
@@ -50,6 +51,7 @@ export function ArtEntryForm({
   maxImages: number;
   rsn: string | null;
   rules: string | null;
+  clanOnly: boolean;
   pieceLocked?: boolean;
   onDone: (message: string) => void;
   onCancel?: () => void;
@@ -64,7 +66,7 @@ export function ArtEntryForm({
   const submit = async () => {
     setBusy(true);
     setError(null);
-    const privacy = { visibility: d.visibility, credit: d.credit, credit_name: d.credit_name, gallery_opt_in: d.gallery_opt_in };
+    const privacy = { credit: d.credit, credit_name: d.credit_name, gallery_opt_in: d.gallery_opt_in };
     const piece = { title: d.title, description: d.description, image_paths: d.images.map((i) => i.path) };
     const res = await fetch(editing ? `/api/art/${contestId}/entries/${d.id}` : `/api/art/${contestId}/entries`, {
       method: editing ? "PATCH" : "POST",
@@ -96,13 +98,10 @@ export function ArtEntryForm({
         </>
       )}
 
-      <fieldset className="space-y-1.5">
-        <legend className="text-sm font-semibold text-bark-brown mb-1">Who can see it</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Choice name="vis" checked={d.visibility === "public"} onPick={() => set("visibility", "public")} title="Everyone" text="Anyone visiting the site, signed in or not." />
-          <Choice name="vis" checked={d.visibility === "clan"} onPick={() => set("visibility", "clan")} title="Clan members only" text="Only signed-in clan members (and staff) can see it, in the vote and the gallery." />
-        </div>
-      </fieldset>
+      <p className="text-xs text-iron-grey">
+        <span className="font-semibold text-bark-brown">Who can see it: </span>
+        {clanOnly ? "only signed-in clan members (and staff), set by staff for this contest." : "everyone visiting the site, set by staff for this contest."}
+      </p>
 
       <fieldset className="space-y-1.5">
         <legend className="text-sm font-semibold text-bark-brown mb-1">How you&apos;re credited</legend>
@@ -119,7 +118,7 @@ export function ArtEntryForm({
         <span>
           Show it in the Gn0mie Gallery after the contest
           <span className="block text-xs text-iron-grey">
-            The gallery shows off members&apos; work for good. {d.visibility === "clan" ? "As a clan-only piece, only clan members will see it there." : "Anyone can see it there."} You can change this later.
+            The gallery shows off members&apos; work for good. {clanOnly ? "Entries in this contest are clan-only, so only clan members will see it there." : "Anyone can see it there."} You can change this later.
           </span>
         </span>
       </label>

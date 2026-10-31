@@ -12,7 +12,7 @@ async function own(id: string, entryId: string) {
 }
 
 // PATCH - edit your entry while entries are open. Its privacy choices
-// (credit, clan-only, gallery) can be changed at any time; editing the
+// (credit, gallery) can be changed at any time; editing the
 // piece itself sends it back for review.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string; entryId: string }> }) {
   const { id, entryId } = await params;
@@ -22,7 +22,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const body = await request.json().catch(() => ({}));
   const fields = readEntryFields({ title: "x", ...body });
   const update: Record<string, unknown> = {
-    visibility: fields.visibility,
     credit: fields.credit,
     credit_name: fields.credit_name,
     gallery_opt_in: fields.gallery_opt_in,
@@ -32,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const editsPiece = "title" in body || "description" in body || "image_paths" in body;
   if (editsPiece) {
-    if (contest.status !== "submissions") return NextResponse.json({ error: "Entries are closed, so the piece can't be changed now. You can still change your privacy choices." }, { status: 400 });
+    if (contest.status !== "submissions") return NextResponse.json({ error: "Entries are closed, so the piece can't be changed now. You can still change how you're credited and the gallery choice." }, { status: 400 });
     if (!fields.title || fields.title === "x") return NextResponse.json({ error: "Give your piece a title." }, { status: 400 });
     const paths = ownPaths(body.image_paths, id, viewer.userId!, contest.max_images_per_entry);
     if (paths.length === 0) return NextResponse.json({ error: "Add at least one image of your piece." }, { status: 400 });

@@ -34,6 +34,22 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: WhatsNewEntry[] = [
+  // ── October 31, 2026 ──────────────────────────────────────────────
+  {
+    id: "2026-10-31-art-entry-visibility",
+    date: "2026-10-31",
+    kind: "improved",
+    audience: "staff",
+    title: "Art contests: staff choose who can see the entries",
+    summary:
+      "Who can see the artwork (everyone, or clan members only) is now a setting staff pick for each art contest, instead of a choice each artist makes when entering. It covers every entry in that contest, in the vote and in the gallery afterwards. Contests that already had a clan-only entry were set to clan members only, so nothing became more public. Artists still choose how they're credited and whether their piece goes in the gallery.",
+    tryIt: [
+      "Go to Admin › Art Contests and open a contest.",
+      "In Setup, under Entering, pick Everyone or Clan members only for Who can see the entries, then press Save.",
+      "Open the contest page: the entry form now says who will see the piece instead of asking.",
+    ],
+    links: [{ label: "Admin › Art Contests", href: "/admin/art" }],
+  },
   // ── October 29, 2026 ──────────────────────────────────────────────
   {
     id: "2026-10-29-art-contests",
